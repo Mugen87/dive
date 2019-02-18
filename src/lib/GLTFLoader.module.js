@@ -188,10 +188,6 @@ GLTFLoader.prototype = {
 						extensions[ extensionName ] = new GLTFDracoMeshCompressionExtension( json, this.dracoLoader );
 						break;
 
-					case EXTENSIONS.MSFT_TEXTURE_DDS:
-						extensions[ EXTENSIONS.MSFT_TEXTURE_DDS ] = new GLTFTextureDDSExtension();
-						break;
-
 					default:
 
 						if ( extensionsRequired.indexOf( extensionName ) >= 0 ) {
@@ -284,26 +280,6 @@ var EXTENSIONS = {
 	KHR_MATERIALS_UNLIT: 'KHR_materials_unlit',
 	MSFT_TEXTURE_DDS: 'MSFT_texture_dds'
 };
-
-/**
- * DDS Texture Extension
- *
- * Specification:
- * https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/MSFT_texture_dds
- *
- */
-function GLTFTextureDDSExtension() {
-
-	if ( ! THREE.DDSLoader ) {
-
-		throw new Error( 'THREE.GLTFLoader: Attempting to load .dds texture without importing THREE.DDSLoader' );
-
-	}
-
-	this.name = EXTENSIONS.MSFT_TEXTURE_DDS;
-	this.ddsLoader = new THREE.DDSLoader();
-
-}
 
 /**
  * Lights Extension
@@ -2399,7 +2375,7 @@ GLTFParser.prototype.loadGeometries = function ( primitives ) {
 
 				return [ geometry ];
 
-			} else if ( geometries.length > 1 && THREE.BufferGeometryUtils !== undefined ) {
+			} else if ( geometries.length > 1 && BufferGeometryUtils !== undefined ) {
 
 				// Tries to merge geometries with BufferGeometryUtils if possible
 
@@ -2420,7 +2396,7 @@ GLTFParser.prototype.loadGeometries = function ( primitives ) {
 
 				} else {
 
-					var geometry = THREE.BufferGeometryUtils.mergeBufferGeometries( geometries, true );
+					var geometry = BufferGeometryUtils.mergeBufferGeometries( geometries, true );
 
 					cache.push( { geometry: geometry, baseGeometries: geometries } );
 

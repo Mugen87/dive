@@ -5,6 +5,32 @@
 }(this, (function () { 'use strict';
 
 	/**
+	 * @license
+	 * The MIT License
+	 *
+	 * Copyright © 2018 Yuka authors
+	 *
+	 * Permission is hereby granted, free of charge, to any person obtaining a copy
+	 * of this software and associated documentation files (the "Software"), to deal
+	 * in the Software without restriction, including without limitation the rights
+	 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	 * copies of the Software, and to permit persons to whom the Software is
+	 * furnished to do so, subject to the following conditions:
+	 *
+	 * The above copyright notice and this permission notice shall be included in
+	 * all copies or substantial portions of the Software.
+	 *
+	 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	 * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+	 * THE SOFTWARE.
+	 *
+	 */
+
+	/**
 	* Class for representing a telegram, an envelope which contains a message
 	* and certain metadata like sender and receiver. Part of the messaging system
 	* for game entities.
@@ -53,6 +79,57 @@
 			* @type Object
 			*/
 			this.data = data;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			return {
+				type: this.constructor.name,
+				sender: this.sender ? this.sender.uuid : null,
+				receiver: this.receiver ? this.receiver.uuid : null,
+				message: this.message,
+				delay: this.delay,
+				data: this.data
+			};
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {Telegram} A reference to this telegram.
+		*/
+		fromJSON( json ) {
+
+			this.sender = json.sender;
+			this.receiver = json.receiver;
+			this.message = json.message;
+			this.delay = json.delay;
+			this.data = json.data;
+
+			return this;
+
+		}
+
+		/**
+		* Restores UUIDs with references to GameEntity objects.
+		*
+		* @param {Map} entities - Maps game entities to UUIDs.
+		* @return {Telegram} A reference to this telegram.
+		*/
+		resolveReferences( entities ) {
+
+			this.sender = entities.get( this.sender );
+			this.receiver = entities.get( this.receiver );
+
+			return this;
 
 		}
 
@@ -239,383 +316,85 @@
 
 		}
 
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const data = {
+				type: this.constructor.name,
+				delayedTelegrams: new Array()
+			};
+
+			// delayed telegrams
+
+			for ( let i = 0, l = this.delayedTelegrams.length; i < l; i ++ ) {
+
+				const delayedTelegram = this.delayedTelegrams[ i ];
+				data.delayedTelegrams.push( delayedTelegram.toJSON() );
+
+			}
+
+			return data;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {MessageDispatcher} A reference to this message dispatcher.
+		*/
+		fromJSON( json ) {
+
+			this.clear();
+
+			const telegramsJSON = json.delayedTelegrams;
+
+			for ( let i = 0, l = telegramsJSON.length; i < l; i ++ ) {
+
+				const telegramJSON = telegramsJSON[ i ];
+				const telegram = new Telegram().fromJSON( telegramJSON );
+
+				this.delayedTelegrams.push( telegram );
+
+			}
+
+			return this;
+
+		}
+
+
+		/**
+		* Restores UUIDs with references to GameEntity objects.
+		*
+		* @param {Map} entities - Maps game entities to UUIDs.
+		* @return {MessageDispatcher} A reference to this message dispatcher.
+		*/
+		resolveReferences( entities ) {
+
+			const delayedTelegrams = this.delayedTelegrams;
+
+			for ( let i = 0, l = delayedTelegrams.length; i < l; i ++ ) {
+
+				const delayedTelegram = delayedTelegrams[ i ];
+				delayedTelegram.resolveReferences( entities );
+
+			}
+
+			return this;
+
+		}
+
 	}
 
-	const candidates = [];
+	const lut = [];
 
-	/**
-	* This class is used for managing all central objects of a game like
-	* game entities and triggers.
-	*
-	* @author {@link https://github.com/Mugen87|Mugen87}
-	*/
-	class EntityManager {
+	for ( let i = 0; i < 256; i ++ ) {
 
-		/**
-		* Constructs a new entity manager.
-		*/
-		constructor() {
-
-			/**
-			* A list of {@link GameEntity game entities }.
-			* @type Array
-			*/
-			this.entities = new Array();
-
-			/**
-			* A list of {@link Trigger triggers }.
-			* @type Array
-			*/
-			this.triggers = new Array();
-
-			/**
-			* A reference to a spatial index.
-			* @type CellSpacePartitioning
-			* @default null
-			*/
-			this.spatialIndex = null;
-
-			this._entityMap = new Map(); // for fast ID access
-			this._indexMap = new Map(); // used by spatial indices
-			this._started = new Set(); // used to control the call of GameEntity.start()
-			this._messageDispatcher = new MessageDispatcher();
-
-		}
-
-		/**
-		* Adds a game entity to this entity manager.
-		*
-		* @param {GameEntity} entity - The game entity to add.
-		* @return {EntityManager} A reference to this entity manager.
-		*/
-		add( entity ) {
-
-			this.entities.push( entity );
-			this._entityMap.set( entity.id, entity );
-
-			entity.manager = this;
-
-			return this;
-
-		}
-
-		/**
-		* Removes a game entity from this entity manager.
-		*
-		* @param {GameEntity} entity - The game entity to remove.
-		* @return {EntityManager} A reference to this entity manager.
-		*/
-		remove( entity ) {
-
-			const index = this.entities.indexOf( entity );
-			this.entities.splice( index, 1 );
-
-			this._entityMap.delete( entity.id );
-			this._started.delete( entity );
-
-			entity.manager = null;
-
-			return this;
-
-		}
-
-		/**
-		* Adds a trigger to this entity manager.
-		*
-		* @param {Trigger} trigger - The trigger to add.
-		* @return {EntityManager} A reference to this entity manager.
-		*/
-		addTrigger( trigger ) {
-
-			this.triggers.push( trigger );
-
-			return this;
-
-		}
-
-		/**
-		* Removes a trigger to this entity manager.
-		*
-		* @param {Trigger} trigger - The trigger to remove.
-		* @return {EntityManager} A reference to this entity manager.
-		*/
-		removeTrigger( trigger ) {
-
-			const index = this.triggers.indexOf( trigger );
-			this.triggers.splice( index, 1 );
-
-			return this;
-
-		}
-
-		/**
-		* Clears the internal state of this entity manager.
-		*
-		* @return {EntityManager} A reference to this entity manager.
-		*/
-		clear() {
-
-			this.entities.length = 0;
-			this.triggers.length = 0;
-
-			this._entityMap.clear();
-			this._started.clear();
-
-			this._messageDispatcher.clear();
-
-			return this;
-
-		}
-
-		/**
-		* Returns an entity by the given ID. If no game entity is found, *null*
-		* is returned.
-		*
-		* @param {Number} id - The id of the game entity.
-		* @return {GameEntity} The found game entity.
-		*/
-		getEntityById( id ) {
-
-			return this._entityMap.get( id ) || null;
-
-		}
-
-		/**
-		* Returns an entity by the given name. If no game entity is found, *null*
-		* is returned. This method is more expensive than {@link GameEntity#getEntityById}
-		* and should not be used in each simlation step. Instead, it should be used once
-		* and the result should be cached for later use.
-		*
-		* @param {String} name - The name of the game entity.
-		* @return {GameEntity} The found game entity.
-		*/
-		getEntityByName( name ) {
-
-			const entities = this.entities;
-
-			for ( let i = 0, l = entities.length; i < l; i ++ ) {
-
-				const entity = entities[ i ];
-
-				if ( entity.name === name ) return entity;
-
-			}
-
-			return null;
-
-		}
-
-		/**
-		* The central update method of this entity manager. Updates all
-		* game entities, triggers and delayed messages.
-		*
-		* @param {Number} delta - The time delta.
-		* @return {EntityManager} A reference to this entity manager.
-		*/
-		update( delta ) {
-
-			const entities = this.entities;
-			const triggers = this.triggers;
-
-			// update entities
-
-			for ( let i = ( entities.length - 1 ); i >= 0; i -- ) {
-
-				const entity = entities[ i ];
-
-				this.updateEntity( entity, delta );
-
-			}
-
-			// update triggers
-
-			for ( let i = ( triggers.length - 1 ); i >= 0; i -- ) {
-
-				const trigger = triggers[ i ];
-
-				this.updateTrigger( trigger, delta );
-
-			}
-
-			// handle messaging
-
-			this._messageDispatcher.dispatchDelayedMessages( delta );
-
-			return this;
-
-		}
-
-		/**
-		* Updates a single entity.
-		*
-		* @param {GameEntity} entity - The game entity to update.
-		* @param {Number} delta - The time delta.
-		* @return {EntityManager} A reference to this entity manager.
-		*/
-		updateEntity( entity, delta ) {
-
-			if ( entity.active === true ) {
-
-				this.updateNeighborhood( entity );
-
-				//
-
-				if ( this._started.has( entity ) === false ) {
-
-					entity.start();
-
-					this._started.add( entity );
-
-				}
-
-				//
-
-				entity.update( delta );
-				entity.updateWorldMatrix();
-
-				//
-
-				const children = entity.children;
-
-				for ( let i = ( children.length - 1 ); i >= 0; i -- ) {
-
-					const child = children[ i ];
-
-					this.updateEntity( child, delta );
-
-				}
-
-				//
-
-				if ( this.spatialIndex !== null ) {
-
-					let currentIndex = this._indexMap.get( entity ) || - 1;
-					currentIndex = this.spatialIndex.updateEntity( entity, currentIndex );
-					this._indexMap.set( entity, currentIndex );
-
-				}
-
-				//
-
-				const renderComponent = entity._renderComponent;
-				const renderComponentCallback = entity._renderComponentCallback;
-
-				if ( renderComponent !== null && renderComponentCallback !== null ) {
-
-					renderComponentCallback( entity, renderComponent );
-
-				}
-
-			}
-
-			return this;
-
-		}
-
-		/**
-		* Updates the neighborhood of a single game entity.
-		*
-		* @param {GameEntity} entity - The game entity to update.
-		* @return {EntityManager} A reference to this entity manager.
-		*/
-		updateNeighborhood( entity ) {
-
-			if ( entity.updateNeighborhood === true ) {
-
-				entity.neighbors.length = 0;
-
-				// determine candidates
-
-				if ( this.spatialIndex !== null ) {
-
-					this.spatialIndex.query( entity.position, entity.neighborhoodRadius, candidates );
-
-				} else {
-
-					// worst case runtime complexity with O(n²)
-
-					candidates.length = 0;
-					candidates.push( ...this.entities );
-
-				}
-
-				// verify if candidates are within the predefined range
-
-				const neighborhoodRadiusSq = ( entity.neighborhoodRadius * entity.neighborhoodRadius );
-
-				for ( let i = 0, l = candidates.length; i < l; i ++ ) {
-
-					const candidate = candidates[ i ];
-
-					if ( entity !== candidate && candidate.active === true ) {
-
-						const distanceSq = entity.position.squaredDistanceTo( candidate.position );
-
-						if ( distanceSq <= neighborhoodRadiusSq ) {
-
-							entity.neighbors.push( candidate );
-
-						}
-
-					}
-
-				}
-
-			}
-
-			return this;
-
-		}
-
-		/**
-		* Updates a single trigger.
-		*
-		* @param {Trigger} trigger - The trigger to update.
-		* @return {EntityManager} A reference to this entity manager.
-		*/
-		updateTrigger( trigger, delta ) {
-
-			if ( trigger.active === true ) {
-
-				trigger.update( delta );
-
-				const entities = this.entities;
-
-				for ( let i = ( entities.length - 1 ); i >= 0; i -- ) {
-
-					const entity = entities[ i ];
-
-					if ( entity.active === true ) {
-
-						trigger.check( entity );
-
-					}
-
-				}
-
-			}
-
-			return this;
-
-		}
-
-		/**
-		* Interface for game entities so they can send messages to other game entities.
-		*
-		* @param {GameEntity} sender - The sender.
-		* @param {GameEntity} receiver - The receiver.
-		* @param {String} message - The actual message.
-		* @param {Number} delay - A time value in millisecond used to delay the message dispatching.
-		* @param {Object} data - An object for custom data.
-		* @return {EntityManager} A reference to this entity manager.
-		*/
-		sendMessage( sender, receiver, message, delay, data ) {
-
-			this._messageDispatcher.dispatch( sender, receiver, message, delay, data );
-
-			return this;
-
-		}
+		lut[ i ] = ( i < 16 ? '0' : '' ) + ( i ).toString( 16 );
 
 	}
 
@@ -678,6 +457,28 @@
 		static area( a, b, c ) {
 
 			return ( ( c.x - a.x ) * ( b.z - a.z ) ) - ( ( b.x - a.x ) * ( c.z - a.z ) );
+
+		}
+
+		/**
+		* Computes a RFC4122 Version 4 complied Universally Unique Identifier (UUID).
+		*
+		* @return {String} The UUID.
+		*/
+		static generateUUID() {
+
+			// https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript/21963136#21963136
+
+			const d0 = Math.random() * 0xffffffff | 0;
+			const d1 = Math.random() * 0xffffffff | 0;
+			const d2 = Math.random() * 0xffffffff | 0;
+			const d3 = Math.random() * 0xffffffff | 0;
+			const uuid = lut[ d0 & 0xff ] + lut[ d0 >> 8 & 0xff ] + lut[ d0 >> 16 & 0xff ] + lut[ d0 >> 24 & 0xff ] + '-' +
+				lut[ d1 & 0xff ] + lut[ d1 >> 8 & 0xff ] + '-' + lut[ d1 >> 16 & 0x0f | 0x40 ] + lut[ d1 >> 24 & 0xff ] + '-' +
+				lut[ d2 & 0x3f | 0x80 ] + lut[ d2 >> 8 & 0xff ] + '-' + lut[ d2 >> 16 & 0xff ] + lut[ d2 >> 24 & 0xff ] +
+				lut[ d3 & 0xff ] + lut[ d3 >> 8 & 0xff ] + lut[ d3 >> 16 & 0xff ] + lut[ d3 >> 24 & 0xff ];
+
+			return uuid.toUpperCase();
 
 		}
 
@@ -814,7 +615,7 @@
 		}
 
 		/**
-		* Substracts the given 3D vector from this 3D vector.
+		* Subtracts the given 3D vector from this 3D vector.
 		*
 		* @param {Vector3} v - The vector to substract.
 		* @return {Vector3} A reference to this vector.
@@ -830,7 +631,7 @@
 		}
 
 		/**
-		* Substracts the given scalar from this 3D vector.
+		* Subtracts the given scalar from this 3D vector.
 		*
 		* @param {Number} s - The scalar to substract.
 		* @return {Vector3} A reference to this vector.
@@ -846,7 +647,7 @@
 		}
 
 		/**
-		* Substracts two given 3D vectors and stores the result in this 3D vector.
+		* Subtracts two given 3D vectors and stores the result in this 3D vector.
 		*
 		* @param {Vector3} a - The first vector of the operation.
 		* @param {Vector3} b - The second vector of the operation.
@@ -957,6 +758,20 @@
 			this.z = a.z / b.z;
 
 			return this;
+
+		}
+
+		/**
+		* Reflects this vector along the given normal.
+		*
+		* @param {Vector3} normal - The normal vector.
+		* @return {Vector3} A reference to this vector.
+		*/
+		reflect( normal ) {
+
+			// solve r = v - 2( v * n ) * n
+
+			return this.sub( v1.copy( normal ).multiplyScalar( 2 * this.dot( normal ) ) );
 
 		}
 
@@ -1104,9 +919,9 @@
 		}
 
 		/**
-		* Computes the manhatten length of this 3D vector.
+		* Computes the manhattan length of this 3D vector.
 		*
-		* @return {Number} The manhatten length of this 3D vector.
+		* @return {Number} The manhattan length of this 3D vector.
 		*/
 		manhattanLength() {
 
@@ -1143,10 +958,10 @@
 		}
 
 		/**
-		* Computes the manhatten distance between this 3D vector and the given one.
+		* Computes the manhattan distance between this 3D vector and the given one.
 		*
 		* @param {Vector3} v - A 3D vector.
-		* @return {Number} The manhatten distance between two 3D vectors.
+		* @return {Number} The manhattan distance between two 3D vectors.
 		*/
 		manhattanDistanceTo( v ) {
 
@@ -1347,6 +1162,8 @@
 
 	}
 
+	const v1 = new Vector3();
+
 	const WorldUp = new Vector3( 0, 1, 0 );
 
 	const localRight = new Vector3();
@@ -1438,7 +1255,7 @@
 		}
 
 		/**
-		* Transforms this matrix to an indentiy matrix.
+		* Transforms this matrix to an identity matrix.
 		*
 		* @return {Matrix3} A reference to this matrix.
 		*/
@@ -1987,19 +1804,19 @@
 		*
 		* @param {Quaternion} q - The target rotation.
 		* @param {Number} step - The maximum step in radians.
-		* @return {Quaternion} A reference to this quaternion.
+		* @return {Boolean} Whether the given quaternion already represents the target rotation.
 		*/
 		rotateTo( q, step ) {
 
 			const angle = this.angleTo( q );
 
-			if ( angle === 0 ) return this;
+			if ( angle < 0.0001 ) return true;
 
 			const t = Math.min( 1, step / angle );
 
 			this.slerp( q, t );
 
-			return this;
+			return false;
 
 		}
 
@@ -2023,7 +1840,7 @@
 		* The parameter t is clamped to the range [0, 1].
 		*
 		* @param {Quaternion} q - The target rotation.
-		* @param {Number} t - The interpolation paramter.
+		* @param {Number} t - The interpolation parameter.
 		* @return {Quaternion} A reference to this quaternion.
 		*/
 		slerp( q, t ) {
@@ -2316,7 +2133,7 @@
 		}
 
 		/**
-		* Transforms this matrix to an indentiy matrix.
+		* Transforms this matrix to an identity matrix.
 		*
 		* @return {Matrix4} A reference to this matrix.
 		*/
@@ -2556,10 +2373,10 @@
 			const e = this.elements;
 			const me = m.elements;
 
-			const n11 = me[ 0 ], n21 = me[ 1 ], n31 = me[ 2 ], n41 = me[ 3 ];
-			const n12 = me[ 4 ], n22 = me[ 5 ], n32 = me[ 6 ], n42 = me[ 7 ];
-			const n13 = me[ 8 ], n23 = me[ 9 ], n33 = me[ 10 ], n43 = me[ 11 ];
-			const n14 = me[ 12 ], n24 = me[ 13 ], n34 = me[ 14 ], n44 = me[ 15 ];
+			const n11 = e[ 0 ], n21 = e[ 1 ], n31 = e[ 2 ], n41 = e[ 3 ];
+			const n12 = e[ 4 ], n22 = e[ 5 ], n32 = e[ 6 ], n42 = e[ 7 ];
+			const n13 = e[ 8 ], n23 = e[ 9 ], n33 = e[ 10 ], n43 = e[ 11 ];
+			const n14 = e[ 12 ], n24 = e[ 13 ], n34 = e[ 14 ], n44 = e[ 15 ];
 
 			const t11 = n23 * n34 * n42 - n24 * n33 * n42 + n24 * n32 * n43 - n22 * n34 * n43 - n23 * n32 * n44 + n22 * n33 * n44;
 			const t12 = n14 * n33 * n42 - n13 * n34 * n42 - n14 * n32 * n43 + n12 * n34 * n43 + n13 * n32 * n44 - n12 * n33 * n44;
@@ -2577,25 +2394,25 @@
 
 			const detInv = 1 / det;
 
-			e[ 0 ] = t11 * detInv;
-			e[ 1 ] = ( n24 * n33 * n41 - n23 * n34 * n41 - n24 * n31 * n43 + n21 * n34 * n43 + n23 * n31 * n44 - n21 * n33 * n44 ) * detInv;
-			e[ 2 ] = ( n22 * n34 * n41 - n24 * n32 * n41 + n24 * n31 * n42 - n21 * n34 * n42 - n22 * n31 * n44 + n21 * n32 * n44 ) * detInv;
-			e[ 3 ] = ( n23 * n32 * n41 - n22 * n33 * n41 - n23 * n31 * n42 + n21 * n33 * n42 + n22 * n31 * n43 - n21 * n32 * n43 ) * detInv;
+			me[ 0 ] = t11 * detInv;
+			me[ 1 ] = ( n24 * n33 * n41 - n23 * n34 * n41 - n24 * n31 * n43 + n21 * n34 * n43 + n23 * n31 * n44 - n21 * n33 * n44 ) * detInv;
+			me[ 2 ] = ( n22 * n34 * n41 - n24 * n32 * n41 + n24 * n31 * n42 - n21 * n34 * n42 - n22 * n31 * n44 + n21 * n32 * n44 ) * detInv;
+			me[ 3 ] = ( n23 * n32 * n41 - n22 * n33 * n41 - n23 * n31 * n42 + n21 * n33 * n42 + n22 * n31 * n43 - n21 * n32 * n43 ) * detInv;
 
-			e[ 4 ] = t12 * detInv;
-			e[ 5 ] = ( n13 * n34 * n41 - n14 * n33 * n41 + n14 * n31 * n43 - n11 * n34 * n43 - n13 * n31 * n44 + n11 * n33 * n44 ) * detInv;
-			e[ 6 ] = ( n14 * n32 * n41 - n12 * n34 * n41 - n14 * n31 * n42 + n11 * n34 * n42 + n12 * n31 * n44 - n11 * n32 * n44 ) * detInv;
-			e[ 7 ] = ( n12 * n33 * n41 - n13 * n32 * n41 + n13 * n31 * n42 - n11 * n33 * n42 - n12 * n31 * n43 + n11 * n32 * n43 ) * detInv;
+			me[ 4 ] = t12 * detInv;
+			me[ 5 ] = ( n13 * n34 * n41 - n14 * n33 * n41 + n14 * n31 * n43 - n11 * n34 * n43 - n13 * n31 * n44 + n11 * n33 * n44 ) * detInv;
+			me[ 6 ] = ( n14 * n32 * n41 - n12 * n34 * n41 - n14 * n31 * n42 + n11 * n34 * n42 + n12 * n31 * n44 - n11 * n32 * n44 ) * detInv;
+			me[ 7 ] = ( n12 * n33 * n41 - n13 * n32 * n41 + n13 * n31 * n42 - n11 * n33 * n42 - n12 * n31 * n43 + n11 * n32 * n43 ) * detInv;
 
-			e[ 8 ] = t13 * detInv;
-			e[ 9 ] = ( n14 * n23 * n41 - n13 * n24 * n41 - n14 * n21 * n43 + n11 * n24 * n43 + n13 * n21 * n44 - n11 * n23 * n44 ) * detInv;
-			e[ 10 ] = ( n12 * n24 * n41 - n14 * n22 * n41 + n14 * n21 * n42 - n11 * n24 * n42 - n12 * n21 * n44 + n11 * n22 * n44 ) * detInv;
-			e[ 11 ] = ( n13 * n22 * n41 - n12 * n23 * n41 - n13 * n21 * n42 + n11 * n23 * n42 + n12 * n21 * n43 - n11 * n22 * n43 ) * detInv;
+			me[ 8 ] = t13 * detInv;
+			me[ 9 ] = ( n14 * n23 * n41 - n13 * n24 * n41 - n14 * n21 * n43 + n11 * n24 * n43 + n13 * n21 * n44 - n11 * n23 * n44 ) * detInv;
+			me[ 10 ] = ( n12 * n24 * n41 - n14 * n22 * n41 + n14 * n21 * n42 - n11 * n24 * n42 - n12 * n21 * n44 + n11 * n22 * n44 ) * detInv;
+			me[ 11 ] = ( n13 * n22 * n41 - n12 * n23 * n41 - n13 * n21 * n42 + n11 * n23 * n42 + n12 * n21 * n43 - n11 * n22 * n43 ) * detInv;
 
-			e[ 12 ] = t14 * detInv;
-			e[ 13 ] = ( n13 * n24 * n31 - n14 * n23 * n31 + n14 * n21 * n33 - n11 * n24 * n33 - n13 * n21 * n34 + n11 * n23 * n34 ) * detInv;
-			e[ 14 ] = ( n14 * n22 * n31 - n12 * n24 * n31 - n14 * n21 * n32 + n11 * n24 * n32 + n12 * n21 * n34 - n11 * n22 * n34 ) * detInv;
-			e[ 15 ] = ( n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33 ) * detInv;
+			me[ 12 ] = t14 * detInv;
+			me[ 13 ] = ( n13 * n24 * n31 - n14 * n23 * n31 + n14 * n21 * n33 - n11 * n24 * n33 - n13 * n21 * n34 + n11 * n23 * n34 ) * detInv;
+			me[ 14 ] = ( n14 * n22 * n31 - n12 * n24 * n31 - n14 * n21 * n32 + n11 * n24 * n32 + n12 * n21 * n34 - n11 * n22 * n34 ) * detInv;
+			me[ 15 ] = ( n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33 ) * detInv;
 
 			return m;
 
@@ -2738,8 +2555,6 @@
 
 	}
 
-	let nextId = 0;
-
 	const targetRotation = new Quaternion();
 	const targetDirection = new Vector3();
 
@@ -2754,12 +2569,6 @@
 		* Constructs a new game entity.
 		*/
 		constructor() {
-
-			/**
-			* The unique ID of this game entity.
-			* @type Number
-			*/
-			this.id = nextId ++;
 
 			/**
 			* The name of this game entity.
@@ -2855,20 +2664,6 @@
 			this.maxTurnRate = Math.PI;
 
 			/**
-			* The field of view of this game entity in radians.
-			* @type Number
-			* @default π/2
-			*/
-			this.fieldOfView = Math.PI;
-
-			/**
-			* The visual range of this game entity in world units.
-			* @type Number
-			* @default Infinity
-			*/
-			this.visualRange = Infinity;
-
-			/**
 			* A transformation matrix representing the local space of this game entity.
 			* @type Matrix4
 			*/
@@ -2898,6 +2693,26 @@
 
 			this._renderComponent = null;
 			this._renderComponentCallback = null;
+			this._started = false;
+			this._uuid = null;
+
+		}
+
+		get uuid() {
+
+			if ( this._uuid === null ) {
+
+				this._uuid = MathUtils.generateUUID();
+
+			}
+
+			return this._uuid;
+
+		}
+
+		set uuid( uuid ) {
+
+			this._uuid = uuid;
 
 		}
 
@@ -2991,16 +2806,14 @@
 		*
 		* @param {Vector3} target - The target position.
 		* @param {Number} delta - The time delta.
-		* @return {GameEntity} A reference to this game entity.
+		* @return {Boolean} Whether the entity is faced to the target or not.
 		*/
 		rotateTo( target, delta ) {
 
 			targetDirection.subVectors( target, this.position ).normalize();
 			targetRotation.lookAt( this.forward, targetDirection, this.up );
 
-			this.rotation.rotateTo( targetRotation, this.maxTurnRate * delta );
-
-			return this;
+			return this.rotation.rotateTo( targetRotation, this.maxTurnRate * delta );
 
 		}
 
@@ -3035,7 +2848,7 @@
 		* Updates the world matrix representing the world space.
 		*
 		* @param {Boolean} up - Whether to update the world matrices of the parents or not.
-		* @param {Boolean} down - Whether to update the world matrices of the childs or not.
+		* @param {Boolean} down - Whether to update the world matrices of the children or not.
 		* @return {GameEntity} A reference to this game entity.
 		*/
 		updateWorldMatrix( up = false, down = false ) {
@@ -3136,6 +2949,4650 @@
 
 		}
 
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			return {
+				type: this.constructor.name,
+				uuid: this.uuid,
+				name: this.name,
+				active: this.active,
+				children: entitiesToIds( this.children ),
+				parent: ( this.parent !== null ) ? this.parent.uuid : null,
+				neighbors: entitiesToIds( this.neighbors ),
+				neighborhoodRadius: this.neighborhoodRadius,
+				updateNeighborhood: this.updateNeighborhood,
+				position: this.position.toArray( new Array() ),
+				rotation: this.rotation.toArray( new Array() ),
+				scale: this.scale.toArray( new Array() ),
+				forward: this.forward.toArray( new Array() ),
+				up: this.up.toArray( new Array() ),
+				boundingRadius: this.boundingRadius,
+				maxTurnRate: this.maxTurnRate,
+				matrix: this.matrix.toArray( new Array() ),
+				worldMatrix: this.worldMatrix.toArray( new Array() ),
+				_cache: {
+					position: this._cache.position.toArray( new Array() ),
+					rotation: this._cache.rotation.toArray( new Array() ),
+					scale: this._cache.scale.toArray( new Array() ),
+				},
+				_started: this._started
+			};
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {GameEntity} A reference to this game entity.
+		*/
+		fromJSON( json ) {
+
+			this.uuid = json.uuid;
+			this.name = json.name;
+			this.active = json.active;
+			this.neighborhoodRadius = json.neighborhoodRadius;
+			this.updateNeighborhood = json.updateNeighborhood;
+			this.position.fromArray( json.position );
+			this.rotation.fromArray( json.rotation );
+			this.scale.fromArray( json.scale );
+			this.forward.fromArray( json.forward );
+			this.up.fromArray( json.up );
+			this.boundingRadius = json.boundingRadius;
+			this.maxTurnRate = json.maxTurnRate;
+			this.matrix.fromArray( json.matrix );
+			this.worldMatrix.fromArray( json.worldMatrix );
+
+			this.children = json.children.slice();
+			this.neighbors = json.neighbors.slice();
+			this.parent = json.parent;
+
+			this._cache.position.fromArray( json._cache.position );
+			this._cache.rotation.fromArray( json._cache.rotation );
+			this._cache.scale.fromArray( json._cache.scale );
+
+			this._started = json._started;
+
+			return this;
+
+		}
+
+		/**
+		* Restores UUIDs with references to GameEntity objects.
+		*
+		* @param {Map} entities - Maps game entities to UUIDs.
+		* @return {GameEntity} A reference to this game entity.
+		*/
+		resolveReferences( entities ) {
+
+			//
+
+			const neighbors = this.neighbors;
+
+			for ( let i = 0, l = neighbors.length; i < l; i ++ ) {
+
+				neighbors[ i ] = entities.get( neighbors[ i ] );
+
+			}
+
+			//
+
+			const children = this.children;
+
+			for ( let i = 0, l = children.length; i < l; i ++ ) {
+
+				children[ i ] = entities.get( children[ i ] );
+
+			}
+
+			//
+
+			this.parent = entities.get( this.parent ) || null;
+
+			return this;
+
+		}
+
+	}
+
+	function entitiesToIds( array ) {
+
+		const ids = new Array();
+
+		for ( let i = 0, l = array.length; i < l; i ++ ) {
+
+			ids.push( array[ i ].uuid );
+
+		}
+
+		return ids;
+
+	}
+
+	const displacement = new Vector3();
+	const target = new Vector3();
+
+	/**
+	* Class representing moving game entities.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments GameEntity
+	*/
+	class MovingEntity extends GameEntity {
+
+		/**
+		* Constructs a new moving entity.
+		*/
+		constructor() {
+
+			super();
+
+			/**
+			* The velocity of this game entity.
+			* @type Vector3
+			*/
+			this.velocity = new Vector3();
+
+			/**
+			* The maximum speed at which this game entity may travel.
+			* @type Number
+			*/
+			this.maxSpeed = 1;
+
+			/**
+			* Whether the orientation of this game entity will be updated based on the velocity or not.
+			* @type Boolean
+			* @default true
+			*/
+			this.updateOrientation = true;
+
+		}
+
+		/**
+		* Updates the internal state of this game entity.
+		*
+		* @param {Number} delta - The time delta.
+		* @return {MovingEntity} A reference to this moving entity.
+		*/
+		update( delta ) {
+
+			// make sure vehicle does not exceed maximum speed
+
+			if ( this.getSpeedSquared() > ( this.maxSpeed * this.maxSpeed ) ) {
+
+				this.velocity.normalize();
+				this.velocity.multiplyScalar( this.maxSpeed );
+
+			}
+
+			// calculate displacement
+
+			displacement.copy( this.velocity ).multiplyScalar( delta );
+
+			// calculate target position
+
+			target.copy( this.position ).add( displacement );
+
+			// update the orientation if the vehicle has a non zero velocity
+
+			if ( this.updateOrientation && this.getSpeedSquared() > 0.00000001 ) {
+
+				this.lookAt( target );
+
+			}
+
+			// update position
+
+			this.position.copy( target );
+
+			return this;
+
+		}
+
+		/**
+		* Returns the current speed of this game entity.
+		*
+		* @return {Number} The current speed.
+		*/
+		getSpeed() {
+
+			return this.velocity.length();
+
+		}
+
+		/**
+		* Returns the current speed in squared space of this game entity.
+		*
+		* @return {Number} The current speed in squared space.
+		*/
+		getSpeedSquared() {
+
+			return this.velocity.squaredLength();
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.velocity = this.velocity.toArray( new Array() );
+			json.maxSpeed = this.maxSpeed;
+			json.updateOrientation = this.updateOrientation;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {MovingEntity} A reference to this moving entity.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.velocity.fromArray( json.velocity );
+			this.maxSpeed = json.maxSpeed;
+			this.updateOrientation = json.updateOrientation;
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Base class for all concrete steering behaviors. They produce a force that describes
+	* where an agent should move and how fast it should travel to get there.
+	*
+	* Note: All built-in steering behaviors assume a {@link Vehicle#mass} of one. Different values can lead to an unexpected results.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class SteeringBehavior {
+
+		/**
+		* Constructs a new steering behavior.
+		*/
+		constructor() {
+
+			/**
+			* Whether this steering behavior is active or not.
+			* @type Boolean
+			* @default true
+			*/
+			this.active = true;
+
+			/**
+			* Can be used to tweak the amount that a steering force contributes to the total steering force.
+			* @type Number
+			* @default 1
+			*/
+			this.weight = 1;
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( /* vehicle, force, delta */ ) {}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			return {
+				type: this.constructor.name,
+				active: this.active,
+				weight: this.weight
+			};
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {SteeringBehavior} A reference to this steering behavior.
+		*/
+		fromJSON( json ) {
+
+			this.active = json.active;
+			this.weight = json.weight;
+
+			return this;
+
+		}
+
+		/**
+		* Restores UUIDs with references to GameEntity objects.
+		*
+		* @param {Map} entities - Maps game entities to UUIDs.
+		* @return {SteeringBehavior} A reference to this steering behavior.
+		*/
+		resolveReferences( /* entities */ ) {}
+
+	}
+
+	const averageDirection = new Vector3();
+	const direction = new Vector3();
+
+	/**
+	* This steering behavior produces a force that keeps a vehicle’s heading aligned with its neighbors.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments SteeringBehavior
+	*/
+	class AlignmentBehavior extends SteeringBehavior {
+
+		/**
+		* Constructs a new alignment behavior.
+		*/
+		constructor() {
+
+			super();
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( vehicle, force /*, delta */ ) {
+
+			averageDirection.set( 0, 0, 0 );
+
+			const neighbors = vehicle.neighbors;
+
+			// iterate over all neighbors to calculate the average direction vector
+
+			for ( let i = 0, l = neighbors.length; i < l; i ++ ) {
+
+				const neighbor = neighbors[ i ];
+
+				neighbor.getDirection( direction );
+
+				averageDirection.add( direction );
+
+			}
+
+			if ( neighbors.length > 0 ) {
+
+				averageDirection.divideScalar( neighbors.length );
+
+				// produce a force to align the vehicle's heading
+
+				vehicle.getDirection( direction );
+				force.subVectors( averageDirection, direction );
+
+			}
+
+			return force;
+
+		}
+
+	}
+
+	const desiredVelocity = new Vector3();
+	const displacement$1 = new Vector3();
+
+	/**
+	* This steering behavior produces a force that directs an agent toward a target position.
+	* Unlike {@link SeekBehavior}, it decelerates so the agent comes to a gentle halt at the target position.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments SteeringBehavior
+	*/
+	class ArriveBehavior extends SteeringBehavior {
+
+		/**
+		* Constructs a new arrive behavior.
+		*
+		* @param {Vector3} target - The target vector.
+		* @param {Number} deceleration - The amount of deceleration.
+		* @param {Number} tolerance - A tolerance value in world units to prevent the vehicle from overshooting its target.
+		*/
+		constructor( target = new Vector3(), deceleration = 3, tolerance = 0 ) {
+
+			super();
+
+			/**
+			* The target vector.
+			* @type Vector3
+			*/
+			this.target = target;
+
+			/**
+			* The amount of deceleration.
+			* @type Number
+			* @default 3
+			*/
+			this.deceleration = deceleration;
+
+			/**
+			 * A tolerance value in world units to prevent the vehicle from overshooting its target.
+			 * @type {Number}
+			 * @default 0
+			 */
+			this.tolerance = tolerance;
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( vehicle, force /*, delta */ ) {
+
+			const target = this.target;
+			const deceleration = this.deceleration;
+
+			displacement$1.subVectors( target, vehicle.position );
+
+			const distance = displacement$1.length();
+
+			if ( distance > this.tolerance ) {
+
+				// calculate the speed required to reach the target given the desired deceleration
+
+				let speed = distance / deceleration;
+
+				// make sure the speed does not exceed the max
+
+				speed = Math.min( speed, vehicle.maxSpeed );
+
+				// from here proceed just like "seek" except we don't need to normalize
+				// the "displacement" vector because we have already gone to the trouble
+				// of calculating its length.
+
+				desiredVelocity.copy( displacement$1 ).multiplyScalar( speed / distance );
+
+			} else {
+
+				desiredVelocity.set( 0, 0, 0 );
+
+			}
+
+			return force.subVectors( desiredVelocity, vehicle.velocity );
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.target = this.target.toArray( new Array() );
+			json.deceleration = this.deceleration;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {ArriveBehavior} A reference to this behavior.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.target.fromArray( json.target );
+			this.deceleration = json.deceleration;
+
+			return this;
+
+		}
+
+	}
+
+	const desiredVelocity$1 = new Vector3();
+
+	/**
+	* This steering behavior produces a force that directs an agent toward a target position.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments SteeringBehavior
+	*/
+	class SeekBehavior extends SteeringBehavior {
+
+		/**
+		* Constructs a new seek behavior.
+		*
+		* @param {Vector3} target - The target vector.
+		*/
+		constructor( target = new Vector3() ) {
+
+			super();
+
+			/**
+			* The target vector.
+			* @type Vector3
+			*/
+			this.target = target;
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( vehicle, force /*, delta */ ) {
+
+			const target = this.target;
+
+			// First the desired velocity is calculated.
+			// This is the velocity the agent would need to reach the target position in an ideal world.
+			// It represents the vector from the agent to the target,
+			// scaled to be the length of the maximum possible speed of the agent.
+
+			desiredVelocity$1.subVectors( target, vehicle.position ).normalize();
+			desiredVelocity$1.multiplyScalar( vehicle.maxSpeed );
+
+			// The steering force returned by this method is the force required,
+			// which when added to the agent’s current velocity vector gives the desired velocity.
+			// To achieve this you simply subtract the agent’s current velocity from the desired velocity.
+
+			return force.subVectors( desiredVelocity$1, vehicle.velocity );
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.target = this.target.toArray( new Array() );
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {SeekBehavior} A reference to this behavior.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.target.fromArray( json.target );
+
+			return this;
+
+		}
+
+	}
+
+	const centerOfMass = new Vector3();
+
+	/**
+	* This steering produces a steering force that moves a vehicle toward the center of mass of its neighbors.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments SteeringBehavior
+	*/
+	class CohesionBehavior extends SteeringBehavior {
+
+		/**
+		* Constructs a new cohesion behavior.
+		*/
+		constructor() {
+
+			super();
+
+			// internal behaviors
+
+			this._seek = new SeekBehavior();
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( vehicle, force /*, delta */ ) {
+
+			centerOfMass.set( 0, 0, 0 );
+
+			const neighbors = vehicle.neighbors;
+
+			// iterate over all neighbors to calculate the center of mass
+
+			for ( let i = 0, l = neighbors.length; i < l; i ++ ) {
+
+				const neighbor = neighbors[ i ];
+
+				centerOfMass.add( neighbor.position );
+
+			}
+
+			if ( neighbors.length > 0 ) {
+
+				centerOfMass.divideScalar( neighbors.length );
+
+				// seek to it
+
+				this._seek.target = centerOfMass;
+				this._seek.calculate( vehicle, force );
+
+				// the magnitude of cohesion is usually much larger than separation
+				// or alignment so it usually helps to normalize it
+
+				force.normalize();
+
+			}
+
+			return force;
+
+		}
+
+	}
+
+	const desiredVelocity$2 = new Vector3();
+
+	/**
+	* This steering behavior produces a force that steers an agent away from a target position.
+	* It's the opposite of {@link SeekBehavior}.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments SteeringBehavior
+	*/
+	class FleeBehavior extends SteeringBehavior {
+
+		/**
+		* Constructs a new flee behavior.
+		*
+		* @param {Vector3} target - The target vector.
+		* @param {Number} panicDistance - The agent only flees from the target if it is inside this radius.
+		*/
+		constructor( target = new Vector3(), panicDistance = 10 ) {
+
+			super();
+
+			/**
+			* The target vector.
+			* @type Vector3
+			*/
+			this.target = target;
+
+			/**
+			* The agent only flees from the target if it is inside this radius.
+			* @type Number
+			* @default 10
+			*/
+			this.panicDistance = panicDistance;
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( vehicle, force /*, delta */ ) {
+
+			const target = this.target;
+
+			// only flee if the target is within panic distance
+
+			const distanceToTargetSq = vehicle.position.squaredDistanceTo( target );
+
+			if ( distanceToTargetSq <= ( this.panicDistance * this.panicDistance ) ) {
+
+				// from here, the only difference compared to seek is that the desired
+				// velocity is calculated using a vector pointing in the opposite direction
+
+				desiredVelocity$2.subVectors( vehicle.position, target ).normalize();
+
+				// if target and vehicle position are identical, choose default velocity
+
+				if ( desiredVelocity$2.squaredLength() === 0 ) {
+
+					desiredVelocity$2.set( 0, 0, 1 );
+
+				}
+
+				desiredVelocity$2.multiplyScalar( vehicle.maxSpeed );
+
+				force.subVectors( desiredVelocity$2, vehicle.velocity );
+
+			}
+
+			return force;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.target = this.target.toArray( new Array() );
+			json.panicDistance = this.panicDistance;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {FleeBehavior} A reference to this behavior.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.target.fromArray( json.target );
+			this.panicDistance = json.panicDistance;
+
+			return this;
+
+		}
+
+	}
+
+	const displacement$2 = new Vector3();
+	const newPursuerVelocity = new Vector3();
+	const predictedPosition = new Vector3();
+
+	/**
+	* This steering behavior is is almost the same as {@link PursuitBehavior} except that
+	* the agent flees from the estimated future position of the pursuer.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments SteeringBehavior
+	*/
+	class EvadeBehavior extends SteeringBehavior {
+
+		/**
+		* Constructs a new evade behavior.
+		*
+		* @param {MovingEntity} pursuer - The agent to evade from.
+		* @param {Number} panicDistance -  The agent only flees from the pursuer if it is inside this radius.
+		* @param {Number} predictionFactor -  This factor determines how far the vehicle predicts the movement of the pursuer.
+		*/
+		constructor( pursuer = null, panicDistance = 10, predictionFactor = 1 ) {
+
+			super();
+
+			/**
+			* The agent to evade from.
+			* @type MovingEntity
+			* @default null
+			*/
+			this.pursuer = pursuer;
+
+			/**
+			* The agent only flees from the pursuer if it is inside this radius.
+			* @type Number
+			* @default 10
+			*/
+			this.panicDistance = panicDistance;
+
+			/**
+			* This factor determines how far the vehicle predicts the movement of the pursuer.
+			* @type Number
+			* @default 1
+			*/
+			this.predictionFactor = predictionFactor;
+
+			// internal behaviors
+
+			this._flee = new FleeBehavior();
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( vehicle, force /*, delta */ ) {
+
+			const pursuer = this.pursuer;
+
+			displacement$2.subVectors( pursuer.position, vehicle.position );
+
+			let lookAheadTime = displacement$2.length() / ( vehicle.maxSpeed + pursuer.getSpeed() );
+			lookAheadTime *= this.predictionFactor; // tweak the magnitude of the prediction
+
+			// calculate new velocity and predicted future position
+
+			newPursuerVelocity.copy( pursuer.velocity ).multiplyScalar( lookAheadTime );
+			predictedPosition.addVectors( pursuer.position, newPursuerVelocity );
+
+			// now flee away from predicted future position of the pursuer
+
+			this._flee.target = predictedPosition;
+			this._flee.panicDistance = this.panicDistance;
+			this._flee.calculate( vehicle, force );
+
+			return force;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.pursuer = this.pursuer ? this.pursuer.uuid : null;
+			json.panicDistance = this.panicDistance;
+			json.predictionFactor = this.predictionFactor;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {EvadeBehavior} A reference to this behavior.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.pursuer = json.pursuer;
+			this.panicDistance = json.panicDistance;
+			this.predictionFactor = json.predictionFactor;
+
+			return this;
+
+		}
+
+		/**
+		* Restores UUIDs with references to GameEntity objects.
+		*
+		* @param {Map} entities - Maps game entities to UUIDs.
+		* @return {EvadeBehavior} A reference to this behavior.
+		*/
+		resolveReferences( entities ) {
+
+			this.pursuer = entities.get( this.pursuer ) || null;
+
+		}
+
+	}
+
+	/**
+	* Class for representing a walkable path.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class Path {
+
+		/**
+		* Constructs a new path.
+		*/
+		constructor() {
+
+			/**
+			* Whether this path is looped or not.
+			* @type Boolean
+			*/
+			this.loop = false;
+
+			this._waypoints = new Array();
+			this._index = 0;
+
+		}
+
+		/**
+		* Adds the given waypoint to this path.
+		*
+		* @param {Vector3} waypoint - The waypoint to add.
+		* @return {Path} A reference to this path.
+		*/
+		add( waypoint ) {
+
+			this._waypoints.push( waypoint );
+
+			return this;
+
+		}
+
+		/**
+		* Clears the internal state of this path.
+		*
+		* @return {Path} A reference to this path.
+		*/
+		clear() {
+
+			this._waypoints.length = 0;
+			this._index = 0;
+
+			return this;
+
+		}
+
+		/**
+		* Returns the current active waypoint of this path.
+		*
+		* @return {Vector3} The current active waypoint.
+		*/
+		current() {
+
+			return this._waypoints[ this._index ];
+
+		}
+
+		/**
+		* Returns true if this path is not looped and the last waypoint is active.
+		*
+		* @return {Boolean} Whether this path is finished or not.
+		*/
+		finished() {
+
+			const lastIndex = this._waypoints.length - 1;
+
+			return ( this.loop === true ) ? false : ( this._index === lastIndex );
+
+		}
+
+		/**
+		* Makes the next waypoint of this path active. If the path is looped and
+		* {@link Path#finished} returns true, the path starts from the beginning.
+		*
+		* @return {Path} A reference to this path.
+		*/
+		advance() {
+
+			this._index ++;
+
+			if ( ( this._index === this._waypoints.length ) ) {
+
+				if ( this.loop === true ) {
+
+					this._index = 0;
+
+				} else {
+
+					this._index --;
+
+				}
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const data = {
+				type: this.constructor.name,
+				loop: this.loop,
+				_waypoints: new Array(),
+				_index: this._index
+			};
+
+			// waypoints
+
+			const waypoints = this._waypoints;
+
+			for ( let i = 0, l = waypoints.length; i < l; i ++ ) {
+
+				const waypoint = waypoints[ i ];
+				data._waypoints.push( waypoint.toArray( new Array() ) );
+
+			}
+
+			return data;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {Path} A reference to this path.
+		*/
+		fromJSON( json ) {
+
+			this.loop = json.loop;
+			this._index = json._index;
+
+			// waypoints
+
+			const waypointsJSON = json._waypoints;
+
+			for ( let i = 0, l = waypointsJSON.length; i < l; i ++ ) {
+
+				const waypointJSON = waypointsJSON[ i ];
+				this._waypoints.push( new Vector3().fromArray( waypointJSON ) );
+
+			}
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* This steering behavior produces a force that moves a vehicle along a series of waypoints forming a path.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments SteeringBehavior
+	*/
+	class FollowPathBehavior extends SteeringBehavior {
+
+		/**
+		* Constructs a new follow path behavior.
+		*
+		* @param {Path} path - The path to follow.
+		* @param {Number} nextWaypointDistance - The distance the agent seeks for the next waypoint.
+		*/
+		constructor( path = new Path(), nextWaypointDistance = 1 ) {
+
+			super();
+
+			/**
+			* The path to follow.
+			* @type Path
+			*/
+			this.path = path;
+
+			/**
+			* The distance the agent seeks for the next waypoint.
+			* @type Number
+			* @default 1
+			*/
+			this.nextWaypointDistance = nextWaypointDistance;
+
+			// internal behaviors
+
+			this._arrive = new ArriveBehavior();
+			this._seek = new SeekBehavior();
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( vehicle, force /*, delta */ ) {
+
+			const path = this.path;
+
+			// calculate distance in square space from current waypoint to vehicle
+
+			const distanceSq = path.current().squaredDistanceTo( vehicle.position );
+
+			// move to next waypoint if close enough to current target
+
+			if ( distanceSq < ( this.nextWaypointDistance * this.nextWaypointDistance ) ) {
+
+				path.advance();
+
+			}
+
+			const target = path.current();
+
+			if ( path.finished() === true ) {
+
+				this._arrive.target = target;
+				this._arrive.calculate( vehicle, force );
+
+			} else {
+
+				this._seek.target = target;
+				this._seek.calculate( vehicle, force );
+
+			}
+
+			return force;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.path = this.path.toJSON();
+			json.nextWaypointDistance = this.nextWaypointDistance;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {FollowPathBehavior} A reference to this behavior.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.path.fromJSON( json.path );
+			this.nextWaypointDistance = json.nextWaypointDistance;
+
+			return this;
+
+		}
+
+	}
+
+	const midPoint = new Vector3();
+	const translation = new Vector3();
+	const predictedPosition1 = new Vector3();
+	const predictedPosition2 = new Vector3();
+
+	/**
+	* This steering behavior produces a force that moves a vehicle to the midpoint
+	* of the imaginary line connecting two other agents.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments SteeringBehavior
+	*/
+	class InterposeBehavior extends SteeringBehavior {
+
+		/**
+		* Constructs a new interpose behavior.
+		*
+		* @param {MovingEntity} entity1 - The first agent.
+		* @param {MovingEntity} entity2 - The second agent.
+		* @param {Number} deceleration - The amount of deceleration.
+		*/
+		constructor( entity1 = null, entity2 = null, deceleration = 3 ) {
+
+			super();
+
+			/**
+			* The first agent.
+			* @type MovingEntity
+			* @default null
+			*/
+			this.entity1 = entity1;
+
+			/**
+			* The second agent.
+			* @type MovingEntity
+			* @default null
+			*/
+			this.entity2 = entity2;
+
+			/**
+			* The amount of deceleration.
+			* @type Number
+			* @default 3
+			*/
+			this.deceleration = deceleration;
+
+			// internal behaviors
+
+			this._arrive = new ArriveBehavior();
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( vehicle, force /*, delta */ ) {
+
+			const entity1 = this.entity1;
+			const entity2 = this.entity2;
+
+			// first we need to figure out where the two entities are going to be
+			// in the future. This is approximated by determining the time
+			// taken to reach the mid way point at the current time at max speed
+
+			midPoint.addVectors( entity1.position, entity2.position ).multiplyScalar( 0.5 );
+			const time = vehicle.position.distanceTo( midPoint ) / vehicle.maxSpeed;
+
+			// now we have the time, we assume that entity 1 and entity 2 will
+			// continue on a straight trajectory and extrapolate to get their future positions
+
+			translation.copy( entity1.velocity ).multiplyScalar( time );
+			predictedPosition1.addVectors( entity1.position, translation );
+
+			translation.copy( entity2.velocity ).multiplyScalar( time );
+			predictedPosition2.addVectors( entity2.position, translation );
+
+			// calculate the mid point of these predicted positions
+
+			midPoint.addVectors( predictedPosition1, predictedPosition2 ).multiplyScalar( 0.5 );
+
+			// then steer to arrive at it
+
+			this._arrive.deceleration = this.deceleration;
+			this._arrive.target = midPoint;
+			this._arrive.calculate( vehicle, force );
+
+			return force;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.entity1 = this.entity1 ? this.entity1.uuid : null;
+			json.entity2 = this.entity2 ? this.entity2.uuid : null;
+			json.deceleration = this.deceleration;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {InterposeBehavior} A reference to this behavior.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.entity1 = json.entity1;
+			this.entity2 = json.entity2;
+			this.deceleration = json.deceleration;
+
+			return this;
+
+		}
+
+		/**
+		* Restores UUIDs with references to GameEntity objects.
+		*
+		* @param {Map} entities - Maps game entities to UUIDs.
+		* @return {InterposeBehavior} A reference to this behavior.
+		*/
+		resolveReferences( entities ) {
+
+			this.entity1 = entities.get( this.entity1 ) || null;
+			this.entity2 = entities.get( this.entity2 ) || null;
+
+		}
+
+	}
+
+	/**
+	* Class representing a bounding sphere.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class BoundingSphere {
+
+		/**
+		* Constructs a new bounding sphere with the given values.
+		*
+		* @param {Vector3} center - The center position of the bounding sphere.
+		* @param {Number} radius - The radius of the bounding sphere.
+		*/
+		constructor( center = new Vector3(), radius = 0 ) {
+
+			/**
+			* The center position of the bounding sphere.
+			* @type Vector3
+			*/
+			this.center = center;
+
+			/**
+			*  The radius of the bounding sphere.
+			* @type Number
+			*/
+			this.radius = radius;
+
+		}
+
+		/**
+		* Sets the given values to this bounding sphere.
+		*
+		* @param {Vector3} center - The center position of the bounding sphere.
+		* @param {Number} radius - The radius of the bounding sphere.
+		* @return {BoundingSphere} A reference to this bounding sphere.
+		*/
+		set( center, radius ) {
+
+			this.center = center;
+			this.radius = radius;
+
+			return this;
+
+		}
+
+		/**
+		* Copies all values from the given bounding sphere to this bounding sphere.
+		*
+		* @param {BoundingSphere} sphere - The bounding sphere to copy.
+		* @return {BoundingSphere} A reference to this bounding sphere.
+		*/
+		copy( sphere ) {
+
+			this.center.copy( sphere.center );
+			this.radius = sphere.radius;
+
+			return this;
+
+		}
+
+		/**
+		* Creates a new bounding sphere and copies all values from this bounding sphere.
+		*
+		* @return {BoundingSphere} A new bounding sphere.
+		*/
+		clone() {
+
+			return new this.constructor().copy( this );
+
+		}
+
+		/**
+		* Ensures the given point is inside this bounding sphere and stores
+		* the result in the given vector.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		clampPoint( point, result ) {
+
+			result.copy( point );
+
+			const squaredDistance = this.center.squaredDistanceTo( point );
+
+			if ( squaredDistance > ( this.radius * this.radius ) ) {
+
+				result.sub( this.center ).normalize();
+				result.multiplyScalar( this.radius ).add( this.center );
+
+			}
+
+			return result;
+
+		}
+
+		/**
+		* Returns true if the given point is inside this bounding sphere.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @return {Boolean} The result of the containments test.
+		*/
+		containsPoint( point ) {
+
+			return ( point.squaredDistanceTo( this.center ) <= ( this.radius * this.radius ) );
+
+		}
+
+		/**
+		* Returns true if the given bounding sphere intersects this bounding sphere.
+		*
+		* @param {BoundingSphere} sphere - The bounding sphere to test.
+		* @return {Boolean} The result of the intersection test.
+		*/
+		intersectsBoundingSphere( sphere ) {
+
+			const radius = this.radius + sphere.radius;
+
+			return ( sphere.center.squaredDistanceTo( this.center ) <= ( radius * radius ) );
+
+		}
+
+		/**
+		* Returns the normal for a given point on this bounding sphere's surface.
+		*
+		* @param {Vector3} point - The point on the surface
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		getNormalFromSurfacePoint( point, result ) {
+
+			return result.subVectors( point, this.center ).normalize();
+
+		}
+
+		/**
+		* Transforms this bounding sphere with the given 4x4 transformation matrix.
+		*
+		* @param {Matrix4} matrix - The 4x4 transformation matrix.
+		* @return {BoundingSphere} A reference to this bounding sphere.
+		*/
+		applyMatrix4( matrix ) {
+
+			this.center.applyMatrix4( matrix );
+			this.radius = this.radius * matrix.getMaxScale();
+
+			return this;
+
+		}
+
+		/**
+		* Returns true if the given bounding sphere is deep equal with this bounding sphere.
+		*
+		* @param {BoundingSphere} sphere - The bounding sphere to test.
+		* @return {Boolean} The result of the equality test.
+		*/
+		equals( sphere ) {
+
+			return ( sphere.center.equals( this.center ) ) && ( sphere.radius === this.radius );
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			return {
+				type: this.constructor.name,
+				center: this.center.toArray( new Array() ),
+				radius: this.radius
+			};
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {BoundingSphere} A reference to this bounding sphere.
+		*/
+		fromJSON( json ) {
+
+			this.center.fromArray( json.center );
+			this.radius = json.radius;
+
+			return this;
+
+		}
+
+	}
+
+	const v1$1 = new Vector3();
+	const edge1 = new Vector3();
+	const edge2 = new Vector3();
+	const normal = new Vector3();
+
+	/**
+	* Class representing a ray in 3D space.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class Ray {
+
+		/**
+		* Constructs a new ray with the given values.
+		*
+		* @param {Vector3} origin - The origin of the ray.
+		* @param {Vector3} direction - The direction of the ray.
+		*/
+		constructor( origin = new Vector3(), direction = new Vector3() ) {
+
+			/**
+			* The origin of the ray.
+			* @type Vector3
+			*/
+			this.origin = origin;
+
+			/**
+			* The direction of the ray.
+			* @type Vector3
+			*/
+			this.direction = direction;
+
+		}
+
+		/**
+		* Sets the given values to this ray.
+		*
+		* @param {Vector3} origin - The origin of the ray.
+		* @param {Vector3} direction - The direction of the ray.
+		* @return {Ray} A reference to this ray.
+		*/
+		set( origin, direction ) {
+
+			this.origin = origin;
+			this.direction = direction;
+
+			return this;
+
+		}
+
+		/**
+		* Copies all values from the given ray to this ray.
+		*
+		* @param {Ray} ray - The ray to copy.
+		* @return {Ray} A reference to this ray.
+		*/
+		copy( ray ) {
+
+			this.origin.copy( ray.origin );
+			this.direction.copy( ray.direction );
+
+			return this;
+
+		}
+
+		/**
+		* Creates a new ray and copies all values from this ray.
+		*
+		* @return {Ray} A new ray.
+		*/
+		clone() {
+
+			return new this.constructor().copy( this );
+
+		}
+
+		/**
+		* Computes a position on the ray according to the given t value
+		* and stores the result in the given 3D vector. The t value has a range of
+		* [0, Infinity] where 0 means the position is equal with the origin of the ray.
+		*
+		* @param {Number} t - A scalar value representing a position on the ray.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		at( t, result ) {
+
+			// t has to be zero or positive
+			return result.copy( this.direction ).multiplyScalar( t ).add( this.origin );
+
+		}
+
+		/**
+		* Performs a ray/sphere intersection test and stores the intersection point
+		* to the given 3D vector. If no intersection is detected, *null* is returned.
+		*
+		* @param {BoundingSphere} sphere - A bounding sphere.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		intersectBoundingSphere( sphere, result ) {
+
+			v1$1.subVectors( sphere.center, this.origin );
+			const tca = v1$1.dot( this.direction );
+			const d2 = v1$1.dot( v1$1 ) - tca * tca;
+			const radius2 = sphere.radius * sphere.radius;
+
+			if ( d2 > radius2 ) return null;
+
+			const thc = Math.sqrt( radius2 - d2 );
+
+			// t0 = first intersect point - entrance on front of sphere
+
+			const t0 = tca - thc;
+
+			// t1 = second intersect point - exit point on back of sphere
+
+			const t1 = tca + thc;
+
+			// test to see if both t0 and t1 are behind the ray - if so, return null
+
+			if ( t0 < 0 && t1 < 0 ) return null;
+
+			// test to see if t0 is behind the ray:
+			// if it is, the ray is inside the sphere, so return the second exit point scaled by t1,
+			// in order to always return an intersect point that is in front of the ray.
+
+			if ( t0 < 0 ) return this.at( t1, result );
+
+			// else t0 is in front of the ray, so return the first collision point scaled by t0
+
+			return this.at( t0, result );
+
+		}
+
+		/**
+		 * Performs a ray/sphere intersection test. Returns either true or false if
+		 * there is a intersection or not.
+		 *
+		 * @param {BoundingSphere} sphere - A bounding sphere.
+		 * @return {boolean} Whether there is an intersection or not.
+		 */
+		intersectsBoundingSphere( sphere ) {
+
+			const v1 = new Vector3();
+			let squaredDistanceToPoint;
+
+			const directionDistance = v1.subVectors( sphere.center, this.origin ).dot( this.direction );
+
+			if ( directionDistance < 0 ) {
+
+				// sphere's center behind the ray
+
+				squaredDistanceToPoint = this.origin.squaredDistanceTo( sphere.center );
+
+			} else {
+
+				v1.copy( this.direction ).multiplyScalar( directionDistance ).add( this.origin );
+
+				squaredDistanceToPoint = v1.squaredDistanceTo( sphere.center );
+
+			}
+
+
+			return squaredDistanceToPoint <= ( sphere.radius * sphere.radius );
+
+		}
+
+		/**
+		* Performs a ray/AABB intersection test and stores the intersection point
+		* to the given 3D vector. If no intersection is detected, *null* is returned.
+		*
+		* @param {AABB} aabb - An AABB.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		intersectAABB( aabb, result ) {
+
+			let tmin, tmax, tymin, tymax, tzmin, tzmax;
+
+			const invdirx = 1 / this.direction.x,
+				invdiry = 1 / this.direction.y,
+				invdirz = 1 / this.direction.z;
+
+			const origin = this.origin;
+
+			if ( invdirx >= 0 ) {
+
+				tmin = ( aabb.min.x - origin.x ) * invdirx;
+				tmax = ( aabb.max.x - origin.x ) * invdirx;
+
+			} else {
+
+				tmin = ( aabb.max.x - origin.x ) * invdirx;
+				tmax = ( aabb.min.x - origin.x ) * invdirx;
+
+			}
+
+			if ( invdiry >= 0 ) {
+
+				tymin = ( aabb.min.y - origin.y ) * invdiry;
+				tymax = ( aabb.max.y - origin.y ) * invdiry;
+
+			} else {
+
+				tymin = ( aabb.max.y - origin.y ) * invdiry;
+				tymax = ( aabb.min.y - origin.y ) * invdiry;
+
+			}
+
+			if ( ( tmin > tymax ) || ( tymin > tmax ) ) return null;
+
+			// these lines also handle the case where tmin or tmax is NaN
+			// (result of 0 * Infinity). x !== x returns true if x is NaN
+
+			if ( tymin > tmin || tmin !== tmin ) tmin = tymin;
+
+			if ( tymax < tmax || tmax !== tmax ) tmax = tymax;
+
+			if ( invdirz >= 0 ) {
+
+				tzmin = ( aabb.min.z - origin.z ) * invdirz;
+				tzmax = ( aabb.max.z - origin.z ) * invdirz;
+
+			} else {
+
+				tzmin = ( aabb.max.z - origin.z ) * invdirz;
+				tzmax = ( aabb.min.z - origin.z ) * invdirz;
+
+			}
+
+			if ( ( tmin > tzmax ) || ( tzmin > tmax ) ) return null;
+
+			if ( tzmin > tmin || tmin !== tmin ) tmin = tzmin;
+
+			if ( tzmax < tmax || tmax !== tmax ) tmax = tzmax;
+
+			// return point closest to the ray (positive side)
+
+			if ( tmax < 0 ) return null;
+
+			return this.at( tmin >= 0 ? tmin : tmax, result );
+
+		}
+
+		/**
+		 * Performs a ray/AABB intersection test. Returns either true or false if
+		 * there is a intersection or not.
+		 *
+		 * @param {AABB} aabb - An axis-aligned bounding box.
+		 * @return {boolean} Whether there is an intersection or not.
+		 */
+		intersectsAABB( aabb ) {
+
+			return this.intersectAABB( aabb, v1$1 ) !== null;
+
+		}
+
+		/**
+		* Performs a ray/plane intersection test and stores the intersection point
+		* to the given 3D vector. If no intersection is detected, *null* is returned.
+		*
+		* @param {Plane} plane - A plane.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		intersectPlane( plane, result ) {
+
+			let t;
+
+			const denominator = plane.normal.dot( this.direction );
+
+			if ( denominator === 0 ) {
+
+				if ( plane.distanceToPoint( this.origin ) === 0 ) {
+
+					// ray is coplanar
+
+					t = 0;
+
+				} else {
+
+					// ray is parallel, no intersection
+
+					return null;
+
+				}
+
+			} else {
+
+				t = - ( this.origin.dot( plane.normal ) + plane.constant ) / denominator;
+
+			}
+
+			// there is no intersection if t is negative
+
+			return ( t >= 0 ) ? this.at( t, result ) : null;
+
+		}
+
+		/**
+		 * Performs a ray/plane intersection test. Returns either true or false if
+		 * there is a intersection or not.
+		 *
+		 * @param {Plane} plane - A plane.
+		 * @return {boolean} Whether there is an intersection or not.
+		 */
+		intersectsPlane( plane ) {
+
+			// check if the ray lies on the plane first
+
+			const distToPoint = plane.distanceToPoint( this.origin );
+
+			if ( distToPoint === 0 ) {
+
+				return true;
+
+			}
+
+			const denominator = plane.normal.dot( this.direction );
+
+			if ( denominator * distToPoint < 0 ) {
+
+				return true;
+
+			}
+
+			// ray origin is behind the plane (and is pointing behind it)
+
+			return false;
+
+		}
+
+		/**
+		* Performs a ray/triangle intersection test and stores the intersection point
+		* to the given 3D vector. If no intersection is detected, *null* is returned.
+		*
+		* @param {Triangle} triangle - A triangle.
+		* @param {Boolean} backfaceCulling - Whether back face culling is active or not.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		intersectTriangle( triangle, backfaceCulling, result ) {
+
+			// reference: https://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
+
+			const a = triangle.a;
+			const b = triangle.b;
+			const c = triangle.c;
+
+			edge1.subVectors( b, a );
+			edge2.subVectors( c, a );
+			normal.crossVectors( edge1, edge2 );
+
+			let DdN = this.direction.dot( normal );
+			let sign;
+
+			if ( DdN > 0 ) {
+
+				if ( backfaceCulling ) return null;
+				sign = 1;
+
+			} else if ( DdN < 0 ) {
+
+				sign = - 1;
+				DdN = - DdN;
+
+			} else {
+
+				return null;
+
+			}
+
+			v1$1.subVectors( this.origin, a );
+			const DdQxE2 = sign * this.direction.dot( edge2.crossVectors( v1$1, edge2 ) );
+
+			// b1 < 0, no intersection
+
+			if ( DdQxE2 < 0 ) {
+
+				return null;
+
+			}
+
+			const DdE1xQ = sign * this.direction.dot( edge1.cross( v1$1 ) );
+
+			// b2 < 0, no intersection
+
+			if ( DdE1xQ < 0 ) {
+
+				return null;
+
+			}
+
+			// b1 + b2 > 1, no intersection
+
+			if ( DdQxE2 + DdE1xQ > DdN ) {
+
+				return null;
+
+			}
+
+			// line intersects triangle, check if ray does
+
+			const QdN = - sign * v1$1.dot( normal );
+
+			// t < 0, no intersection
+
+			if ( QdN < 0 ) {
+
+				return null;
+
+			}
+
+			// ray intersects triangle
+
+			return this.at( QdN / DdN, result );
+
+		}
+
+		/**
+		* Transforms this ray by the given 4x4 matrix.
+		*
+		* @param {Matrix4} m - The 4x4 matrix.
+		* @return {Ray} A reference to this ray.
+		*/
+		applyMatrix4( m ) {
+
+			this.origin.applyMatrix4( m );
+			this.direction.transformDirection( m );
+
+			return this;
+
+		}
+
+		/**
+		* Returns true if the given ray is deep equal with this ray.
+		*
+		* @param {Ray} ray - The ray to test.
+		* @return {Boolean} The result of the equality test.
+		*/
+		equals( ray ) {
+
+			return ray.origin.equals( this.origin ) && ray.direction.equals( this.direction );
+
+		}
+
+	}
+
+	const inverse = new Matrix4();
+	const localPositionOfObstacle = new Vector3();
+	const localPositionOfClosestObstacle = new Vector3();
+	const intersectionPoint = new Vector3();
+	const boundingSphere = new BoundingSphere();
+
+	const ray = new Ray( new Vector3( 0, 0, 0 ), new Vector3( 0, 0, 1 ) );
+
+	/**
+	* This steering behavior produces a force so a vehicle avoids obstacles lying in its path.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @author {@link https://github.com/robp94|robp94}
+	* @augments SteeringBehavior
+	*/
+	class ObstacleAvoidanceBehavior extends SteeringBehavior {
+
+		/**
+		* Constructs a new obstacle avoidance behavior.
+		*
+		* @param {Array} obstacles - An Array with obstacle of type {@link GameEntity}.
+		*/
+		constructor( obstacles = new Array() ) {
+
+			super();
+
+			/**
+			* An Array with obstacle of type {@link GameEntity}.
+			* @type Array
+			*/
+			this.obstacles = obstacles;
+
+			/**
+			* This factor determines how much the vehicle decelerates if an intersection occurs.
+			* @type Number
+			* @default 0.2
+			*/
+			this.brakingWeight = 0.2;
+
+			/**
+			* Minimum length of the detection box used for intersection tests.
+			* @type Number
+			* @default 4
+			*/
+			this.dBoxMinLength = 4; //
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( vehicle, force /*, delta */ ) {
+
+			const obstacles = this.obstacles;
+
+			// this will keep track of the closest intersecting obstacle
+
+			let closestObstacle = null;
+
+			// this will be used to track the distance to the closest obstacle
+
+			let distanceToClosestObstacle = Infinity;
+
+			// the detection box length is proportional to the agent's velocity
+
+			const dBoxLength = this.dBoxMinLength + ( vehicle.getSpeed() / vehicle.maxSpeed ) * this.dBoxMinLength;
+
+			vehicle.matrix.getInverse( inverse );
+
+			for ( let i = 0, l = obstacles.length; i < l; i ++ ) {
+
+				const obstacle = obstacles[ i ];
+
+				if ( obstacle === vehicle ) continue;
+
+				// calculate this obstacle's position in local space of the vehicle
+
+				localPositionOfObstacle.copy( obstacle.position ).applyMatrix4( inverse );
+
+				// if the local position has a positive z value then it must lay behind the agent.
+				// besides the absolute z value must be smaller than the length of the detection box
+
+				if ( localPositionOfObstacle.z > 0 && Math.abs( localPositionOfObstacle.z ) < dBoxLength ) {
+
+					// if the distance from the x axis to the object's position is less
+					// than its radius + half the width of the detection box then there is a potential intersection
+
+					const expandedRadius = obstacle.boundingRadius + vehicle.boundingRadius;
+
+					if ( Math.abs( localPositionOfObstacle.x ) < expandedRadius ) {
+
+						// do intersection test in local space of the vehicle
+
+						boundingSphere.center.copy( localPositionOfObstacle );
+						boundingSphere.radius = expandedRadius;
+
+						ray.intersectBoundingSphere( boundingSphere, intersectionPoint );
+
+						// compare distances
+
+						if ( intersectionPoint.z < distanceToClosestObstacle ) {
+
+							// save new minimum distance
+
+							distanceToClosestObstacle = intersectionPoint.z;
+
+							// save closest obstacle
+
+							closestObstacle = obstacle;
+
+							// save local position for force calculation
+
+							localPositionOfClosestObstacle.copy( localPositionOfObstacle );
+
+						}
+
+					}
+
+				}
+
+			}
+
+			// if we have found an intersecting obstacle, calculate a steering force away from it
+
+			if ( closestObstacle !== null ) {
+
+				// the closer the agent is to an object, the stronger the steering force should be
+
+				const multiplier = 1 + ( ( dBoxLength - localPositionOfClosestObstacle.z ) / dBoxLength );
+
+				// calculate the lateral force
+
+				force.x = ( closestObstacle.boundingRadius - localPositionOfClosestObstacle.x ) * multiplier;
+
+				// apply a braking force proportional to the obstacles distance from the vehicle
+
+				force.z = ( closestObstacle.boundingRadius - localPositionOfClosestObstacle.z ) * this.brakingWeight;
+
+				// finally, convert the steering vector from local to world space (just apply the rotation)
+
+				force.applyRotation( vehicle.rotation );
+
+			}
+
+			return force;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.obstacles = new Array();
+			json.brakingWeight = this.brakingWeight;
+			json.dBoxMinLength = this.dBoxMinLength;
+
+			// obstacles
+
+			for ( let i = 0, l = this.obstacles.length; i < l; i ++ ) {
+
+				json.obstacles.push( this.obstacles[ i ].uuid );
+
+			}
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {ObstacleAvoidanceBehavior} A reference to this behavior.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.obstacles = json.obstacles;
+			this.brakingWeight = json.brakingWeight;
+			this.dBoxMinLength = json.dBoxMinLength;
+
+			return this;
+
+		}
+
+		/**
+		* Restores UUIDs with references to GameEntity objects.
+		*
+		* @param {Map} entities - Maps game entities to UUIDs.
+		* @return {ObstacleAvoidanceBehavior} A reference to this behavior.
+		*/
+		resolveReferences( entities ) {
+
+			const obstacles = this.obstacles;
+
+			for ( let i = 0, l = obstacles.length; i < l; i ++ ) {
+
+				obstacles[ i ] = entities.get( obstacles[ i ] );
+
+			}
+
+
+		}
+
+	}
+
+	const offsetWorld = new Vector3();
+	const toOffset = new Vector3();
+	const newLeaderVelocity = new Vector3();
+	const predictedPosition$1 = new Vector3();
+
+	/**
+	* This steering behavior produces a force that keeps a vehicle at a specified offset from a leader vehicle.
+	* Useful for creating formations.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments SteeringBehavior
+	*/
+	class OffsetPursuitBehavior extends SteeringBehavior {
+
+		/**
+		* Constructs a new offset pursuit behavior.
+		*
+		* @param {Vehicle} leader - The leader vehicle.
+		* @param {Vector3} offset - The offset from the leader.
+		*/
+		constructor( leader = null, offset = new Vector3() ) {
+
+			super();
+
+			/**
+			* The leader vehicle.
+			* @type Vehicle
+			*/
+			this.leader = leader;
+
+			/**
+			* The offset from the leader.
+			* @type Vector3
+			*/
+			this.offset = offset;
+
+			// internal behaviors
+
+			this._arrive = new ArriveBehavior();
+			this._arrive.deceleration = 1.5;
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( vehicle, force /*, delta */ ) {
+
+			const leader = this.leader;
+			const offset = this.offset;
+
+			// calculate the offset's position in world space
+
+			offsetWorld.copy( offset ).applyMatrix4( leader.matrix );
+
+			// calculate the vector that points from the vehicle to the offset position
+
+			toOffset.subVectors( offsetWorld, vehicle.position );
+
+			// the lookahead time is proportional to the distance between the leader
+			// and the pursuer and is inversely proportional to the sum of both
+			// agent's velocities
+
+			const lookAheadTime = toOffset.length() / ( vehicle.maxSpeed + leader.getSpeed() );
+
+			// calculate new velocity and predicted future position
+
+			newLeaderVelocity.copy( leader.velocity ).multiplyScalar( lookAheadTime );
+
+			predictedPosition$1.addVectors( offsetWorld, newLeaderVelocity );
+
+			// now arrive at the predicted future position of the offset
+
+			this._arrive.target = predictedPosition$1;
+			this._arrive.calculate( vehicle, force );
+
+			return force;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.leader = this.leader ? this.leader.uuid : null;
+			json.offset = this.offset;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {OffsetPursuitBehavior} A reference to this behavior.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.leader = json.leader;
+			this.offset = json.offset;
+
+			return this;
+
+		}
+
+
+		/**
+		* Restores UUIDs with references to GameEntity objects.
+		*
+		* @param {Map} entities - Maps game entities to UUIDs.
+		* @return {OffsetPursuitBehavior} A reference to this behavior.
+		*/
+		resolveReferences( entities ) {
+
+			this.leader = entities.get( this.leader ) || null;
+
+		}
+
+	}
+
+	const displacement$3 = new Vector3();
+	const vehicleDirection = new Vector3();
+	const evaderDirection = new Vector3();
+	const newEvaderVelocity = new Vector3();
+	const predictedPosition$2 = new Vector3();
+
+	/**
+	* This steering behavior is useful when an agent is required to intercept a moving agent.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments SteeringBehavior
+	*/
+	class PursuitBehavior extends SteeringBehavior {
+
+		/**
+		* Constructs a new pursuit behavior.
+		*
+		* @param {MovingEntity} evader - The agent to pursue.
+		* @param {Number} predictionFactor -  This factor determines how far the vehicle predicts the movement of the evader.
+		*/
+		constructor( evader = null, predictionFactor = 1 ) {
+
+			super();
+
+			/**
+			* The agent to pursue.
+			* @type MovingEntity
+			* @default null
+			*/
+			this.evader = evader;
+
+			/**
+			* This factor determines how far the vehicle predicts the movement of the evader.
+			* @type Number
+			* @default 1
+			*/
+			this.predictionFactor = predictionFactor;
+
+			// internal behaviors
+
+			this._seek = new SeekBehavior();
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( vehicle, force /*, delta */ ) {
+
+			const evader = this.evader;
+
+			displacement$3.subVectors( evader.position, vehicle.position );
+
+			// 1. if the evader is ahead and facing the agent then we can just seek for the evader's current position
+
+			vehicle.getDirection( vehicleDirection );
+			evader.getDirection( evaderDirection );
+
+			// first condition: evader must be in front of the pursuer
+
+			const evaderAhead = displacement$3.dot( vehicleDirection ) > 0;
+
+			// second condition: evader must almost directly facing the agent
+
+			const facing = vehicleDirection.dot( evaderDirection ) < - 0.95;
+
+			if ( evaderAhead === true && facing === true ) {
+
+				this._seek.target = evader.position;
+				this._seek.calculate( vehicle, force );
+				return force;
+
+			}
+
+			// 2. evader not considered ahead so we predict where the evader will be
+
+			// the lookahead time is proportional to the distance between the evader
+			// and the pursuer. and is inversely proportional to the sum of the
+			// agent's velocities
+
+			let lookAheadTime = displacement$3.length() / ( vehicle.maxSpeed + evader.getSpeed() );
+			lookAheadTime *= this.predictionFactor; // tweak the magnitude of the prediction
+
+			// calculate new velocity and predicted future position
+
+			newEvaderVelocity.copy( evader.velocity ).multiplyScalar( lookAheadTime );
+			predictedPosition$2.addVectors( evader.position, newEvaderVelocity );
+
+			// now seek to the predicted future position of the evader
+
+			this._seek.target = predictedPosition$2;
+			this._seek.calculate( vehicle, force );
+
+			return force;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.evader = this.evader ? this.evader.uuid : null;
+			json.predictionFactor = this.predictionFactor;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {PursuitBehavior} A reference to this behavior.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.evader = json.evader;
+			this.predictionFactor = json.predictionFactor;
+
+			return this;
+
+		}
+
+		/**
+		* Restores UUIDs with references to GameEntity objects.
+		*
+		* @param {Map} entities - Maps game entities to UUIDs.
+		* @return {PursuitBehavior} A reference to this behavior.
+		*/
+		resolveReferences( entities ) {
+
+			this.evader = entities.get( this.evader ) || null;
+
+		}
+
+	}
+
+	const toAgent = new Vector3();
+
+	/**
+	* This steering produces a force that steers a vehicle away from those in its neighborhood region.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments SteeringBehavior
+	*/
+	class SeparationBehavior extends SteeringBehavior {
+
+		/**
+		* Constructs a new separation behavior.
+		*/
+		constructor() {
+
+			super();
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( vehicle, force /*, delta */ ) {
+
+			const neighbors = vehicle.neighbors;
+
+			for ( let i = 0, l = neighbors.length; i < l; i ++ ) {
+
+				const neighbor = neighbors[ i ];
+
+				toAgent.subVectors( vehicle.position, neighbor.position );
+
+				let length = toAgent.length();
+
+				// handle zero length if both vehicles have the same position
+
+				if ( length === 0 ) length = 0.0001;
+
+				// scale the force inversely proportional to the agents distance from its neighbor
+
+				toAgent.normalize().divideScalar( length );
+
+				force.add( toAgent );
+
+			}
+
+			return force;
+
+		}
+
+	}
+
+	const targetWorld = new Vector3();
+	const randomDisplacement = new Vector3();
+
+	/**
+	* This steering behavior produces a steering force that will give the
+	* impression of a random walk through the agent’s environment. The behavior only
+	* produces a 2D force (XZ).
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments SteeringBehavior
+	*/
+	class WanderBehavior extends SteeringBehavior {
+
+		/**
+		* Constructs a new wander behavior.
+		*
+		* @param {Number} radius - The radius of the wander circle for the wander behavior.
+		* @param {Number} distance - The distance the wander circle is projected in front of the agent.
+		* @param {Number} jitter - The maximum amount of displacement along the sphere each frame.
+		*/
+		constructor( radius = 1, distance = 5, jitter = 5 ) {
+
+			super();
+
+			/**
+			* The radius of the constraining circle for the wander behavior.
+			* @type Number
+			* @default 1
+			*/
+			this.radius = radius;
+
+			/**
+			* The distance the wander sphere is projected in front of the agent.
+			* @type Number
+			* @default 5
+			*/
+			this.distance = distance;
+
+			/**
+			* The maximum amount of displacement along the sphere each frame.
+			* @type Number
+			* @default 5
+			*/
+			this.jitter = jitter;
+
+			this._targetLocal = new Vector3();
+
+			generateRandomPointOnCircle( this.radius, this._targetLocal );
+
+		}
+
+		/**
+		* Calculates the steering force for a single simulation step.
+		*
+		* @param {Vehicle} vehicle - The game entity the force is produced for.
+		* @param {Vector3} force - The force/result vector.
+		* @param {Number} delta - The time delta.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( vehicle, force, delta ) {
+
+			// this behavior is dependent on the update rate, so this line must be
+			// included when using time independent frame rate
+
+			const jitterThisTimeSlice = this.jitter * delta;
+
+			// prepare random vector
+
+			randomDisplacement.x = MathUtils.randFloat( - 1, 1 ) * jitterThisTimeSlice;
+			randomDisplacement.z = MathUtils.randFloat( - 1, 1 ) * jitterThisTimeSlice;
+
+			// add random vector to the target's position
+
+			this._targetLocal.add( randomDisplacement );
+
+			// re-project this new vector back onto a unit sphere
+
+			this._targetLocal.normalize();
+
+			// increase the length of the vector to the same as the radius of the wander sphere
+
+			this._targetLocal.multiplyScalar( this.radius );
+
+			// move the target into a position wanderDist in front of the agent
+
+			targetWorld.copy( this._targetLocal );
+			targetWorld.z += this.distance;
+
+			// project the target into world space
+
+			targetWorld.applyMatrix4( vehicle.worldMatrix );
+
+			// and steer towards it
+
+			force.subVectors( targetWorld, vehicle.position );
+
+			return force;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.radius = this.radius;
+			json.distance = this.distance;
+			json.jitter = this.jitter;
+			json._targetLocal = this._targetLocal.toArray( new Array() );
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {WanderBehavior} A reference to this behavior.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.radius = json.radius;
+			this.distance = json.distance;
+			this.jitter = json.jitter;
+			this._targetLocal.fromArray( json._targetLocal );
+
+			return this;
+
+		}
+
+	}
+
+	//
+
+	function generateRandomPointOnCircle( radius, target ) {
+
+		const theta = Math.random() * Math.PI * 2;
+
+		target.x = radius * Math.cos( theta );
+		target.z = radius * Math.sin( theta );
+
+	}
+
+	const force = new Vector3();
+
+	/**
+	* This class is responsible for managing the steering of a single vehicle. The steering manager
+	* can manage multiple steering behaviors and combine their produced force into a single one used
+	* by the vehicle.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class SteeringManager {
+
+		/**
+		* Constructs a new steering manager.
+		*
+		* @param  {Vehicle} vehicle - The vehicle that owns this steering manager.
+		*/
+		constructor( vehicle ) {
+
+			/**
+			* The vehicle that owns this steering manager.
+			* @type Vehicle
+			*/
+			this.vehicle = vehicle;
+
+			/**
+			* A list of all steering behaviors.
+			* @type Array
+			*/
+			this.behaviors = new Array();
+
+			this._steeringForce = new Vector3(); // the calculated steering force per simulation step
+			this._typesMap = new Map(); // used for deserialization of custom behaviors
+
+		}
+
+		/**
+		* Adds the given steering behavior to this steering manager.
+		*
+		* @param {SteeringBehavior} behavior - The steering behavior to add.
+		* @return {SteeringManager} A reference to this steering manager.
+		*/
+		add( behavior ) {
+
+			this.behaviors.push( behavior );
+
+			return this;
+
+		}
+
+		/**
+		* Removes the given steering behavior from this steering manager.
+		*
+		* @param {SteeringBehavior} behavior - The steering behavior to remove.
+		* @return {SteeringManager} A reference to this steering manager.
+		*/
+		remove( behavior ) {
+
+			const index = this.behaviors.indexOf( behavior );
+			this.behaviors.splice( index, 1 );
+
+			return this;
+
+		}
+
+		/**
+		* Clears the internal state of this steering manager.
+		*
+		* @return {SteeringManager} A reference to this steering manager.
+		*/
+		clear() {
+
+			this.behaviors.length = 0;
+
+			return this;
+
+		}
+
+		/**
+		* Calculates the steering forces for all active steering behaviors and
+		* combines it into a single result force. This method is called in
+		* {@link Vehicle#update}.
+		*
+		* @param {Number} delta - The time delta.
+		* @param {Vector3} result - The force/result vector.
+		* @return {Vector3} The force/result vector.
+		*/
+		calculate( delta, result ) {
+
+			this._calculateByOrder( delta );
+
+			return result.copy( this._steeringForce );
+
+		}
+
+		// this method calculates how much of its max steering force the vehicle has
+		// left to apply and then applies that amount of the force to add
+
+		_accumulate( forceToAdd ) {
+
+			// calculate how much steering force the vehicle has used so far
+
+			const magnitudeSoFar = this._steeringForce.length();
+
+			// calculate how much steering force remains to be used by this vehicle
+
+			const magnitudeRemaining = this.vehicle.maxForce - magnitudeSoFar;
+
+			// return false if there is no more force left to use
+
+			if ( magnitudeRemaining <= 0 ) return false;
+
+			// calculate the magnitude of the force we want to add
+
+			const magnitudeToAdd = forceToAdd.length();
+
+			// restrict the magnitude of forceToAdd, so we don't exceed the max force of the vehicle
+
+			if ( magnitudeToAdd > magnitudeRemaining ) {
+
+				forceToAdd.normalize().multiplyScalar( magnitudeRemaining );
+
+			}
+
+			// add force
+
+			this._steeringForce.add( forceToAdd );
+
+			return true;
+
+		}
+
+		_calculateByOrder( delta ) {
+
+			const behaviors = this.behaviors;
+
+			// reset steering force
+
+			this._steeringForce.set( 0, 0, 0 );
+
+			// calculate for each behavior the respective force
+
+			for ( let i = 0, l = behaviors.length; i < l; i ++ ) {
+
+				const behavior = behaviors[ i ];
+
+				if ( behavior.active === true ) {
+
+					force.set( 0, 0, 0 );
+
+					behavior.calculate( this.vehicle, force, delta );
+
+					force.multiplyScalar( behavior.weight );
+
+					if ( this._accumulate( force ) === false ) return;
+
+				}
+
+			}
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const data = {
+				type: 'SteeringManager',
+				behaviors: new Array()
+			};
+
+			const behaviors = this.behaviors;
+
+			for ( let i = 0, l = behaviors.length; i < l; i ++ ) {
+
+				const behavior = behaviors[ i ];
+				data.behaviors.push( behavior.toJSON() );
+
+			}
+
+			return data;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {SteeringManager} A reference to this steering manager.
+		*/
+		fromJSON( json ) {
+
+			this.clear();
+
+			const behaviorsJSON = json.behaviors;
+
+			for ( let i = 0, l = behaviorsJSON.length; i < l; i ++ ) {
+
+				const behaviorJSON = behaviorsJSON[ i ];
+				const type = behaviorJSON.type;
+
+				let behavior;
+
+				switch ( type ) {
+
+					case 'SteeringBehavior':
+						behavior = new SteeringBehavior().fromJSON( behaviorJSON );
+						break;
+
+					case 'AlignmentBehavior':
+						behavior = new AlignmentBehavior().fromJSON( behaviorJSON );
+						break;
+
+					case 'ArriveBehavior':
+						behavior = new ArriveBehavior().fromJSON( behaviorJSON );
+						break;
+
+					case 'CohesionBehavior':
+						behavior = new CohesionBehavior().fromJSON( behaviorJSON );
+						break;
+
+					case 'EvadeBehavior':
+						behavior = new EvadeBehavior().fromJSON( behaviorJSON );
+						break;
+
+					case 'FleeBehavior':
+						behavior = new FleeBehavior().fromJSON( behaviorJSON );
+						break;
+
+					case 'FollowPathBehavior':
+						behavior = new FollowPathBehavior().fromJSON( behaviorJSON );
+						break;
+
+					case 'InterposeBehavior':
+						behavior = new InterposeBehavior().fromJSON( behaviorJSON );
+						break;
+
+					case 'ObstacleAvoidanceBehavior':
+						behavior = new ObstacleAvoidanceBehavior().fromJSON( behaviorJSON );
+						break;
+
+					case 'OffsetPursuitBehavior':
+						behavior = new OffsetPursuitBehavior().fromJSON( behaviorJSON );
+						break;
+
+					case 'PursuitBehavior':
+						behavior = new PursuitBehavior().fromJSON( behaviorJSON );
+						break;
+
+					case 'SeekBehavior':
+						behavior = new SeekBehavior().fromJSON( behaviorJSON );
+						break;
+
+					case 'SeparationBehavior':
+						behavior = new SeparationBehavior().fromJSON( behaviorJSON );
+						break;
+
+					case 'WanderBehavior':
+						behavior = new WanderBehavior().fromJSON( behaviorJSON );
+						break;
+
+					default:
+
+						// handle custom type
+
+						const ctor = this._typesMap.get( type );
+
+						if ( ctor !== undefined ) {
+
+							behavior = new ctor().fromJSON( behaviorJSON );
+
+						} else {
+
+							Logger.warn( 'YUKA.SteeringManager: Unsupported steering behavior type:', type );
+							continue;
+
+						}
+
+				}
+
+				this.add( behavior );
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		 * Registers a custom type for deserialization. When calling {@link SteeringManager#fromJSON}
+		 * the steering manager is able to pick the correct constructor in order to create custom
+		 * steering behavior.
+		 *
+		 * @param {String} type - The name of the behavior type.
+		 * @param {Function} constructor -  The constructor function.
+		 * @return {SteeringManager} A reference to this steering manager.
+		 */
+		registerType( type, constructor ) {
+
+			this._typesMap.set( type, constructor );
+
+			return this;
+
+		}
+
+		/**
+		* Restores UUIDs with references to GameEntity objects.
+		*
+		* @param {Map} entities - Maps game entities to UUIDs.
+		* @return {SteeringManager} A reference to this steering manager.
+		*/
+		resolveReferences( entities ) {
+
+			const behaviors = this.behaviors;
+
+			for ( let i = 0, l = behaviors.length; i < l; i ++ ) {
+
+				const behavior = behaviors[ i ];
+				behavior.resolveReferences( entities );
+
+
+			}
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* This class can be used to smooth the result of a vector calculation. One use case
+	* is the smoothing of the velocity vector of game entities in order to avoid a shaky
+	* movements du to conflicting forces.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @author {@link https://github.com/robp94|robp94}
+	*/
+	class Smoother {
+
+		/**
+		* Constructs a new smoother.
+		*
+		* @param  {Number} count - The amount of samples the smoother will use to average a vector.
+		*/
+		constructor( count = 10 ) {
+
+			/**
+			* The amount of samples the smoother will use to average a vector.
+			* @type Number
+			* @default 10
+			*/
+			this.count = count;
+
+			this._history = []; // this holds the history
+			this._slot = 0; // the current sample slot
+
+			// initialize history with Vector3s
+
+			for ( let i = 0; i < this.count; i ++ ) {
+
+				this._history[ i ] = new Vector3();
+
+			}
+
+		}
+
+		/**
+		* Calculates for the given value a smooth average.
+		*
+		* @param {Vector3} value - The value to smooth.
+		* @param {Vector3} average - The calculated average.
+		* @return {Vector3} The calculated average.
+		*/
+		calculate( value, average ) {
+
+			// ensure, average is a zero vector
+
+			average.set( 0, 0, 0 );
+
+			// make sure the slot index wraps around
+
+			if ( this._slot === this.count ) {
+
+				this._slot = 0;
+
+			}
+
+			// overwrite the oldest value with the newest
+
+			this._history[ this._slot ].copy( value );
+
+			// increase slot index
+
+			this._slot ++;
+
+			// now calculate the average of the history array
+
+			for ( let i = 0; i < this.count; i ++ ) {
+
+				average.add( this._history[ i ] );
+
+			}
+
+			average.divideScalar( this.count );
+
+			return average;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const data = {
+				type: this.constructor.name,
+				count: this.count,
+				_history: new Array(),
+				_slot: this._slot
+			};
+
+			// history
+
+			const history = this._history;
+
+			for ( let i = 0, l = history.length; i < l; i ++ ) {
+
+				const value = history[ i ];
+				data._history.push( value.toArray( new Array() ) );
+
+			}
+
+			return data;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {Smoother} A reference to this smoother.
+		*/
+		fromJSON( json ) {
+
+			this.count = json.count;
+			this._slot = json._slot;
+
+			// history
+
+			const historyJSON = json._history;
+			this._history.length = 0;
+
+			for ( let i = 0, l = historyJSON.length; i < l; i ++ ) {
+
+				const valueJSON = historyJSON[ i ];
+				this._history.push( new Vector3().fromArray( valueJSON ) );
+
+			}
+
+
+			return this;
+
+		}
+
+	}
+
+	const steeringForce = new Vector3();
+	const displacement$4 = new Vector3();
+	const acceleration = new Vector3();
+	const target$1 = new Vector3();
+	const velocitySmooth = new Vector3();
+
+	/**
+	* This type of game entity implements a special type of locomotion, the so called
+	* *Vehicle Model*. The class uses basic physical metrics in order to implement a
+	* realistic movement.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @author {@link https://github.com/robp94|robp94}
+	* @augments MovingEntity
+	*/
+	class Vehicle extends MovingEntity {
+
+		/**
+		* Constructs a new vehicle.
+		*/
+		constructor() {
+
+			super();
+
+			/**
+			* The mass if the vehicle in kilogram.
+			* @type Number
+			* @default 1
+			*/
+			this.mass = 1;
+
+			/**
+			* The maximum force this entity can produce to power itself.
+			* @type Number
+			* @default 100
+			*/
+			this.maxForce = 100;
+
+			/**
+			* The steering manager of this vehicle.
+			* @type SteeringManager
+			*/
+			this.steering = new SteeringManager( this );
+
+			/**
+			* An optional smoother to avoid shakiness due to conflicting steering behaviors.
+			* @type Smoother
+			* @default null
+			*/
+			this.smoother = null;
+
+		}
+
+		/**
+		* This method is responsible for updating the position based on the force produced
+		* by the internal steering manager.
+		*
+		* @param {Number} delta - The time delta.
+		* @return {Vehicle} A reference to this vehicle.
+		*/
+		update( delta ) {
+
+			// calculate steering force
+
+			this.steering.calculate( delta, steeringForce );
+
+			// acceleration = force / mass
+
+			acceleration.copy( steeringForce ).divideScalar( this.mass );
+
+			// update velocity
+
+			this.velocity.add( acceleration.multiplyScalar( delta ) );
+
+			// make sure vehicle does not exceed maximum speed
+
+			if ( this.getSpeedSquared() > ( this.maxSpeed * this.maxSpeed ) ) {
+
+				this.velocity.normalize();
+				this.velocity.multiplyScalar( this.maxSpeed );
+
+			}
+
+			// calculate displacement
+
+			displacement$4.copy( this.velocity ).multiplyScalar( delta );
+
+			// calculate target position
+
+			target$1.copy( this.position ).add( displacement$4 );
+
+			// update the orientation if the vehicle has a non zero velocity
+
+			if ( this.updateOrientation === true && this.smoother === null && this.getSpeedSquared() > 0.00000001 ) {
+
+				this.lookAt( target$1 );
+
+			}
+
+			// update position
+
+			this.position.copy( target$1 );
+
+			// if smoothing is enabled, the orientation (not the position!) of the vehicle is
+			// changed based on a post-processed velocity vector
+
+			if ( this.updateOrientation === true && this.smoother !== null ) {
+
+				this.smoother.calculate( this.velocity, velocitySmooth );
+
+				displacement$4.copy( velocitySmooth ).multiplyScalar( delta );
+				target$1.copy( this.position ).add( displacement$4 );
+
+				this.lookAt( target$1 );
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.mass = this.mass;
+			json.maxForce = this.maxForce;
+			json.steering = this.steering.toJSON();
+			json.smoother = this.smoother ? this.smoother.toJSON() : null;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {Vehicle} A reference to this vehicle.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.mass = json.mass;
+			this.maxForce = json.maxForce;
+			this.steering = new SteeringManager( this ).fromJSON( json.steering );
+			this.smoother = json.smoother ? new Smoother().fromJSON( json.smoother ) : null;
+
+			return this;
+
+		}
+
+		/**
+		* Restores UUIDs with references to GameEntity objects.
+		*
+		* @param {Map} entities - Maps game entities to UUIDs.
+		* @return {Vehicle} A reference to this vehicle.
+		*/
+		resolveReferences( entities ) {
+
+			super.resolveReferences( entities );
+
+			this.steering.resolveReferences( entities );
+
+		}
+
+	}
+
+	/**
+	* Base class for representing trigger regions. It's a predefine region in 3D space,
+	* owned by one or more triggers. The shape of the trigger can be arbitrary.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class TriggerRegion {
+
+		/**
+		* Returns true if the bounding volume of the given game entity touches/intersects
+		* the trigger region. Must be implemented by all concrete trigger regions.
+		*
+		* @param {GameEntity} entity - The entity to test.
+		* @return {Boolean} Whether this trigger touches the given game entity or not.
+		*/
+		touching( /* entity */ ) {
+
+			return false;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			return {
+				type: this.constructor.name
+			};
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {TriggerRegion} A reference to this trigger region.
+		*/
+		fromJSON( /* json */ ) {
+
+			return this;
+
+		}
+
+	}
+
+	const vector = new Vector3();
+	const center = new Vector3();
+	const size = new Vector3();
+
+	const points = [
+		new Vector3(),
+		new Vector3(),
+		new Vector3(),
+		new Vector3(),
+		new Vector3(),
+		new Vector3(),
+		new Vector3(),
+		new Vector3()
+	];
+
+	/**
+	* Class representing an axis-aligned bounding box (AABB).
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class AABB {
+
+		/**
+		* Constructs a new AABB with the given values.
+		*
+		* @param {Vector3} min - The minimum bounds of the AABB.
+		* @param {Vector3} max - The maximum bounds of the AABB.
+		*/
+		constructor( min = new Vector3(), max = new Vector3() ) {
+
+			/**
+			* The minimum bounds of the AABB.
+			* @type Vector3
+			*/
+			this.min = min;
+
+			/**
+			* The maximum bounds of the AABB.
+			* @type Vector3
+			*/
+			this.max = max;
+
+		}
+
+		/**
+		* Sets the given values to this AABB.
+		*
+		* @param {Vector3} min - The minimum bounds of the AABB.
+		* @param {Vector3} max - The maximum bounds of the AABB.
+		* @return {AABB} A reference to this AABB.
+		*/
+		set( min, max ) {
+
+			this.min = min;
+			this.max = max;
+
+			return this;
+
+		}
+
+		/**
+		* Copies all values from the given AABB to this AABB.
+		*
+		* @param {AABB} aabb - The AABB to copy.
+		* @return {AABB} A reference to this AABB.
+		*/
+		copy( aabb ) {
+
+			this.min.copy( aabb.min );
+			this.max.copy( aabb.max );
+
+			return this;
+
+		}
+
+		/**
+		* Creates a new AABB and copies all values from this AABB.
+		*
+		* @return {AABB} A new AABB.
+		*/
+		clone() {
+
+			return new this.constructor().copy( this );
+
+		}
+
+		/**
+		* Ensures the given point is inside this AABB and stores
+		* the result in the given vector.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		clampPoint( point, result ) {
+
+			result.copy( point ).clamp( this.min, this.max );
+
+			return result;
+
+		}
+
+		/**
+		* Returns true if the given point is inside this AABB.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @return {Boolean} The result of the containments test.
+		*/
+		containsPoint( point ) {
+
+			return point.x < this.min.x || point.x > this.max.x ||
+				point.y < this.min.y || point.y > this.max.y ||
+				point.z < this.min.z || point.z > this.max.z ? false : true;
+
+		}
+
+		/**
+		* Expands this AABB by the given point. So after this method call,
+		* the given point lies inside the AABB.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @return {AABB} A reference to this AABB.
+		*/
+		expand( point ) {
+
+			this.min.min( point );
+			this.max.max( point );
+
+			return this;
+
+		}
+
+		/**
+		* Computes the center point of this AABB and stores it into the given vector.
+		*
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		getCenter( result ) {
+
+			return result.addVectors( this.min, this.max ).multiplyScalar( 0.5 );
+
+		}
+
+		/**
+		* Computes the size (width, height, depth) of this AABB and stores it into the given vector.
+		*
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		getSize( result ) {
+
+			return result.subVectors( this.max, this.min );
+
+		}
+
+		/**
+		* Returns true if the given AABB intersects this AABB.
+		*
+		* @param {AABB} aabb - The AABB to test.
+		* @return {Boolean} The result of the intersection test.
+		*/
+		intersectsAABB( aabb ) {
+
+			return aabb.max.x < this.min.x || aabb.min.x > this.max.x ||
+				aabb.max.y < this.min.y || aabb.min.y > this.max.y ||
+				aabb.max.z < this.min.z || aabb.min.z > this.max.z ? false : true;
+
+		}
+
+		/**
+		* Returns true if the given bounding sphere intersects this AABB.
+		*
+		* @param {BoundingSphere} sphere - The bounding sphere to test.
+		* @return {Boolean} The result of the intersection test.
+		*/
+		intersectsBoundingSphere( sphere ) {
+
+			// find the point on the AABB closest to the sphere center
+
+			this.clampPoint( sphere.center, vector );
+
+			// if that point is inside the sphere, the AABB and sphere intersect.
+
+			return vector.squaredDistanceTo( sphere.center ) <= ( sphere.radius * sphere.radius );
+
+		}
+
+		/**
+		* Returns the normal for a given point on this AABB's surface.
+		*
+		* @param {Vector3} point - The point on the surface
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		getNormalFromSurfacePoint( point, result ) {
+
+			// from https://www.gamedev.net/forums/topic/551816-finding-the-aabb-surface-normal-from-an-intersection-point-on-aabb/
+
+			result.set( 0, 0, 0 );
+
+			let distance;
+			let minDistance = Infinity;
+
+			this.getCenter( center );
+			this.getSize( size );
+
+			// transform point into local space of AABB
+
+			vector.copy( point ).sub( center );
+
+			// x-axis
+
+			distance = Math.abs( size.x - Math.abs( vector.x ) );
+
+			if ( distance < minDistance ) {
+
+				minDistance = distance;
+				result.set( 1 * Math.sign( vector.x ), 0, 0 );
+
+			}
+
+			// y-axis
+
+			distance = Math.abs( size.y - Math.abs( vector.y ) );
+
+			if ( distance < minDistance ) {
+
+				minDistance = distance;
+				result.set( 0, 1 * Math.sign( vector.y ), 0 );
+
+			}
+
+			// z-axis
+
+			distance = Math.abs( size.z - Math.abs( vector.z ) );
+
+			if ( distance < minDistance ) {
+
+				minDistance = distance;
+				result.set( 0, 0, 1 * Math.sign( vector.z ) );
+
+			}
+
+			return result;
+
+		}
+
+		/**
+		* Sets the values of the AABB from the given center and size vector.
+		*
+		* @param {Vector3} center - The center point of the AABB.
+		* @param {Vector3} size - The size of the AABB per axis.
+		* @return {AABB} A reference to this AABB.
+		*/
+		fromCenterAndSize( center, size ) {
+
+			vector.copy( size ).multiplyScalar( 0.5 ); // compute half size
+
+			this.min.copy( center ).sub( vector );
+			this.max.copy( center ).add( vector );
+
+			return this;
+
+		}
+
+		/**
+		* Sets the values of the AABB from the given array of points.
+		*
+		* @param {Array} points - An array of 3D vectors representing points in 3D space.
+		* @return {AABB} A reference to this AABB.
+		*/
+		fromPoints( points ) {
+
+			this.min.set( Infinity, Infinity, Infinity );
+			this.max.set( - Infinity, - Infinity, - Infinity );
+
+			for ( let i = 0, l = points.length; i < l; i ++ ) {
+
+				this.expand( points[ i ] );
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Transforms this AABB with the given 4x4 transformation matrix.
+		*
+		* @param {Matrix4} matrix - The 4x4 transformation matrix.
+		* @return {AABB} A reference to this AABB.
+		*/
+		applyMatrix4( matrix ) {
+
+			const min = this.min;
+			const max = this.max;
+
+			points[ 0 ].set( min.x, min.y, min.z ).applyMatrix4( matrix );
+			points[ 1 ].set( min.x, min.y, max.z ).applyMatrix4( matrix );
+			points[ 2 ].set( min.x, max.y, min.z ).applyMatrix4( matrix );
+			points[ 3 ].set( min.x, max.y, max.z ).applyMatrix4( matrix );
+			points[ 4 ].set( max.x, min.y, min.z ).applyMatrix4( matrix );
+			points[ 5 ].set( max.x, min.y, max.z ).applyMatrix4( matrix );
+			points[ 6 ].set( max.x, max.y, min.z ).applyMatrix4( matrix );
+			points[ 7 ].set( max.x, max.y, max.z ).applyMatrix4( matrix );
+
+			return this.fromPoints( points );
+
+		}
+
+		/**
+		* Returns true if the given AABB is deep equal with this AABB.
+		*
+		* @param {AABB} aabb - The AABB to test.
+		* @return {Boolean} The result of the equality test.
+		*/
+		equals( aabb ) {
+
+			return ( aabb.min.equals( this.min ) ) && ( aabb.max.equals( this.max ) );
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			return {
+				type: this.constructor.name,
+				min: this.min.toArray( new Array() ),
+				max: this.max.toArray( new Array() )
+			};
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {AABB} A reference to this AABB.
+		*/
+		fromJSON( json ) {
+
+			this.min.fromArray( json.min );
+			this.max.fromArray( json.max );
+
+			return this;
+
+		}
+
+	}
+
+	const boundingSphereEntity = new BoundingSphere();
+
+	/**
+	* Class for representing a rectangular trigger region as an AABB.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments TriggerRegion
+	*/
+	class RectangularTriggerRegion extends TriggerRegion {
+
+		/**
+		* Constructs a new rectangular trigger region with the given values.
+		*
+		* @param {Vector3} min - The minimum bounds of the region.
+		* @param {Vector3} max - The maximum bounds of the region.
+		*/
+		constructor( min = new Vector3(), max = new Vector3() ) {
+
+			super();
+
+			this._aabb = new AABB( min, max );
+
+		}
+
+		get min() {
+
+			return this._aabb.min;
+
+		}
+
+		set min( min ) {
+
+			this._aabb.min = min;
+
+		}
+
+		get max() {
+
+			return this._aabb.max;
+
+		}
+
+		set max( max ) {
+
+			this._aabb.max = max;
+
+		}
+
+		/**
+		* Creates the new rectangular trigger region from a given position and size.
+		*
+		* @param {Vector3} position - The center position of the trigger region.
+		* @param {Vector3} size - The size of the trigger region per axis.
+		* @return {RectangularTriggerRegion} A reference to this trigger region.
+		*/
+		fromPositionAndSize( position, size ) {
+
+			this._aabb.fromCenterAndSize( position, size );
+
+			return this;
+
+		}
+
+		/**
+		* Returns true if the bounding volume of the given game entity touches/intersects
+		* the trigger region.
+		*
+		* @param {GameEntity} entity - The entity to test.
+		* @return {Boolean} Whether this trigger touches the given game entity or not.
+		*/
+		touching( entity ) {
+
+			boundingSphereEntity.set( entity.position, entity.boundingRadius );
+
+			return this._aabb.intersectsBoundingSphere( boundingSphereEntity );
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json._aabb = this._aabb.toJSON();
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {RectangularTriggerRegion} A reference to this trigger region.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this._aabb.fromJSON( json._aabb );
+
+			return this;
+
+		}
+
+	}
+
+	const boundingSphereEntity$1 = new BoundingSphere();
+
+	/**
+	* Class for representing a spherical trigger region as a bounding sphere.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments TriggerRegion
+	*/
+	class SphericalTriggerRegion extends TriggerRegion {
+
+		/**
+		* Constructs a new spherical trigger region with the given values.
+		*
+		* @param {Vector3} position - The center position of the region.
+		* @param {Number} radius - The radius of the region.
+		*/
+		constructor( position = new Vector3(), radius = 0 ) {
+
+			super();
+
+			this._boundingSphere = new BoundingSphere( position, radius );
+
+		}
+
+		get position() {
+
+			return this._boundingSphere.center;
+
+		}
+
+		set position( position ) {
+
+			this._boundingSphere.center = position;
+
+		}
+
+		get radius() {
+
+			return this._boundingSphere.radius;
+
+		}
+
+		set radius( radius ) {
+
+			this._boundingSphere.radius = radius;
+
+		}
+
+		/**
+		* Returns true if the bounding volume of the given game entity touches/intersects
+		* the trigger region.
+		*
+		* @param {GameEntity} entity - The entity to test.
+		* @return {Boolean} Whether this trigger touches the given game entity or not.
+		*/
+		touching( entity ) {
+
+			boundingSphereEntity$1.set( entity.position, entity.boundingRadius );
+
+			return this._boundingSphere.intersectsBoundingSphere( boundingSphereEntity$1 );
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json._boundingSphere = this._boundingSphere.toJSON();
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {SphericalTriggerRegion} A reference to this trigger region.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this._boundingSphere.fromJSON( json._boundingSphere );
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Base class for representing triggers. A trigger generates an action if a game entity
+	* touches its trigger region, a predefine region in 3D space.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class Trigger {
+
+		/**
+		* Constructs a new trigger with the given values.
+		*
+		* @param {TriggerRegion} region - The region of the trigger.
+		*/
+		constructor( region = new TriggerRegion() ) {
+
+			/**
+			* Whether this trigger is active or not.
+			* @type Boolean
+			* @default true
+			*/
+			this.active = true;
+
+			/**
+			* The region of the trigger.
+			* @type TriggerRegion
+			*/
+			this.region = region;
+
+			//
+
+			this._typesMap = new Map(); // used for deserialization of custom triggerRegions
+
+		}
+
+		/**
+		* This method is called per simulation step for all game entities. If the game
+		* entity touches the region of the trigger, the respective action is executed.
+		*
+		* @param {GameEntity} entity - The entity to test
+		* @return {Trigger} A reference to this trigger.
+		*/
+		check( entity ) {
+
+			if ( ( this.active === true ) && ( this.region.touching( entity ) === true ) ) {
+
+				this.execute( entity );
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* This method is called when the trigger should execute its action.
+		* Must be implemented by all concrete triggers.
+		*
+		* @param {GameEntity} entity - The entity that touched the trigger region.
+		* @return {Trigger} A reference to this trigger.
+		*/
+		execute( /* entity */ ) {}
+
+		/**
+		* Triggers can have internal states. This method is called per simulation step
+		* and can be used to update the trigger.
+		*
+		* @param {Number} delta - The time delta value.
+		* @return {Trigger} A reference to this trigger.
+		*/
+		update( /* delta */ ) {}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			return {
+				type: this.constructor.name,
+				active: this.active,
+				region: this.region.toJSON()
+			};
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {Trigger} A reference to this trigger.
+		*/
+		fromJSON( json ) {
+
+			this.active = json.active;
+
+			const regionJSON = json.region;
+			let type = regionJSON.type;
+
+			switch ( type ) {
+
+				case 'TriggerRegion':
+					this.region = new TriggerRegion().fromJSON( regionJSON );
+					break;
+
+				case 'RectangularTriggerRegion':
+					this.region = new RectangularTriggerRegion().fromJSON( regionJSON );
+					break;
+
+				case 'SphericalTriggerRegion':
+					this.region = new SphericalTriggerRegion().fromJSON( regionJSON );
+					break;
+
+				default:
+					// handle custom type
+
+					const ctor = this._typesMap.get( type );
+
+					if ( ctor !== undefined ) {
+
+						this.region = new ctor().fromJSON( regionJSON );
+
+					} else {
+
+						Logger.warn( 'YUKA.Trigger: Unsupported trigger region type:', regionJSON.type );
+
+					}
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		 * Registers a custom type for deserialization. When calling {@link Trigger#fromJSON}
+		 * the trigger is able to pick the correct constructor in order to create custom
+		 * trigger regions.
+		 *
+		 * @param {String} type - The name of the trigger region.
+		 * @param {Function} constructor -  The constructor function.
+		 * @return {Trigger} A reference to this trigger.
+		 */
+		registerType( type, constructor ) {
+
+			this._typesMap.set( type, constructor );
+
+			return this;
+
+		}
+
+	}
+
+	const candidates = [];
+
+	/**
+	* This class is used for managing all central objects of a game like
+	* game entities and triggers.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class EntityManager {
+
+		/**
+		* Constructs a new entity manager.
+		*/
+		constructor() {
+
+			/**
+			* A list of {@link GameEntity game entities }.
+			* @type Array
+			*/
+			this.entities = new Array();
+
+			/**
+			* A list of {@link Trigger triggers }.
+			* @type Array
+			*/
+			this.triggers = new Array();
+
+			/**
+			* A reference to a spatial index.
+			* @type CellSpacePartitioning
+			* @default null
+			*/
+			this.spatialIndex = null;
+
+			this._indexMap = new Map(); // used by spatial indices
+			this._typesMap = new Map(); // used for deserialization of custom entities
+			this._messageDispatcher = new MessageDispatcher();
+
+		}
+
+		/**
+		* Adds a game entity to this entity manager.
+		*
+		* @param {GameEntity} entity - The game entity to add.
+		* @return {EntityManager} A reference to this entity manager.
+		*/
+		add( entity ) {
+
+			this.entities.push( entity );
+
+			entity.manager = this;
+
+			return this;
+
+		}
+
+		/**
+		* Removes a game entity from this entity manager.
+		*
+		* @param {GameEntity} entity - The game entity to remove.
+		* @return {EntityManager} A reference to this entity manager.
+		*/
+		remove( entity ) {
+
+			const index = this.entities.indexOf( entity );
+			this.entities.splice( index, 1 );
+
+			entity.manager = null;
+
+			return this;
+
+		}
+
+		/**
+		* Adds a trigger to this entity manager.
+		*
+		* @param {Trigger} trigger - The trigger to add.
+		* @return {EntityManager} A reference to this entity manager.
+		*/
+		addTrigger( trigger ) {
+
+			this.triggers.push( trigger );
+
+			return this;
+
+		}
+
+		/**
+		* Removes a trigger to this entity manager.
+		*
+		* @param {Trigger} trigger - The trigger to remove.
+		* @return {EntityManager} A reference to this entity manager.
+		*/
+		removeTrigger( trigger ) {
+
+			const index = this.triggers.indexOf( trigger );
+			this.triggers.splice( index, 1 );
+
+			return this;
+
+		}
+
+		/**
+		* Clears the internal state of this entity manager.
+		*
+		* @return {EntityManager} A reference to this entity manager.
+		*/
+		clear() {
+
+			this.entities.length = 0;
+			this.triggers.length = 0;
+
+			this._messageDispatcher.clear();
+
+			return this;
+
+		}
+
+		/**
+		* Returns an entity by the given name. If no game entity is found, *null*
+		* is returned. This method should be used once (e.g. at {@link GameEntity#start})
+		* and the result should be cached for later use.
+		*
+		* @param {String} name - The name of the game entity.
+		* @return {GameEntity} The found game entity.
+		*/
+		getEntityByName( name ) {
+
+			const entities = this.entities;
+
+			for ( let i = 0, l = entities.length; i < l; i ++ ) {
+
+				const entity = entities[ i ];
+
+				if ( entity.name === name ) return entity;
+
+			}
+
+			return null;
+
+		}
+
+		/**
+		* The central update method of this entity manager. Updates all
+		* game entities, triggers and delayed messages.
+		*
+		* @param {Number} delta - The time delta.
+		* @return {EntityManager} A reference to this entity manager.
+		*/
+		update( delta ) {
+
+			const entities = this.entities;
+			const triggers = this.triggers;
+
+			// update entities
+
+			for ( let i = ( entities.length - 1 ); i >= 0; i -- ) {
+
+				const entity = entities[ i ];
+
+				this.updateEntity( entity, delta );
+
+			}
+
+			// update triggers
+
+			for ( let i = ( triggers.length - 1 ); i >= 0; i -- ) {
+
+				const trigger = triggers[ i ];
+
+				this.updateTrigger( trigger, delta );
+
+			}
+
+			// handle messaging
+
+			this._messageDispatcher.dispatchDelayedMessages( delta );
+
+			return this;
+
+		}
+
+		/**
+		* Updates a single entity.
+		*
+		* @param {GameEntity} entity - The game entity to update.
+		* @param {Number} delta - The time delta.
+		* @return {EntityManager} A reference to this entity manager.
+		*/
+		updateEntity( entity, delta ) {
+
+			if ( entity.active === true ) {
+
+				this.updateNeighborhood( entity );
+
+				//
+
+				if ( entity._started === false ) {
+
+					entity.start();
+
+					entity._started = true;
+
+				}
+
+				//
+
+				entity.update( delta );
+				entity.updateWorldMatrix();
+
+				//
+
+				const children = entity.children;
+
+				for ( let i = ( children.length - 1 ); i >= 0; i -- ) {
+
+					const child = children[ i ];
+
+					this.updateEntity( child, delta );
+
+				}
+
+				//
+
+				if ( this.spatialIndex !== null ) {
+
+					let currentIndex = this._indexMap.get( entity ) || - 1;
+					currentIndex = this.spatialIndex.updateEntity( entity, currentIndex );
+					this._indexMap.set( entity, currentIndex );
+
+				}
+
+				//
+
+				const renderComponent = entity._renderComponent;
+				const renderComponentCallback = entity._renderComponentCallback;
+
+				if ( renderComponent !== null && renderComponentCallback !== null ) {
+
+					renderComponentCallback( entity, renderComponent );
+
+				}
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Updates the neighborhood of a single game entity.
+		*
+		* @param {GameEntity} entity - The game entity to update.
+		* @return {EntityManager} A reference to this entity manager.
+		*/
+		updateNeighborhood( entity ) {
+
+			if ( entity.updateNeighborhood === true ) {
+
+				entity.neighbors.length = 0;
+
+				// determine candidates
+
+				if ( this.spatialIndex !== null ) {
+
+					this.spatialIndex.query( entity.position, entity.neighborhoodRadius, candidates );
+
+				} else {
+
+					// worst case runtime complexity with O(n²)
+
+					candidates.length = 0;
+					candidates.push( ...this.entities );
+
+				}
+
+				// verify if candidates are within the predefined range
+
+				const neighborhoodRadiusSq = ( entity.neighborhoodRadius * entity.neighborhoodRadius );
+
+				for ( let i = 0, l = candidates.length; i < l; i ++ ) {
+
+					const candidate = candidates[ i ];
+
+					if ( entity !== candidate && candidate.active === true ) {
+
+						const distanceSq = entity.position.squaredDistanceTo( candidate.position );
+
+						if ( distanceSq <= neighborhoodRadiusSq ) {
+
+							entity.neighbors.push( candidate );
+
+						}
+
+					}
+
+				}
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Updates a single trigger.
+		*
+		* @param {Trigger} trigger - The trigger to update.
+		* @return {EntityManager} A reference to this entity manager.
+		*/
+		updateTrigger( trigger, delta ) {
+
+			if ( trigger.active === true ) {
+
+				trigger.update( delta );
+
+				const entities = this.entities;
+
+				for ( let i = ( entities.length - 1 ); i >= 0; i -- ) {
+
+					const entity = entities[ i ];
+
+					if ( entity.active === true ) {
+
+						trigger.check( entity );
+
+					}
+
+				}
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Interface for game entities so they can send messages to other game entities.
+		*
+		* @param {GameEntity} sender - The sender.
+		* @param {GameEntity} receiver - The receiver.
+		* @param {String} message - The actual message.
+		* @param {Number} delay - A time value in millisecond used to delay the message dispatching.
+		* @param {Object} data - An object for custom data.
+		* @return {EntityManager} A reference to this entity manager.
+		*/
+		sendMessage( sender, receiver, message, delay, data ) {
+
+			this._messageDispatcher.dispatch( sender, receiver, message, delay, data );
+
+			return this;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const data = {
+				type: this.constructor.name,
+				entities: new Array(),
+				triggers: new Array(),
+				_messageDispatcher: this._messageDispatcher.toJSON()
+			};
+
+			// entities
+
+			function processEntity( entity ) {
+
+				data.entities.push( entity.toJSON() );
+
+				for ( let i = 0, l = entity.children.length; i < l; i ++ ) {
+
+					processEntity( entity.children[ i ] );
+
+				}
+
+			}
+
+			for ( let i = 0, l = this.entities.length; i < l; i ++ ) {
+
+				// recursively process all entities
+
+				processEntity( this.entities[ i ] );
+
+			}
+
+			// triggers
+
+			for ( let i = 0, l = this.triggers.length; i < l; i ++ ) {
+
+				const trigger = this.triggers[ i ];
+				data.triggers.push( trigger.toJSON() );
+
+			}
+
+			return data;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {EntityManager} A reference to this entity manager.
+		*/
+		fromJSON( json ) {
+
+			this.clear();
+
+			const entitiesJSON = json.entities;
+			const triggersJSON = json.triggers;
+			const _messageDispatcherJSON = json._messageDispatcher;
+
+			// entities
+
+			const entitiesMap = new Map();
+
+			for ( let i = 0, l = entitiesJSON.length; i < l; i ++ ) {
+
+				const entityJSON = entitiesJSON[ i ];
+				const type = entityJSON.type;
+
+				let entity;
+
+				switch ( type ) {
+
+					case 'GameEntity':
+						entity = new GameEntity().fromJSON( entityJSON );
+						break;
+
+					case 'MovingEntity':
+						entity = new MovingEntity().fromJSON( entityJSON );
+						break;
+
+					case 'Vehicle':
+						entity = new Vehicle().fromJSON( entityJSON );
+						break;
+
+					default:
+
+						// handle custom type
+
+						const ctor = this._typesMap.get( type );
+
+						if ( ctor !== undefined ) {
+
+							entity = new ctor().fromJSON( entityJSON );
+
+						} else {
+
+							Logger.warn( 'YUKA.EntityManager: Unsupported entity type:', type );
+							continue;
+
+						}
+
+				}
+
+				entitiesMap.set( entity.uuid, entity );
+
+				if ( entity.parent === null ) this.add( entity );
+
+			}
+
+			// resolve UUIDs to game entity objects
+
+			for ( let entity of entitiesMap.values() ) {
+
+				entity.resolveReferences( entitiesMap );
+
+			}
+
+			// triggers
+
+			for ( let i = 0, l = triggersJSON.length; i < l; i ++ ) {
+
+				const triggerJSON = triggersJSON[ i ];
+				const type = triggerJSON.type;
+
+				let trigger;
+
+				if ( type === 'Trigger' ) {
+
+					trigger = new Trigger().fromJSON( triggerJSON );
+
+				} else {
+
+					// handle custom type
+
+					const ctor = this._typesMap.get( type );
+
+					if ( ctor !== undefined ) {
+
+						trigger = new ctor().fromJSON( triggerJSON );
+
+					} else {
+
+						Logger.warn( 'YUKA.EntityManager: Unsupported trigger type:', type );
+						continue;
+
+					}
+
+				}
+
+				this.addTrigger( trigger );
+
+			}
+
+			// restore delayed messages
+
+			this._messageDispatcher.fromJSON( _messageDispatcherJSON );
+
+			return this;
+
+		}
+
+		/**
+		* Registers a custom type for deserialization. When calling {@link EntityManager#fromJSON}
+		* the entity manager is able to pick the correct constructor in order to create custom
+		* game entities or triggers.
+		*
+		* @param {String} type - The name of the entity or trigger type.
+		* @param {Function} constructor -  The constructor function.
+		* @return {EntityManager} A reference to this entity manager.
+		*/
+		registerType( type, constructor ) {
+
+			this._typesMap.set( type, constructor );
+
+			return this;
+
+		}
+
 	}
 
 	/**
@@ -3170,6 +7627,25 @@
 			* @default 0
 			*/
 			this.currentTime = 0;
+
+			/**
+			* Whether the Page Visibility API should be used to avoid large time
+			* delta values produced via inactivity or not. This setting is
+			* ignored if the browser does not support the API.
+			* @type Boolean
+			* @default true
+			*/
+			this.detectPageVisibility = true;
+
+			//
+
+			if ( typeof document !== 'undefined' && document.hidden !== undefined ) {
+
+				this._pageVisibilityHandler = handleVisibilityChange.bind( this );
+
+				document.addEventListener( 'visibilitychange', this._pageVisibilityHandler, false );
+
+			}
 
 		}
 
@@ -3222,8 +7698,1677 @@
 
 	}
 
+	//
+
+	function handleVisibilityChange() {
+
+		if ( this.detectPageVisibility === true && document.hidden === false ) {
+
+			// reset the current time when the app was inactive (window minimized or tab switched)
+
+			this.currentTime = this.now();
+
+		}
+
+	}
+
 	/**
-	* Base class for represeting a goal in context of Goal-driven agent design.
+	* Base class for representing a term in a {@link FuzzyRule}.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class FuzzyTerm {
+
+		/**
+		* Clears the degree of membership value.
+		*
+		* @return {FuzzyTerm} A reference to this term.
+		*/
+		clearDegreeOfMembership() {}
+
+		/**
+		* Returns the degree of membership.
+		*
+		* @return {Number} Degree of membership.
+		*/
+		getDegreeOfMembership() {}
+
+		/**
+		* Updates the degree of membership by the given value. This method is used when
+		* the term is part of a fuzzy rule's consequent.
+		*
+		* @param {Number} value - The value used to update the degree of membership.
+		* @return {FuzzyTerm} A reference to this term.
+		*/
+		updateDegreeOfMembership( /* value */ ) {}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			return {
+				type: this.constructor.name
+			};
+
+		}
+
+	}
+
+	/**
+	* Base class for representing more complex fuzzy terms based on the
+	* composite design pattern.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments FuzzyTerm
+	*/
+	class FuzzyCompositeTerm extends FuzzyTerm {
+
+		/**
+		* Constructs a new fuzzy composite term with the given values.
+		*
+		* @param {Array} terms - An arbitrary amount of fuzzy terms.
+		*/
+		constructor( terms = [] ) {
+
+			super();
+
+			/**
+			* List of fuzzy terms.
+			* @type Array
+			*/
+			this.terms = terms;
+
+		}
+
+		/**
+		* Clears the degree of membership value.
+		*
+		* @return {FuzzyCompositeTerm} A reference to this term.
+		*/
+		clearDegreeOfMembership() {
+
+			const terms = this.terms;
+
+			for ( let i = 0, l = terms.length; i < l; i ++ ) {
+
+				terms[ i ].clearDegreeOfMembership();
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Updates the degree of membership by the given value. This method is used when
+		* the term is part of a fuzzy rule's consequent.
+		*
+		* @param {Number} value - The value used to update the degree of membership.
+		* @return {FuzzyCompositeTerm} A reference to this term.
+		*/
+		updateDegreeOfMembership( value ) {
+
+			const terms = this.terms;
+
+			for ( let i = 0, l = terms.length; i < l; i ++ ) {
+
+				terms[ i ].updateDegreeOfMembership( value );
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.terms = new Array();
+
+			for ( let i = 0, l = this.terms.length; i < l; i ++ ) {
+
+				const term = this.terms[ i ];
+
+				if ( term instanceof FuzzyCompositeTerm ) {
+
+					json.terms.push( term.toJSON() );
+
+				} else {
+
+					json.terms.push( term.uuid );
+
+				}
+
+			}
+
+			return json;
+
+		}
+
+	}
+
+	/**
+	* Class for representing an AND operator. Can be used to construct
+	* fuzzy rules.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments FuzzyCompositeTerm
+	*/
+	class FuzzyAND extends FuzzyCompositeTerm {
+
+		/**
+		* Constructs a new fuzzy AND operator with the given values. The constructor
+		* accepts and arbitrary amount of fuzzy terms.
+		*/
+		constructor() {
+
+			const terms = Array.from( arguments );
+
+			super( terms );
+
+		}
+
+		/**
+		* Returns the degree of membership. The AND operator returns the minimum
+		* degree of membership of the sets it is operating on.
+		*
+		* @return {Number} Degree of membership.
+		*/
+		getDegreeOfMembership() {
+
+			const terms = this.terms;
+			let minDOM = Infinity;
+
+			for ( let i = 0, l = terms.length; i < l; i ++ ) {
+
+				const term = terms[ i ];
+				const currentDOM = term.getDegreeOfMembership();
+
+				if ( currentDOM < minDOM ) minDOM = currentDOM;
+
+			}
+
+			return minDOM;
+
+		}
+
+	}
+
+	/**
+	* Hedges are special unary operators that can be employed to modify the meaning
+	* of a fuzzy set. The FAIRLY fuzzy hedge widens the membership function.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments FuzzyCompositeTerm
+	*/
+	class FuzzyFAIRLY extends FuzzyCompositeTerm {
+
+		/**
+		* Constructs a new fuzzy FAIRLY hedge with the given values.
+		*
+		* @param {FuzzyTerm} fuzzyTerm - The fuzzy term this hedge is working on.
+		*/
+		constructor( fuzzyTerm = null ) {
+
+			const terms = ( fuzzyTerm !== null ) ? [ fuzzyTerm ] : [];
+
+			super( terms );
+
+		}
+
+		// FuzzyTerm API
+
+		/**
+		* Clears the degree of membership value.
+		*
+		* @return {FuzzyFAIRLY} A reference to this fuzzy hedge.
+		*/
+		clearDegreeOfMembership() {
+
+			const fuzzyTerm = this.terms[ 0 ];
+			fuzzyTerm.clearDegreeOfMembership();
+
+			return this;
+
+		}
+
+		/**
+		* Returns the degree of membership.
+		*
+		* @return {Number} Degree of membership.
+		*/
+		getDegreeOfMembership() {
+
+			const fuzzyTerm = this.terms[ 0 ];
+			const dom = fuzzyTerm.getDegreeOfMembership();
+
+			return Math.sqrt( dom );
+
+		}
+
+		/**
+		* Updates the degree of membership by the given value.
+		*
+		* @return {FuzzyFAIRLY} A reference to this fuzzy hedge.
+		*/
+		updateDegreeOfMembership( value ) {
+
+			const fuzzyTerm = this.terms[ 0 ];
+			fuzzyTerm.updateDegreeOfMembership( Math.sqrt( value ) );
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Class for representing an OR operator. Can be used to construct
+	* fuzzy rules.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments FuzzyCompositeTerm
+	*/
+	class FuzzyOR extends FuzzyCompositeTerm {
+
+		/**
+		* Constructs a new fuzzy AND operator with the given values. The constructor
+		* accepts and arbitrary amount of fuzzy terms.
+		*/
+		constructor() {
+
+			const terms = Array.from( arguments );
+
+			super( terms );
+
+		}
+
+		/**
+		* Returns the degree of membership. The AND operator returns the maximum
+		* degree of membership of the sets it is operating on.
+		*
+		* @return {Number} Degree of membership.
+		*/
+		getDegreeOfMembership() {
+
+			const terms = this.terms;
+			let maxDOM = - Infinity;
+
+			for ( let i = 0, l = terms.length; i < l; i ++ ) {
+
+				const term = terms[ i ];
+				const currentDOM = term.getDegreeOfMembership();
+
+				if ( currentDOM > maxDOM ) maxDOM = currentDOM;
+
+			}
+
+			return maxDOM;
+
+		}
+
+	}
+
+	/**
+	* Hedges are special unary operators that can be employed to modify the meaning
+	* of a fuzzy set. The FAIRLY fuzzy hedge widens the membership function.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments FuzzyCompositeTerm
+	*/
+	class FuzzyVERY extends FuzzyCompositeTerm {
+
+		/**
+		* Constructs a new fuzzy VERY hedge with the given values.
+		*
+		* @param {FuzzyTerm} fuzzyTerm - The fuzzy term this hedge is working on.
+		*/
+		constructor( fuzzyTerm = null ) {
+
+			const terms = ( fuzzyTerm !== null ) ? [ fuzzyTerm ] : [];
+
+			super( terms );
+
+		}
+
+		// FuzzyTerm API
+
+		/**
+		* Clears the degree of membership value.
+		*
+		* @return {FuzzyVERY} A reference to this fuzzy hedge.
+		*/
+		clearDegreeOfMembership() {
+
+			const fuzzyTerm = this.terms[ 0 ];
+			fuzzyTerm.clearDegreeOfMembership();
+
+			return this;
+
+		}
+
+		/**
+		* Returns the degree of membership.
+		*
+		* @return {Number} Degree of membership.
+		*/
+		getDegreeOfMembership() {
+
+			const fuzzyTerm = this.terms[ 0 ];
+			const dom = fuzzyTerm.getDegreeOfMembership();
+
+			return dom * dom;
+
+		}
+
+		/**
+		* Updates the degree of membership by the given value.
+		*
+		* @return {FuzzyVERY} A reference to this fuzzy hedge.
+		*/
+		updateDegreeOfMembership( value ) {
+
+			const fuzzyTerm = this.terms[ 0 ];
+			fuzzyTerm.updateDegreeOfMembership( value * value );
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Base class for fuzzy sets. This type of sets are defined by a membership function
+	* which can be any arbitrary shape but are typically triangular or trapezoidal. They define
+	* a gradual transition from regions completely outside the set to regions completely
+	* within the set, thereby enabling a value to have partial membership to a set.
+	*
+	* This class is derived from {@link FuzzyTerm} so it can be directly used in fuzzy rules.
+	* According to the composite design pattern, a fuzzy set can be considered as an atomic fuzzy term.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments FuzzyTerm
+	*/
+	class FuzzySet extends FuzzyTerm {
+
+		/**
+		* Constructs a new fuzzy set with the given values.
+		*
+		* @param {Number} representativeValue - The maximum of the set's membership function.
+		*/
+		constructor( representativeValue = 0 ) {
+
+			super();
+
+			/**
+			* Represents the degree of membership to this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.degreeOfMembership = 0;
+
+			/**
+			* The maximum of the set's membership function. For instance, if
+			* the set is triangular then this will be the peak point of the triangular.
+			* If the set has a plateau then this value will be the mid point of the
+			* plateau. Used to avoid runtime calculations.
+			* @type Number
+			* @default 0
+			*/
+			this.representativeValue = representativeValue;
+
+			/**
+			* Represents the left border of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.left = 0;
+
+			/**
+			* Represents the right border of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.right = 0;
+
+			//
+
+			this._uuid = null;
+
+		}
+
+		get uuid() {
+
+			if ( this._uuid === null ) {
+
+				this._uuid = MathUtils.generateUUID();
+
+			}
+
+			return this._uuid;
+
+		}
+
+		set uuid( uuid ) {
+
+			this._uuid = uuid;
+
+		}
+
+		/**
+		* Computes the degree of membership for the given value. Notice that this method
+		* does not set {@link FuzzySet#degreeOfMembership} since other classes use it in
+		* order to calculate intermediate degree of membership values. This method be
+		* implemented by all concrete fuzzy set classes.
+		*
+		* @param {Number} value - The value used to calculate the degree of membership.
+		* @return {Number} The degree of membership.
+		*/
+		computeDegreeOfMembership( /* value */ ) {}
+
+		// FuzzyTerm API
+
+		/**
+		* Clears the degree of membership value.
+		*
+		* @return {FuzzySet} A reference to this fuzzy set.
+		*/
+		clearDegreeOfMembership() {
+
+			this.degreeOfMembership = 0;
+
+			return this;
+
+		}
+
+		/**
+		* Returns the degree of membership.
+		*
+		* @return {Number} Degree of membership.
+		*/
+		getDegreeOfMembership() {
+
+			return this.degreeOfMembership;
+
+		}
+
+		/**
+		* Updates the degree of membership by the given value. This method is used when
+		* the set is part of a fuzzy rule's consequent.
+		*
+		* @return {FuzzySet} A reference to this fuzzy set.
+		*/
+		updateDegreeOfMembership( value ) {
+
+			// update the degree of membership if the given value is greater than the
+			// existing one
+
+			if ( value > this.degreeOfMembership ) this.degreeOfMembership = value;
+
+			return this;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.degreeOfMembership = this.degreeOfMembership;
+			json.representativeValue = this.representativeValue;
+			json.left = this.left;
+			json.right = this.right;
+			json.uuid = this.uuid;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {FuzzySet} A reference to this fuzzy set.
+		*/
+		fromJSON( json ) {
+
+			this.degreeOfMembership = json.degreeOfMembership;
+			this.representativeValue = json.representativeValue;
+			this.left = json.left;
+			this.right = json.right;
+			this.uuid = json.uuid;
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Class for representing a fuzzy set that has a left shoulder shape. The range between
+	* the midpoint and left border point represents the same DOM.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments FuzzySet
+	*/
+	class LeftShoulderFuzzySet extends FuzzySet {
+
+		/**
+		* Constructs a new left shoulder fuzzy set with the given values.
+		*
+		* @param {Number} left - Represents the left border of this fuzzy set.
+		* @param {Number} midpoint - Represents the peak value of this fuzzy set.
+		* @param {Number} right - Represents the right border of this fuzzy set.
+		*/
+		constructor( left = 0, midpoint = 0, right = 0 ) {
+
+			// the representative value is the midpoint of the plateau of the shoulder
+
+			const representativeValue = ( midpoint + left ) / 2;
+
+			super( representativeValue );
+
+			/**
+			* Represents the left border of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.left = left;
+
+			/**
+			* Represents the peak value of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.midpoint = midpoint;
+
+			/**
+			* Represents the right border of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.right = right;
+
+		}
+
+		/**
+		* Computes the degree of membership for the given value.
+		*
+		* @param {Number} value - The value used to calculate the degree of membership.
+		* @return {Number} The degree of membership.
+		*/
+		computeDegreeOfMembership( value ) {
+
+			const midpoint = this.midpoint;
+			const left = this.left;
+			const right = this.right;
+
+			// find DOM if the given value is left of the center or equal to the center
+
+			if ( ( value >= left ) && ( value <= midpoint ) ) {
+
+				return 1;
+
+			}
+
+			// find DOM if the given value is right of the midpoint
+
+			if ( ( value > midpoint ) && ( value <= right ) ) {
+
+				const grad = 1 / ( right - midpoint );
+
+				return grad * ( right - value );
+
+			}
+
+			// out of range
+
+			return 0;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.midpoint = this.midpoint;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {LeftShoulderFuzzySet} A reference to this fuzzy set.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.midpoint = json.midpoint;
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Class for representing a fuzzy set that has a right shoulder shape. The range between
+	* the midpoint and right border point represents the same DOM.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments FuzzySet
+	*/
+	class RightShoulderFuzzySet extends FuzzySet {
+
+		/**
+		* Constructs a new right shoulder fuzzy set with the given values.
+		*
+		* @param {Number} left - Represents the left border of this fuzzy set.
+		* @param {Number} midpoint - Represents the peak value of this fuzzy set.
+		* @param {Number} right - Represents the right border of this fuzzy set.
+		*/
+		constructor( left = 0, midpoint = 0, right = 0 ) {
+
+			// the representative value is the midpoint of the plateau of the shoulder
+
+			const representativeValue = ( midpoint + right ) / 2;
+
+			super( representativeValue );
+
+			/**
+			* Represents the left border of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.left = left;
+
+			/**
+			* Represents the peak value of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.midpoint = midpoint;
+
+			/**
+			* Represents the right border of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.right = right;
+
+		}
+
+		/**
+		* Computes the degree of membership for the given value.
+		*
+		* @param {Number} value - The value used to calculate the degree of membership.
+		* @return {Number} The degree of membership.
+		*/
+		computeDegreeOfMembership( value ) {
+
+			const midpoint = this.midpoint;
+			const left = this.left;
+			const right = this.right;
+
+			// find DOM if the given value is left of the center or equal to the center
+
+			if ( ( value >= left ) && ( value <= midpoint ) ) {
+
+				const grad = 1 / ( midpoint - left );
+
+				return grad * ( value - left );
+
+			}
+
+			// find DOM if the given value is right of the midpoint
+
+			if ( ( value > midpoint ) && ( value <= right ) ) {
+
+				return 1;
+
+			}
+
+			// out of range
+
+			return 0;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.midpoint = this.midpoint;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {RightShoulderFuzzySet} A reference to this fuzzy set.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.midpoint = json.midpoint;
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Class for representing a fuzzy set that is a singleton. In its range, the degree of
+	* membership is always one.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments FuzzySet
+	*/
+	class SingletonFuzzySet extends FuzzySet {
+
+		/**
+		* Constructs a new singleton fuzzy set with the given values.
+		*
+		* @param {Number} left - Represents the left border of this fuzzy set.
+		* @param {Number} midpoint - Represents the peak value of this fuzzy set.
+		* @param {Number} right - Represents the right border of this fuzzy set.
+		*/
+		constructor( left = 0, midpoint = 0, right = 0 ) {
+
+			super( midpoint );
+
+			/**
+			* Represents the left border of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.left = left;
+
+			/**
+			* Represents the peak value of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.midpoint = midpoint;
+
+			/**
+			* Represents the right border of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.right = right;
+
+		}
+
+		/**
+		* Computes the degree of membership for the given value.
+		*
+		* @param {Number} value - The value used to calculate the degree of membership.
+		* @return {Number} The degree of membership.
+		*/
+		computeDegreeOfMembership( value ) {
+
+			const left = this.left;
+			const right = this.right;
+
+			return ( value >= left && value <= right ) ? 1 : 0;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.midpoint = this.midpoint;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {SingletonFuzzySet} A reference to this fuzzy set.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.midpoint = json.midpoint;
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Class for representing a fuzzy set that has a triangular shape. It can be defined
+	* by a left point, a midpoint (peak) and a right point.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments FuzzySet
+	*/
+	class TriangularFuzzySet extends FuzzySet {
+
+		/**
+		* Constructs a new triangular fuzzy set with the given values.
+		*
+		* @param {Number} left - Represents the left border of this fuzzy set.
+		* @param {Number} midpoint - Represents the peak value of this fuzzy set.
+		* @param {Number} right - Represents the right border of this fuzzy set.
+		*/
+		constructor( left = 0, midpoint = 0, right = 0 ) {
+
+			super( midpoint );
+
+			/**
+			* Represents the left border of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.left = left;
+
+			/**
+			* Represents the peak value of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.midpoint = midpoint;
+
+			/**
+			* Represents the right border of this fuzzy set.
+			* @type Number
+			* @default 0
+			*/
+			this.right = right;
+
+		}
+
+		/**
+		* Computes the degree of membership for the given value.
+		*
+		* @param {Number} value - The value used to calculate the degree of membership.
+		* @return {Number} The degree of membership.
+		*/
+		computeDegreeOfMembership( value ) {
+
+			const midpoint = this.midpoint;
+			const left = this.left;
+			const right = this.right;
+
+			// find DOM if the given value is left of the center or equal to the center
+
+			if ( ( value >= left ) && ( value <= midpoint ) ) {
+
+				const grad = 1 / ( midpoint - left );
+
+				return grad * ( value - left );
+
+			}
+
+			// find DOM if the given value is right of the center
+
+			if ( ( value > midpoint ) && ( value <= right ) ) {
+
+				const grad = 1 / ( right - midpoint );
+
+				return grad * ( right - value );
+
+			}
+
+			// out of range
+
+			return 0;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.midpoint = this.midpoint;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {TriangularFuzzySet} A reference to this fuzzy set.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			this.midpoint = json.midpoint;
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Class for representing a fuzzy rule. Fuzzy rules are comprised of an antecedent and
+	* a consequent in the form: IF antecedent THEN consequent.
+	*
+	* Compared to ordinary if/else statements with discrete values, the consequent term
+	* of a fuzzy rule can fire to a matter of degree.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class FuzzyRule {
+
+		/**
+		* Constructs a new fuzzy rule with the given values.
+		*
+		* @param {FuzzyTerm} antecedent - Represents the condition of the rule.
+		* @param {FuzzyTerm} consequence - Describes the consequence if the condition is satisfied.
+		*/
+		constructor( antecedent = null, consequence = null ) {
+
+			/**
+			* Represents the condition of the rule.
+			* @type FuzzyTerm
+			* @default null
+			*/
+			this.antecedent = antecedent;
+
+			/**
+			* Describes the consequence if the condition is satisfied.
+			* @type FuzzyTerm
+			* @default null
+			*/
+			this.consequence = consequence;
+
+		}
+
+		/**
+		* Initializes the consequent term of this fuzzy rule.
+		*
+		* @return {FuzzyRule} A reference to this fuzzy rule.
+		*/
+		initConsequence() {
+
+			this.consequence.clearDegreeOfMembership();
+
+			return this;
+
+		}
+
+		/**
+		* Evaluates the rule and updates the degree of membership of the consequent term with
+		* the degree of membership of the antecedent term.
+		*
+		* @return {FuzzyRule} A reference to this fuzzy rule.
+		*/
+		evaluate() {
+
+			this.consequence.updateDegreeOfMembership( this.antecedent.getDegreeOfMembership() );
+
+			return this;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = {};
+
+			const antecedent = this.antecedent;
+			const consequence = this.consequence;
+
+			json.type = this.constructor.name;
+			json.antecedent = ( antecedent instanceof FuzzyCompositeTerm ) ? antecedent.toJSON() : antecedent.uuid;
+			json.consequence = ( consequence instanceof FuzzyCompositeTerm ) ? consequence.toJSON() : consequence.uuid;
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @param {Map} fuzzySets - Maps fuzzy sets to UUIDs.
+		* @return {FuzzyRule} A reference to this fuzzy rule.
+		*/
+		fromJSON( json, fuzzySets ) {
+
+			function parseTerm( termJSON ) {
+
+				if ( typeof termJSON === 'string' ) {
+
+					// atomic term -> FuzzySet
+
+					const uuid = termJSON;
+					return fuzzySets.get( uuid ) || null;
+
+				} else {
+
+					// composite term
+
+					const type = termJSON.type;
+
+					let term;
+
+					switch ( type ) {
+
+						case 'FuzzyAND':
+							term = new FuzzyAND();
+							break;
+
+						case 'FuzzyOR':
+							term = new FuzzyOR();
+							break;
+
+						case 'FuzzyVERY':
+							term = new FuzzyVERY();
+							break;
+
+						case 'FuzzyFAIRLY':
+							term = new FuzzyFAIRLY();
+							break;
+
+						default:
+							Logger.error( 'YUKA.FuzzyRule: Unsupported operator type:', type );
+							return;
+
+					}
+
+					const termsJSON = termJSON.terms;
+
+					for ( let i = 0, l = termsJSON.length; i < l; i ++ ) {
+
+						// recursively parse all subordinate terms
+
+						term.terms.push( parseTerm( termsJSON[ i ] ) );
+
+					}
+
+					return term;
+
+				}
+
+			}
+
+			this.antecedent = parseTerm( json.antecedent );
+			this.consequence = parseTerm( json.consequence );
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Class for representing a fuzzy linguistic variable (FLV). A FLV is the
+	* composition of one or more fuzzy sets to represent a concept or domain
+	* qualitatively. For example fuzzs sets "Dumb", "Average", and "Clever"
+	* are members of the fuzzy linguistic variable "IQ".
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class FuzzyVariable {
+
+		/**
+		* Constructs a new fuzzy linguistic variable.
+		*/
+		constructor() {
+
+			/**
+			* An array of the fuzzy sets that comprise this FLV.
+			* @type Array
+			*/
+			this.fuzzySets = new Array();
+
+			/**
+			* The minimum value range of this FLV. This value is
+			* automatically updated when adding/removing fuzzy sets.
+			* @type Number
+			* @default Infinity
+			*/
+			this.minRange = Infinity;
+
+			/**
+			* The maximum value range of this FLV. This value is
+			* automatically updated when adding/removing fuzzy sets.
+			* @type Number
+			* @default - Infinity
+			*/
+			this.maxRange = - Infinity;
+
+		}
+
+		/**
+		* Adds the given fuzzy set to this FLV.
+		*
+		* @param {FuzzySet} fuzzySet - The fuzzy set to add.
+		* @return {FuzzyVariable} A reference to this FLV.
+		*/
+		add( fuzzySet ) {
+
+			this.fuzzySets.push( fuzzySet );
+
+			// adjust range
+
+			if ( fuzzySet.left < this.minRange ) this.minRange = fuzzySet.left;
+			if ( fuzzySet.right > this.maxRange ) this.maxRange = fuzzySet.right;
+
+			return this;
+
+		}
+
+		/**
+		* Removes the given fuzzy set from this FLV.
+		*
+		* @param {FuzzySet} fuzzySet - The fuzzy set to remove.
+		* @return {FuzzyVariable} A reference to this FLV.
+		*/
+		remove( fuzzySet ) {
+
+			const fuzzySets = this.fuzzySets;
+
+			const index = fuzzySets.indexOf( fuzzySet );
+			fuzzySets.splice( index, 1 );
+
+			// iterate over all fuzzy sets to recalculate the min/max range
+
+			this.minRange = Infinity;
+			this.maxRange = - Infinity;
+
+			for ( let i = 0, l = fuzzySets.length; i < l; i ++ ) {
+
+				const fuzzySet = fuzzySets[ i ];
+
+				if ( fuzzySet.left < this.minRange ) this.minRange = fuzzySet.left;
+				if ( fuzzySet.right > this.maxRange ) this.maxRange = fuzzySet.right;
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Fuzzifies a value by calculating its degree of membership in each of
+		* this variable's fuzzy sets.
+		*
+		* @param {Number} value - The crips value to fuzzify.
+		* @return {FuzzyVariable} A reference to this FLV.
+		*/
+		fuzzify( value ) {
+
+			if ( value < this.minRange || value > this.maxRange ) {
+
+				Logger.warn( 'YUKA.FuzzyVariable: Value for fuzzification out of range.' );
+				return;
+
+			}
+
+			const fuzzySets = this.fuzzySets;
+
+			for ( let i = 0, l = fuzzySets.length; i < l; i ++ ) {
+
+				const fuzzySet = fuzzySets[ i ];
+
+				fuzzySet.degreeOfMembership = fuzzySet.computeDegreeOfMembership( value );
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Defuzzifies the FLV using the "Average of Maxima" (MaxAv) method.
+		*
+		* @return {Number} The defuzzified, crips value.
+		*/
+		defuzzifyMaxAv() {
+
+			// the average of maxima (MaxAv for short) defuzzification method scales the
+			// representative value of each fuzzy set by its DOM and takes the average
+
+			const fuzzySets = this.fuzzySets;
+
+			let bottom = 0;
+			let top = 0;
+
+			for ( let i = 0, l = fuzzySets.length; i < l; i ++ ) {
+
+				const fuzzySet = fuzzySets[ i ];
+
+				bottom += fuzzySet.degreeOfMembership;
+				top += fuzzySet.representativeValue * fuzzySet.degreeOfMembership;
+
+			}
+
+			return ( bottom === 0 ) ? 0 : ( top / bottom );
+
+		}
+
+		/**
+		* Defuzzifies the FLV using the "Centroid" method.
+		*
+		* @param {Number} samples - The amount of samples used for defuzzification.
+		* @return {Number} The defuzzified, crips value.
+		*/
+		defuzzifyCentroid( samples = 10 ) {
+
+			const fuzzySets = this.fuzzySets;
+
+			const stepSize = ( this.maxRange - this.minRange ) / samples;
+
+			let totalArea = 0;
+			let sumOfMoments = 0;
+
+			for ( let s = 1; s <= samples; s ++ ) {
+
+				const sample = this.minRange + ( s * stepSize );
+
+				for ( let i = 0, l = fuzzySets.length; i < l; i ++ ) {
+
+					const fuzzySet = fuzzySets[ i ];
+
+					const contribution = Math.min( fuzzySet.degreeOfMembership, fuzzySet.computeDegreeOfMembership( sample ) );
+
+					totalArea += contribution;
+
+					sumOfMoments += ( sample * contribution );
+
+				}
+
+			}
+
+			return ( totalArea === 0 ) ? 0 : ( sumOfMoments / totalArea );
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = {
+				type: this.constructor.name,
+				fuzzySets: new Array(),
+				minRange: this.minRange.toString(),
+				maxRange: this.maxRange.toString(),
+			};
+
+			for ( let i = 0, l = this.fuzzySets.length; i < l; i ++ ) {
+
+				const fuzzySet = this.fuzzySets[ i ];
+				json.fuzzySets.push( fuzzySet.toJSON() );
+
+			}
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {FuzzyVariable} A reference to this fuzzy variable.
+		*/
+		fromJSON( json ) {
+
+			this.minRange = parseFloat( json.minRange );
+			this.maxRange = parseFloat( json.maxRange );
+
+			for ( let i = 0, l = json.fuzzySets.length; i < l; i ++ ) {
+
+				const fuzzySetJson = json.fuzzySets[ i ];
+
+				let type = fuzzySetJson.type;
+
+				switch ( type ) {
+
+					case 'LeftShoulderFuzzySet':
+						this.fuzzySets.push( new LeftShoulderFuzzySet().fromJSON( fuzzySetJson ) );
+						break;
+
+					case 'RightShoulderFuzzySet':
+						this.fuzzySets.push( new RightShoulderFuzzySet().fromJSON( fuzzySetJson ) );
+						break;
+
+					case 'SingletonFuzzySet':
+						this.fuzzySets.push( new SingletonFuzzySet().fromJSON( fuzzySetJson ) );
+						break;
+
+					case 'TriangularFuzzySet':
+						this.fuzzySets.push( new TriangularFuzzySet().fromJSON( fuzzySetJson ) );
+						break;
+
+					default:
+						Logger.error( 'YUKA.FuzzyVariable: Unsupported fuzzy set type:', fuzzySetJson.type );
+
+				}
+
+			}
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Class for representing a fuzzy module. Instances of this class are used by
+	* game entities for fuzzy inference. A fuzzy module is a collection of fuzzy variables
+	* and the rules that operate on them.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class FuzzyModule {
+
+		/**
+		* Constructs a new fuzzy module.
+		*/
+		constructor() {
+
+			/**
+			* An array of the fuzzy rules.
+			* @type Array
+			*/
+			this.rules = new Array();
+
+			/**
+			* A map of FLVs.
+			* @type Map
+			*/
+			this.flvs = new Map();
+
+		}
+
+		/**
+		* Adds the given FLV under the given name to this fuzzy module.
+		*
+		* @param {String} name - The name of the FLV.
+		* @param {FuzzyVariable} flv - The FLV to add.
+		* @return {FuzzyModule} A reference to this fuzzy module.
+		*/
+		addFLV( name, flv ) {
+
+			this.flvs.set( name, flv );
+
+			return this;
+
+		}
+
+		/**
+		* Remove the FLV under the given name from this fuzzy module.
+		*
+		* @param {String} name - The name of the FLV to remove.
+		* @return {FuzzyModule} A reference to this fuzzy module.
+		*/
+		removeFLV( name ) {
+
+			this.flvs.delete( name );
+
+			return this;
+
+		}
+
+		/**
+		* Adds the given fuzzy rule to this fuzzy module.
+		*
+		* @param {FuzzyRule} rule - The fuzzy rule to add.
+		* @return {FuzzyModule} A reference to this fuzzy module.
+		*/
+		addRule( rule ) {
+
+			this.rules.push( rule );
+
+			return this;
+
+		}
+
+		/**
+		* Removes the given fuzzy rule from this fuzzy module.
+		*
+		* @param {FuzzyRule} rule - The fuzzy rule to remove.
+		* @return {FuzzyModule} A reference to this fuzzy module.
+		*/
+		removeRule( rule ) {
+
+			const rules = this.rules;
+
+			const index = rules.indexOf( rule );
+			rules.splice( index, 1 );
+
+			return this;
+
+		}
+
+		/**
+		* Calls the fuzzify method of the defined FLV with the given value.
+		*
+		* @param {String} name - The name of the FLV
+		* @param {Number} value - The crips value to fuzzify.
+		* @return {FuzzyModule} A reference to this fuzzy module.
+		*/
+		fuzzify( name, value ) {
+
+			const flv = this.flvs.get( name );
+
+			flv.fuzzify( value );
+
+			return this;
+
+		}
+
+		/**
+		* Given a fuzzy variable and a defuzzification method this returns a crisp value.
+		*
+		* @param {String} name - The name of the FLV
+		* @param {String} type - The type of defuzzification.
+		* @return {Number} The defuzzified, crips value.
+		*/
+		defuzzify( name, type = FuzzyModule.DEFUZ_TYPE.MAXAV ) {
+
+			const flvs = this.flvs;
+			const rules = this.rules;
+
+			this._initConsequences();
+
+			for ( let i = 0, l = rules.length; i < l; i ++ ) {
+
+				const rule = rules[ i ];
+
+				rule.evaluate();
+
+			}
+
+			const flv = flvs.get( name );
+
+			let value;
+
+			switch ( type ) {
+
+				case FuzzyModule.DEFUZ_TYPE.MAXAV:
+					value = flv.defuzzifyMaxAv();
+					break;
+
+				case FuzzyModule.DEFUZ_TYPE.CENTROID:
+					value = flv.defuzzifyCentroid();
+					break;
+
+				default:
+					Logger.warn( 'YUKA.FuzzyModule: Unknown defuzzification method:', type );
+					value = flv.defuzzifyMaxAv(); // use MaxAv as fallback
+
+			}
+
+			return value;
+
+		}
+
+		_initConsequences() {
+
+			const rules = this.rules;
+
+			// initializes the consequences of all rules.
+
+			for ( let i = 0, l = rules.length; i < l; i ++ ) {
+
+				const rule = rules[ i ];
+
+				rule.initConsequence();
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = {
+				rules: new Array(),
+				flvs: new Array()
+			};
+
+			// rules
+
+			const rules = this.rules;
+
+			for ( let i = 0, l = rules.length; i < l; i ++ ) {
+
+				json.rules.push( rules[ i ].toJSON() );
+
+			}
+
+			// flvs
+
+			const flvs = this.flvs;
+
+			for ( let [ name, flv ] of flvs ) {
+
+				json.flvs.push( { name: name, flv: flv.toJSON() } );
+
+			}
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {FuzzyModule} A reference to this fuzzy module.
+		*/
+		fromJSON( json ) {
+
+			const fuzzySets = new Map(); // used for rules
+
+			// flvs
+
+			const flvsJSON = json.flvs;
+
+			for ( let i = 0, l = flvsJSON.length; i < l; i ++ ) {
+
+				const flvJSON = flvsJSON[ i ];
+				const name = flvJSON.name;
+				const flv = new FuzzyVariable().fromJSON( flvJSON.flv );
+
+				this.addFLV( name, flv );
+
+				for ( let fuzzySet of flv.fuzzySets ) {
+
+					fuzzySets.set( fuzzySet.uuid, fuzzySet );
+
+				}
+
+			}
+
+			// rules
+
+			const rulesJSON = json.rules;
+
+			for ( let i = 0, l = rulesJSON.length; i < l; i ++ ) {
+
+				const ruleJSON = rulesJSON[ i ];
+				const rule = new FuzzyRule().fromJSON( ruleJSON, fuzzySets );
+
+				this.addRule( rule );
+
+			}
+
+			return this;
+
+		}
+
+	}
+
+	FuzzyModule.DEFUZ_TYPE = Object.freeze( {
+		MAXAV: 0,
+		CENTROID: 1
+	} );
+
+	/**
+	* Base class for representing a goal in context of Goal-driven agent design.
 	*
 	* @author {@link https://github.com/Mugen87|Mugen87}
 	*/
@@ -3358,6 +9503,50 @@
 
 		}
 
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			return {
+				type: this.constructor.name,
+				owner: this.owner.uuid,
+				status: this.status
+			};
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {Goal} A reference to this goal.
+		*/
+		fromJSON( json ) {
+
+			this.owner = json.owner; // uuid
+			this.status = json.status;
+
+			return this;
+
+		}
+
+		/**
+		* Restores UUIDs with references to GameEntity objects.
+		*
+		* @param {Map} entities - Maps game entities to UUIDs.
+		* @return {Goal} A reference to this goal.
+		*/
+		resolveReferences( entities ) {
+
+			this.owner = entities.get( this.owner ) || null;
+
+			return this;
+
+		}
+
 	}
 
 	Goal.STATUS = Object.freeze( {
@@ -3366,6 +9555,3033 @@
 		COMPLETED: 'completed', // the goal has completed and will be removed on the next update
 		FAILED: 'failed' // the goal has failed and will either replan or be removed on the next update
 	} );
+
+	/**
+	* Base class for graph edges.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class Edge {
+
+		/**
+		* Constructs a new edge.
+		*
+		* @param {Number} from - The index of the from node.
+		* @param {Number} to - The index of the to node.
+		* @param {Number} cost - The cost of this edge.
+		*/
+		constructor( from = - 1, to = - 1, cost = 0 ) {
+
+			/**
+			* The index of the *from* node.
+			* @type Number
+			* @default -1
+			*/
+			this.from = from;
+
+			/**
+			* The index of the *to* node.
+			* @type Number
+			* @default -1
+			*/
+			this.to = to;
+
+			/**
+			* The cost of this edge. This could be for example a distance or time value.
+			* @type Number
+			* @default 0
+			*/
+			this.cost = cost;
+
+		}
+
+		/**
+		* Copies all values from the given edge to this edge.
+		*
+		* @param {Edge} edge - The edge to copy.
+		* @return {Edge} A reference to this edge.
+		*/
+		copy( edge ) {
+
+			this.from = edge.from;
+			this.to = edge.to;
+			this.cost = edge.cost;
+
+			return this;
+
+		}
+
+		/**
+		* Creates a new edge and copies all values from this edge.
+		*
+		* @return {Edge} A new edge.
+		*/
+		clone() {
+
+			return new this.constructor().copy( this );
+
+		}
+
+		/**
+		 * Transforms this instance into a JSON object.
+		 *
+		 * @return {Object} The JSON object.
+		 */
+		toJSON() {
+
+			return {
+				type: this.constructor.name,
+				from: this.from,
+				to: this.to,
+				cost: this.cost
+			};
+
+		}
+
+		/**
+		 * Restores this instance from the given JSON object.
+		 *
+		 * @param {Object} json - The JSON object.
+		 * @return {Edge} A reference to this edge.
+		 */
+		fromJSON( json ) {
+
+			this.from = json.from;
+			this.to = json.to;
+			this.cost = json.cost;
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Base class for graph nodes.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class Node {
+
+		/**
+		* Constructs a new node.
+		*
+		* @param {Number} index - The unique index of this node.
+		*/
+		constructor( index = - 1 ) {
+
+			/**
+			* The unique index of this node. The default value *-1* means invalid index.
+			* @type Number
+			* @default -1
+			*/
+			this.index = index;
+
+		}
+
+		/**
+		 * Transforms this instance into a JSON object.
+		 *
+		 * @return {Object} The JSON object.
+		 */
+		toJSON() {
+
+			return {
+				type: this.constructor.name,
+				index: this.index
+			};
+
+		}
+
+		/**
+		 * Restores this instance from the given JSON object.
+		 *
+		 * @param {Object} json - The JSON object.
+		 * @return {Node} A reference to this node.
+		 */
+		fromJSON( json ) {
+
+			this.index = json.index;
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Class representing a sparse graph implementation based on adjacency lists.
+	* A sparse graph can be used to model many different types of graphs like navigation
+	* graphs (pathfinding), dependency graphs (e.g. technology trees) or state graphs
+	* (a representation of every possible state in a game).
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class Graph {
+
+		/**
+		* Constructs a new graph.
+		*/
+		constructor() {
+
+			/**
+			* Whether this graph is directed or not.
+			* @type Boolean
+			* @default false
+			*/
+			this.digraph = false;
+
+			this._nodes = new Map(); // contains all nodes in a map: (nodeIndex => node)
+			this._edges = new Map(); // adjacency list for each node: (nodeIndex => edges)
+
+		}
+
+		/**
+		* Adds a node to the graph.
+		*
+		* @param {Node} node - The node to add.
+		* @return {Graph} A reference to this graph.
+		*/
+		addNode( node ) {
+
+			const index = node.index;
+
+			this._nodes.set( index, node );
+			this._edges.set( index, new Array() );
+
+			return this;
+
+		}
+
+		/**
+		* Adds an edge to the graph. If the graph is undirected, the method
+		* automatically creates the opponent edge.
+		*
+		* @param {Edge} edge - The edge to add.
+		* @return {Graph} A reference to this graph.
+		*/
+		addEdge( edge ) {
+
+			let edges;
+
+			edges = this._edges.get( edge.from );
+			edges.push( edge );
+
+			if ( this.digraph === false ) {
+
+				const oppositeEdge = edge.clone();
+
+				oppositeEdge.from = edge.to;
+				oppositeEdge.to = edge.from;
+
+				edges = this._edges.get( edge.to );
+				edges.push( oppositeEdge );
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Returns a node for the given node index. If no node is found,
+		* *null* is returned.
+		*
+		* @param {Number} index - The index of the node.
+		* @return {Node} The requested node.
+		*/
+		getNode( index ) {
+
+			return this._nodes.get( index ) || null;
+
+		}
+
+		/**
+		* Returns an edge for the given *from* and *to* node indices.
+		* If no node is found, *null* is returned.
+		*
+		* @param {Number} from - The index of the from node.
+		* @param {Number} to - The index of the to node.
+		* @return {Edge} The requested edge.
+		*/
+		getEdge( from, to ) {
+
+			if ( this.hasNode( from ) && this.hasNode( to ) ) {
+
+				const edges = this._edges.get( from );
+
+				for ( let i = 0, l = edges.length; i < l; i ++ ) {
+
+					const edge = edges[ i ];
+
+					if ( edge.to === to ) {
+
+						return edge;
+
+					}
+
+				}
+
+			}
+
+			return null;
+
+		}
+
+		/**
+		* Gathers all nodes of the graph and stores them into the given array.
+		*
+		* @param {Array} result - The result array.
+		* @return {Array} The result array.
+		*/
+		getNodes( result ) {
+
+			result.length = 0;
+			result.push( ...this._nodes.values() );
+
+			return result;
+
+		}
+
+		/**
+		* Gathers all edges leading from the given node index and stores them
+		* into the given array.
+		*
+		* @param {Number} index - The node index.
+		* @param {Array} result - The result array.
+		* @return {Array} The result array.
+		*/
+		getEdgesOfNode( index, result ) {
+
+			const edges = this._edges.get( index );
+
+			if ( edges !== undefined ) {
+
+				result.length = 0;
+				result.push( ...edges );
+
+			}
+
+			return result;
+
+		}
+
+		/**
+		* Returns the node count of the graph.
+		*
+		* @return {number} The amount of nodes.
+		*/
+		getNodeCount() {
+
+			return this._nodes.size;
+
+		}
+
+		/**
+		* Returns the edge count of the graph.
+		*
+		* @return {number} The amount of edges.
+		*/
+		getEdgeCount() {
+
+			let count = 0;
+
+			for ( const edges of this._edges.values() ) {
+
+				count += edges.length;
+
+			}
+
+			return count;
+
+		}
+
+		/**
+		* Removes the given node from the graph and all edges which are connected
+		* with this node.
+		*
+		* @param {Node} node - The node to remove.
+		* @return {Graph} A reference to this graph.
+		*/
+		removeNode( node ) {
+
+			this._nodes.delete( node.index );
+
+			if ( this.digraph === false ) {
+
+				// if the graph is not directed, remove all edges leading to this node
+
+				const edges = this._edges.get( node.index );
+
+				for ( const edge of edges ) {
+
+					const edgesOfNeighbor = this._edges.get( edge.to );
+
+					for ( let i = ( edgesOfNeighbor.length - 1 ); i >= 0; i -- ) {
+
+						const edgeNeighbor = edgesOfNeighbor[ i ];
+
+						if ( edgeNeighbor.to === node.index ) {
+
+							const index = edgesOfNeighbor.indexOf( edgeNeighbor );
+							edgesOfNeighbor.splice( index, 1 );
+
+							break;
+
+						}
+
+					}
+
+				}
+
+			} else {
+
+				// if the graph is directed, remove the edges the slow way
+
+				for ( const edges of this._edges.values() ) {
+
+					for ( let i = ( edges.length - 1 ); i >= 0; i -- ) {
+
+						const edge = edges[ i ];
+
+						if ( ! this.hasNode( edge.to ) || ! this.hasNode( edge.from ) ) {
+
+							const index = edges.indexOf( edge );
+							edges.splice( index, 1 );
+
+						}
+
+					}
+
+				}
+
+			}
+
+			// delete edge list of node (edges leading from this node)
+
+			this._edges.delete( node.index );
+
+			return this;
+
+		}
+
+		/**
+		* Removes the given edge from the graph. If the graph is undirected, the
+		* method also removes the opponent edge.
+		*
+		* @param {Edge} edge - The edge to remove.
+		* @return {Graph} A reference to this graph.
+		*/
+		removeEdge( edge ) {
+
+			// delete the edge from the node's edge list
+
+			const edges = this._edges.get( edge.from );
+
+			if ( edges !== undefined ) {
+
+				const index = edges.indexOf( edge );
+				edges.splice( index, 1 );
+
+				// if the graph is not directed, delete the edge connecting the node in the opposite direction
+
+				if ( this.digraph === false ) {
+
+					const edges = this._edges.get( edge.to );
+
+					for ( let i = 0, l = edges.length; i < l; i ++ ) {
+
+						const e = edges[ i ];
+
+						if ( e.to === edge.from ) {
+
+							const index = edges.indexOf( e );
+							edges.splice( index, 1 );
+							break;
+
+						}
+
+					}
+
+				}
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Return true if the graph has the given node index.
+		*
+		* @param {Number} index - The node index to test.
+		* @return {Boolean} Whether this graph has the node or not.
+		*/
+		hasNode( index ) {
+
+			return this._nodes.has( index );
+
+		}
+
+		/**
+		* Return true if the graph has an edge connecting the given
+		* *from* and *to* node indices.
+		*
+		* @param {Number} from - The index of the from node.
+		* @param {Number} to - The index of the to node.
+		* @return {Boolean} Whether this graph has the edge or not.
+		*/
+		hasEdge( from, to ) {
+
+			if ( this.hasNode( from ) && this.hasNode( to ) ) {
+
+				const edges = this._edges.get( from );
+
+				for ( let i = 0, l = edges.length; i < l; i ++ ) {
+
+					const edge = edges[ i ];
+
+					if ( edge.to === to ) {
+
+						return true;
+
+					}
+
+				}
+
+				return false;
+
+			} else {
+
+				return false;
+
+			}
+
+		}
+
+		/**
+		* Removes all nodes and edges from this graph.
+		*
+		* @return {Graph} A reference to this graph.
+		*/
+		clear() {
+
+			this._nodes.clear();
+			this._edges.clear();
+
+			return this;
+
+		}
+
+		/**
+		 * Transforms this instance into a JSON object.
+		 *
+		 * @return {Object} The JSON object.
+		 */
+		toJSON() {
+
+			const json = {
+				type: this.constructor.name,
+				digraph: this.digraph
+			};
+
+			const edges = [];
+			const nodes = [];
+
+			for ( let [ key, value ] of this._nodes.entries() ) {
+
+				const adjacencyList = [];
+
+				this.getEdgesOfNode( key, adjacencyList );
+
+				for ( let i = 0, l = adjacencyList.length; i < l; i ++ ) {
+
+					edges.push( adjacencyList[ i ].toJSON() );
+
+				}
+
+				nodes.push( value.toJSON() );
+
+			}
+
+			json._edges = edges;
+			json._nodes = nodes;
+
+			return json;
+
+		}
+
+		/**
+		 * Restores this instance from the given JSON object.
+		 *
+		 * @param {Object} json - The JSON object.
+		 * @return {Graph} A reference to this graph.
+		 */
+		fromJSON( json ) {
+
+			this.digraph = json.digraph;
+
+			for ( let i = 0, l = json._nodes.length; i < l; i ++ ) {
+
+				this.addNode( new Node().fromJSON( json._nodes[ i ] ) );
+
+			}
+
+			for ( let i = 0, l = json._edges.length; i < l; i ++ ) {
+
+				this.addEdge( new Edge().fromJSON( json._edges[ i ] ) );
+
+			}
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Class for representing a heuristic for graph search algorithms based
+	* on the euclidean distance. The heuristic assumes that the node have
+	* a *position* property of type {@link Vector3}.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class HeuristicPolicyEuclid {
+
+		/**
+		* Calculates the euclidean distance between two nodes.
+		*
+		* @param {Graph} graph - The graph.
+		* @param {Number} source - The index of the source node.
+		* @param {Number} target - The index of the target node.
+		* @return {Number} The euclidean distance between both nodes.
+		*/
+		static calculate( graph, source, target ) {
+
+			const sourceNode = graph.getNode( source );
+			const targetNode = graph.getNode( target );
+
+			return sourceNode.position.distanceTo( targetNode.position );
+
+		}
+
+	}
+
+	/**
+	 * Class for representing a binary heap priority queue that enables
+	 * more efficient sorting of arrays. The implementation is based on
+	 * {@link https://github.com/mourner/tinyqueue tinyqueue}.
+	 *
+	 * @author {@link https://github.com/Mugen87|Mugen87}
+	 */
+	class PriorityQueue {
+
+		/**
+		* Constructs a new priority queue.
+		*
+		* @param {Function} compare - The compare function used for sorting.
+		*/
+		constructor( compare = defaultCompare ) {
+
+			/**
+			* The data items of the priority queue.
+			* @type Array
+			*/
+			this.data = new Array();
+
+			/**
+			* The length of the priority queue.
+			* @type Number
+			* @default 0
+			*/
+			this.length = 0;
+
+			/**
+			* The compare function used for sorting.
+			* @type Function
+			* @default defaultCompare
+			*/
+			this.compare = compare;
+
+		}
+
+		/**
+		* Pushes an item to the priority queue.
+		*
+		* @param {Object} item - The item to add.
+		*/
+		push( item ) {
+
+			this.data.push( item );
+			this.length ++;
+			this._up( this.length - 1 );
+
+		}
+
+		/**
+		* Returns the item with the highest priority and removes
+		* it from the priority queue.
+		*
+		* @return {Object} The item with the highest priority.
+		*/
+		pop() {
+
+			if ( this.length === 0 ) return null;
+
+			const top = this.data[ 0 ];
+			this.length --;
+
+			if ( this.length > 0 ) {
+
+				this.data[ 0 ] = this.data[ this.length ];
+				this._down( 0 );
+
+			}
+
+			this.data.pop();
+
+			return top;
+
+		}
+
+		/**
+		* Returns the item with the highest priority without removal.
+		*
+		* @return {Object} The item with the highest priority.
+		*/
+		peek() {
+
+			return this.data[ 0 ] || null;
+
+		}
+
+		_up( index ) {
+
+			const data = this.data;
+			const compare = this.compare;
+			const item = data[ index ];
+
+			while ( index > 0 ) {
+
+				const parent = ( index - 1 ) >> 1;
+				const current = data[ parent ];
+				if ( compare( item, current ) >= 0 ) break;
+				data[ index ] = current;
+				index = parent;
+
+			}
+
+			data[ index ] = item;
+
+		}
+
+		_down( index ) {
+
+			const data = this.data;
+			const compare = this.compare;
+			const item = data[ index ];
+			const halfLength = this.length >> 1;
+
+			while ( index < halfLength ) {
+
+				let left = ( index << 1 ) + 1;
+				let right = left + 1;
+				let best = data[ left ];
+
+				if ( right < this.length && compare( data[ right ], best ) < 0 ) {
+
+					left = right;
+					best = data[ right ];
+
+				}
+
+				if ( compare( best, item ) >= 0 ) break;
+
+				data[ index ] = best;
+				index = left;
+
+			}
+
+
+			data[ index ] = item;
+
+		}
+
+	}
+
+	/* istanbul ignore next */
+
+	function defaultCompare( a, b ) {
+
+		return ( a < b ) ? - 1 : ( a > b ) ? 1 : 0;
+
+	}
+
+	/**
+	* Implementation of the AStar algorithm.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class AStar {
+
+		/**
+		* Constructs an AStar algorithm object.
+		*
+		* @param {Graph} graph - The graph.
+		* @param {Number} source - The node index of the source node.
+		* @param {Number} target - The node index of the target node.
+		*/
+		constructor( graph = null, source = - 1, target = - 1 ) {
+
+			/**
+			* The graph.
+			* @type Graph
+			*/
+			this.graph = graph;
+
+			/**
+			* The node index of the source node.
+			* @type Number
+			*/
+			this.source = source;
+
+			/**
+			* The node index of the target node.
+			* @type Number
+			*/
+			this.target = target;
+
+			/**
+			* Whether the search was successful or not.
+			* @type Boolean
+			* @default false
+			*/
+			this.found = false;
+
+			/**
+			* The heuristic of the search.
+			* @type Object
+			* @default HeuristicPolicyEuclid
+			*/
+			this.heuristic = HeuristicPolicyEuclid;
+
+			this._cost = new Map(); // contains the "real" accumulative cost to a node
+			this._shortestPathTree = new Map();
+			this._searchFrontier = new Map();
+
+		}
+
+		/**
+		* Executes the graph search. If the search was successful, {@link AStar#found}
+		* is set to true.
+		*
+		* @return {AStar} A reference to this AStar object.
+		*/
+		search() {
+
+			const outgoingEdges = new Array();
+			const pQueue = new PriorityQueue( compare );
+
+			pQueue.push( {
+				cost: 0,
+				index: this.source
+			} );
+
+			// while the queue is not empty
+
+			while ( pQueue.length > 0 ) {
+
+				const nextNode = pQueue.pop();
+				const nextNodeIndex = nextNode.index;
+
+				// if the shortest path tree has the given node, we already found the shortest
+				// path to this particular one
+
+				if ( this._shortestPathTree.has( nextNodeIndex ) ) continue;
+
+				// move this edge from the frontier to the shortest path tree
+
+				if ( this._searchFrontier.has( nextNodeIndex ) === true ) {
+
+					this._shortestPathTree.set( nextNodeIndex, this._searchFrontier.get( nextNodeIndex ) );
+
+				}
+
+				// if the target has been found exit
+
+				if ( nextNodeIndex === this.target ) {
+
+					this.found = true;
+
+					return this;
+
+				}
+
+				// now relax the edges
+
+				this.graph.getEdgesOfNode( nextNodeIndex, outgoingEdges );
+
+				for ( let i = 0, l = outgoingEdges.length; i < l; i ++ ) {
+
+					const edge = outgoingEdges[ i ];
+
+					// A* cost formula : F = G + H
+
+					// G is the cumulative cost to reach a node
+
+					const G = ( this._cost.get( nextNodeIndex ) || 0 ) + edge.cost;
+
+					// H is the heuristic estimate of the distance to the target
+
+					const H = this.heuristic.calculate( this.graph, edge.to, this.target );
+
+					// F is the sum of G and H
+
+					const F = G + H;
+
+					// We enhance our search frontier in two cases:
+					// 1. If the node was never on the search frontier
+					// 2. If the cost to this node is better than before
+
+					if ( ( this._searchFrontier.has( edge.to ) === false ) || G < ( this._cost.get( edge.to ) ) ) {
+
+						this._cost.set( edge.to, G );
+
+						this._searchFrontier.set( edge.to, edge );
+
+						pQueue.push( {
+							cost: F,
+							index: edge.to
+						} );
+
+					}
+
+				}
+
+			}
+
+			this.found = false;
+
+			return this;
+
+		}
+
+		/**
+		* Returns the shortest path from the source to the target node as an array of node indices.
+		*
+		* @return {Array} The shortest path.
+		*/
+		getPath() {
+
+			// array of node indices that comprise the shortest path from the source to the target
+
+			const path = new Array();
+
+			// just return an empty path if no path to target found or if no target has been specified
+
+			if ( this.found === false || this.target === - 1 ) return path;
+
+			// start with the target of the path
+
+			let currentNode = this.target;
+
+			path.push( currentNode );
+
+			// while the current node is not the source node keep processing
+
+			while ( currentNode !== this.source ) {
+
+				// determine the parent of the current node
+
+				currentNode = this._shortestPathTree.get( currentNode ).from;
+
+				// push the new current node at the beginning of the array
+
+				path.unshift( currentNode );
+
+			}
+
+			return path;
+
+		}
+
+		/**
+		* Returns the search tree of the algorithm as an array of edges.
+		*
+		* @return {Array} The search tree.
+		*/
+		getSearchTree() {
+
+			return [ ...this._shortestPathTree.values() ];
+
+		}
+
+		/**
+		* Clears the internal state of the object. A new search is now possible.
+		*
+		* @return {AStar} A reference to this AStar object.
+		*/
+		clear() {
+
+			this.found = false;
+
+			this._cost.clear();
+			this._shortestPathTree.clear();
+			this._searchFrontier.clear();
+
+			return this;
+
+		}
+
+	}
+
+
+	function compare( a, b ) {
+
+		return ( a.cost < b.cost ) ? - 1 : ( a.cost > b.cost ) ? 1 : 0;
+
+	}
+
+	const p1 = new Vector3();
+	const p2 = new Vector3();
+
+	/**
+	* Class representing a 3D line segment.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class LineSegment {
+
+		/**
+		* Constructs a new line segment with the given values.
+		*
+		* @param {Vector3} from - The start point of the line segment.
+		* @param {Vector3} to - The end point of the line segment.
+		*/
+		constructor( from = new Vector3(), to = new Vector3() ) {
+
+			/**
+			* The start point of the line segment.
+			* @type Vector3
+			*/
+			this.from = from;
+
+			/**
+			* The end point of the line segment.
+			* @type Vector3
+			*/
+			this.to = to;
+
+		}
+
+		/**
+		* Sets the given values to this line segment.
+		*
+		* @param {Vector3} from - The start point of the line segment.
+		* @param {Vector3} to - The end point of the line segment.
+		* @return {LineSegment} A reference to this line segment.
+		*/
+		set( from, to ) {
+
+			this.from = from;
+			this.to = to;
+
+			return this;
+
+		}
+
+		/**
+		* Copies all values from the given line segment to this line segment.
+		*
+		* @param {LineSegment} lineSegment - The line segment to copy.
+		* @return {LineSegment} A reference to this line segment.
+		*/
+		copy( lineSegment ) {
+
+			this.from.copy( lineSegment.from );
+			this.to.copy( lineSegment.to );
+
+			return this;
+
+		}
+
+		/**
+		* Creates a new line segment and copies all values from this line segment.
+		*
+		* @return {LineSegment} A new line segment.
+		*/
+		clone() {
+
+			return new this.constructor().copy( this );
+
+		}
+
+		/**
+		* Computes the difference vector between the end and start point of this
+		* line segment and stores the result in the given vector.
+		*
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		delta( result ) {
+
+			return result.subVectors( this.to, this.from );
+
+		}
+
+		/**
+		* Computes a position on the line segment according to the given t value
+		* and stores the result in the given 3D vector. The t value has usually a range of
+		* [0, 1] where 0 means start position and 1 the end position.
+		*
+		* @param {Number} t - A scalar value representing a position on the line segment.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		at( t, result ) {
+
+			return this.delta( result ).multiplyScalar( t ).add( this.from );
+
+		}
+
+		/**
+		* Computes the closest point on an infinite line defined by the line segment.
+		* It's possible to clamp the closest point so it does not exceed the start and
+		* end position of the line segment.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @param {Boolean} clampToLine - Indicates if the results should be clamped.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The closest point.
+		*/
+		closestPointToPoint( point, clampToLine, result ) {
+
+			const t = this.closestPointToPointParameter( point, clampToLine );
+
+			return this.at( t, result );
+
+		}
+
+		/**
+		* Computes a scalar value which represents the closest point on an infinite line
+		* defined by the line segment. It's possible to clamp this value so it does not
+		* exceed the start and end position of the line segment.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @param {Boolean} clampToLine - Indicates if the results should be clamped.
+		* @return {Number} A scalar representing the closest point.
+		*/
+		closestPointToPointParameter( point, clampToLine = true ) {
+
+			p1.subVectors( point, this.from );
+			p2.subVectors( this.to, this.from );
+
+			const dotP2P2 = p2.dot( p2 );
+			const dotP2P1 = p2.dot( p1 );
+
+			let t = dotP2P1 / dotP2P2;
+
+			if ( clampToLine ) t = MathUtils.clamp( t, 0, 1 );
+
+			return t;
+
+		}
+
+		/**
+		* Returns true if the given line segment is deep equal with this line segment.
+		*
+		* @param {LineSegment} lineSegment - The line segment to test.
+		* @return {Boolean} The result of the equality test.
+		*/
+		equals( lineSegment ) {
+
+			return lineSegment.from.equals( this.from ) && lineSegment.to.equals( this.to );
+
+		}
+
+	}
+
+	const v1$2 = new Vector3();
+	const v2 = new Vector3();
+
+	/**
+	* Class representing a plane in 3D space. The plane is specified in Hessian normal form.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class Plane {
+
+		/**
+		* Constructs a new plane with the given values. The sign of {@link Plane#constant} determines the side of the plane on which the origin is located.
+		*
+		* @param {Vector3} normal - The normal vector of the plane.
+		* @param {Number} constant - The distance of the plane from the origin.
+		*/
+		constructor( normal = new Vector3( 0, 0, 1 ), constant = 0 ) {
+
+			/**
+			* The normal vector of the plane.
+			* @type Vector3
+			*/
+			this.normal = normal;
+
+			/**
+			* The distance of the plane from the origin.
+			* @type Number
+			*/
+			this.constant = constant;
+
+		}
+
+		/**
+		* Sets the given values to this plane.
+		*
+		* @param {Vector3} normal - The normal vector of the plane.
+		* @param {Number} constant - The distance of the plane from the origin.
+		* @return {Plane} A reference to this plane.
+		*/
+		set( normal, constant ) {
+
+			this.normal = normal;
+			this.constant = constant;
+
+			return this;
+
+		}
+
+		/**
+		* Copies all values from the given plane to this plane.
+		*
+		* @param {Plane} plane - The plane to copy.
+		* @return {Plane} A reference to this plane.
+		*/
+		copy( plane ) {
+
+			this.normal.copy( plane.normal );
+			this.constant = plane.constant;
+
+			return this;
+
+		}
+
+		/**
+		* Creates a new plane and copies all values from this plane.
+		*
+		* @return {Plane} A new plane.
+		*/
+		clone() {
+
+			return new this.constructor().copy( this );
+
+		}
+
+		/**
+		* Computes the signed distance from the given 3D vector to this plane.
+		* The sign of the distance indicates the half-space in which the points lies.
+		* Zero means the point lies on the plane.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @return {Number} The signed distance.
+		*/
+		distanceToPoint( point ) {
+
+			return this.normal.dot( point ) + this.constant;
+
+		}
+
+		/**
+		* Sets the values of the plane from the given normal vector and a coplanar point.
+		*
+		* @param {Vector3} normal - A normalized vector.
+		* @param {Vector3} point - A coplanar point.
+		* @return {Plane} A reference to this plane.
+		*/
+		fromNormalAndCoplanarPoint( normal, point ) {
+
+			this.normal.copy( normal );
+			this.constant = - point.dot( this.normal );
+
+			return this;
+
+		}
+
+		/**
+		* Sets the values of the plane from three given coplanar points.
+		*
+		* @param {Vector3} a - A coplanar point.
+		* @param {Vector3} b - A coplanar point.
+		* @param {Vector3} c - A coplanar point.
+		* @return {Plane} A reference to this plane.
+		*/
+		fromCoplanarPoints( a, b, c ) {
+
+			v1$2.subVectors( c, b ).cross( v2.subVectors( a, b ) ).normalize();
+
+			this.fromNormalAndCoplanarPoint( v1$2, a );
+
+			return this;
+
+		}
+
+		/**
+		* Returns true if the given plane is deep equal with this plane.
+		*
+		* @param {Plane} plane - The plane to test.
+		* @return {Boolean} The result of the equality test.
+		*/
+		equals( plane ) {
+
+			return plane.normal.equals( this.normal ) && plane.constant === this.constant;
+
+		}
+
+	}
+
+	/**
+	* Class for representing navigation edges.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments Edge
+	*/
+	class NavEdge extends Edge {
+
+		/**
+		* Constructs a navigation edge.
+		*
+		* @param {Number} from - The index of the from node.
+		* @param {Number} to - The index of the to node.
+		* @param {Number} cost - The cost of this edge.
+		*/
+		constructor( from = - 1, to = - 1, cost = 0 ) {
+
+			super( from, to, cost );
+
+		}
+
+	}
+
+	/**
+	* Class for representing navigation nodes.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments Node
+	*/
+	class NavNode extends Node {
+
+		/**
+		* Constructs a new navigation node.
+		*
+		* @param {Number} index - The unique index of this node.
+		* @param {Vector3} position - The position of the node in 3D space.
+		* @param {Object} userData - Custom user data connected to this node.
+		*/
+		constructor( index = - 1, position = new Vector3(), userData = {} ) {
+
+			super( index );
+
+			/**
+			* The position of the node in 3D space.
+			* @type Vector3
+			*/
+			this.position = position;
+
+			/**
+			* Custom user data connected to this node.
+			* @type Object
+			*/
+			this.userData = userData;
+
+		}
+
+	}
+
+	/**
+	* A corridor is a sequence of portal edges representing a walkable way within a navigation mesh. The class is able
+	* to find the shortest path through this corridor as a sequence of waypoints.
+	* Code is based on the following {@link https://github.com/nickjanssen/PatrolJS/blob/master/patrol.js implementation}.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @author {@link https://github.com/robp94|robp94}
+	*/
+	class Corridor {
+
+		/**
+		* Creates a new corridor.
+		*/
+		constructor() {
+
+			/**
+			* The portal edges of the corridor.
+			* @type Array
+			*/
+			this.portalEdges = new Array();
+
+		}
+
+		/**
+		* Adds a portal edge defined by its left and right vertex to this corridor.
+		*
+		* @param {Vector3} left - The left point (origin) of the portal edge.
+		* @param {Vector3} right - The right point (destination) of the portal edge.
+		* @return {Corridor} A reference to this corridor.
+		*/
+		push( left, right ) {
+
+			this.portalEdges.push( {
+				left: left,
+				right: right
+			} );
+
+			return this;
+
+		}
+
+		/**
+		* Generates the shortest path through the corridor as an array of 3D vectors.
+		*
+		* @return {Array} An array of 3D waypoints.
+		*/
+		generate() {
+
+			const portalEdges = this.portalEdges;
+			const path = new Array();
+
+			// init scan state
+
+			let portalApex, portalLeft, portalRight;
+			let apexIndex = 0, leftIndex = 0, rightIndex = 0;
+
+			portalApex = portalEdges[ 0 ].left;
+			portalLeft = portalEdges[ 0 ].left;
+			portalRight = portalEdges[ 0 ].right;
+
+			// add start point
+
+			path.push( portalApex );
+
+			for ( let i = 1, l = portalEdges.length; i < l; i ++ ) {
+
+				const left = portalEdges[ i ].left;
+				const right = portalEdges[ i ].right;
+
+				// update right vertex
+
+				if ( MathUtils.area( portalApex, portalRight, right ) <= 0.0 ) {
+
+					if ( portalApex === portalRight || MathUtils.area( portalApex, portalLeft, right ) > 0.0 ) {
+
+						// tighten the funnel
+
+						portalRight = right;
+						rightIndex = i;
+
+					} else {
+
+						// right over left, insert left to path and restart scan from portal left point
+
+						path.push( portalLeft );
+
+						// make current left the new apex
+
+						portalApex = portalLeft;
+						apexIndex = leftIndex;
+
+						// review eset portal
+
+						portalLeft = portalApex;
+						portalRight = portalApex;
+						leftIndex = apexIndex;
+						rightIndex = apexIndex;
+
+						// restart scan
+
+						i = apexIndex;
+
+						continue;
+
+					}
+
+				}
+
+				// update left vertex
+
+				if ( MathUtils.area( portalApex, portalLeft, left ) >= 0.0 ) {
+
+					if ( portalApex === portalLeft || MathUtils.area( portalApex, portalRight, left ) < 0.0 ) {
+
+						// tighten the funnel
+
+						portalLeft = left;
+						leftIndex = i;
+
+					} else {
+
+						// left over right, insert right to path and restart scan from portal right point
+
+						path.push( portalRight );
+
+						// make current right the new apex
+
+						portalApex = portalRight;
+						apexIndex = rightIndex;
+
+						// reset portal
+
+						portalLeft = portalApex;
+						portalRight = portalApex;
+						leftIndex = apexIndex;
+						rightIndex = apexIndex;
+
+						// restart scan
+
+						i = apexIndex;
+
+						continue;
+
+					}
+
+				}
+
+			}
+
+			if ( ( path.length === 0 ) || ( path[ path.length - 1 ] !== portalEdges[ portalEdges.length - 1 ].left ) ) {
+
+				// append last point to path
+
+				path.push( portalEdges[ portalEdges.length - 1 ].left );
+
+			}
+
+			return path;
+
+		}
+
+	}
+
+	/**
+	* Implementation of a half-edge data structure, also known as
+	* {@link https://en.wikipedia.org/wiki/Doubly_connected_edge_list Doubly connected edge list}.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class HalfEdge {
+
+		/**
+		* Constructs a new half-edge.
+		*
+		* @param {Vector3} vertex - The (origin) vertex of this half-edge.
+		*/
+		constructor( vertex = new Vector3() ) {
+
+			/**
+			* The (origin) vertex of this half-edge.
+			* @type Vector3
+			*/
+			this.vertex = vertex;
+
+			/**
+			* A reference to the next half-edge.
+			* @type HalfEdge
+			*/
+			this.next = null;
+
+			/**
+			* A reference to the previous half-edge.
+			* @type HalfEdge
+			*/
+			this.prev = null;
+
+			/**
+			* A reference to the opponent half-edge.
+			* @type HalfEdge
+			*/
+			this.twin = null;
+
+			/**
+			* A reference to its polygon/face.
+			* @type Polygon
+			*/
+			this.polygon = null;
+
+		}
+
+		/**
+		* Returns the origin vertex of this half-edge.
+		*
+		* @return {Vector3} The origin vertex.
+		*/
+		from() {
+
+			return this.vertex;
+
+		}
+
+		/**
+		* Returns the destination vertex of this half-edge.
+		*
+		* @return {Vector3} The destination vertex.
+		*/
+		to() {
+
+			return this.next ? this.next.vertex : null;
+
+		}
+
+		/**
+		* Computes the length of this half-edge.
+		*
+		* @return {Number} The length of this half-edge.
+		*/
+		length() {
+
+			const from = this.from();
+			const to = this.to();
+
+			if ( to !== null ) {
+
+				return from.distanceTo( to );
+
+			}
+
+			return - 1;
+
+		}
+
+		/**
+		* Computes the squared length of this half-edge.
+		*
+		* @return {Number} The squared length of this half-edge.
+		*/
+		squaredLength() {
+
+			const from = this.from();
+			const to = this.to();
+
+			if ( to !== null ) {
+
+				return from.squaredDistanceTo( to );
+
+			}
+
+			return - 1;
+
+		}
+
+	}
+
+	const pointOnLineSegment = new Vector3();
+	const closestPoint = new Vector3();
+	const edgeDirection = new Vector3();
+	const movementDirection = new Vector3();
+	const newPosition = new Vector3();
+	const lineSegment = new LineSegment();
+
+	/**
+	* Implementation of a navigation mesh. A navigation mesh is a network of convex polygons
+	* which define the walkable areas of a game environment. A convex polygon allows unobstructed travel
+	* from any point in the polygon to any other. This is useful because it enables the navigation mesh
+	* to be represented using a graph where each node represents a convex polygon and their respective edges
+	* represent the neighborly relations to other polygons. More compact navigation graphs leads
+	* to faster graph search execution.
+	*
+	* This particular implementation is able to merge convex polygons into bigger ones as long
+	* as they keep their convexity and coplanarity. The performance of the path finding process and convex region tests
+	* for complex navigation meshes can be improved by using a spatial index like {@link CellSpacePartitioning}.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @author {@link https://github.com/robp94|robp94}
+	*/
+	class NavMesh {
+
+		/**
+		* Constructs a new navigation mesh.
+		*/
+		constructor() {
+
+			/**
+			* The internal navigation graph of this navigation mesh representing neighboring polygons.
+			* @type Graph
+			*/
+			this.graph = new Graph();
+			this.graph.digraph = true;
+
+			/**
+			* The list of convex regions.
+			* @type Array
+			*/
+			this.regions = new Array();
+
+			/**
+			* A reference to a spatial index.
+			* @type CellSpacePartitioning
+			* @default null
+			*/
+			this.spatialIndex = null;
+
+			/**
+			* The tolerance value for the coplanar test.
+			* @type Number
+			* @default 1e-3
+			*/
+			this.epsilonCoplanarTest = 1e-3;
+
+			/**
+			* The tolerance value for the containment test.
+			* @type Number
+			* @default 1
+			*/
+			this.epsilonContainsTest = 1;
+
+		}
+
+		/**
+		* Creates the navigation mesh from an array of convex polygons.
+		*
+		* @param {Array} polygons - An array of convex polygons.
+		* @return {NavMesh} A reference to this navigation mesh.
+		*/
+		fromPolygons( polygons ) {
+
+			this.clear();
+
+			//
+
+			const initialEdgeList = new Array();
+			const sortedEdgeList = new Array();
+
+			// setup list with all edges
+
+			for ( let i = 0, l = polygons.length; i < l; i ++ ) {
+
+				const polygon = polygons[ i ];
+
+				let edge = polygon.edge;
+
+				do {
+
+					initialEdgeList.push( edge );
+
+					edge = edge.next;
+
+				} while ( edge !== polygon.edge );
+
+				//
+
+				this.regions.push( polygon );
+
+			}
+
+			// setup twin references and sorted list of edges
+
+			for ( let i = 0, il = initialEdgeList.length; i < il; i ++ ) {
+
+				let edge0 = initialEdgeList[ i ];
+
+				if ( edge0.twin !== null ) continue;
+
+				for ( let j = i + 1, jl = initialEdgeList.length; j < jl; j ++ ) {
+
+					let edge1 = initialEdgeList[ j ];
+
+					if ( edge0.from().equals( edge1.to() ) && edge0.to().equals( edge1.from() ) ) {
+
+						// twin found, set references
+
+						edge0.twin = edge1;
+						edge1.twin = edge0;
+
+						// add edge to list
+
+						const cost = edge0.squaredLength();
+
+						sortedEdgeList.push( {
+							cost: cost,
+							edge: edge0
+						} );
+
+						// there can only be a single twin
+
+						break;
+
+					}
+
+				}
+
+			}
+
+			sortedEdgeList.sort( descending );
+
+			// half-edge data structure is now complete, begin build of convex regions
+
+			this._buildRegions( sortedEdgeList );
+
+			// now build the navigation graph
+
+			this._buildGraph();
+
+			return this;
+
+		}
+
+		/**
+		* Clears the internal state of this navigation mesh.
+		*
+		* @return {NavMesh} A reference to this navigation mesh.
+		*/
+		clear() {
+
+			this.graph.clear();
+			this.regions.length = 0;
+			this.spatialIndex = null;
+
+			return this;
+
+		}
+
+		/**
+		* Returns the closest convex region for the given point in 3D space.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @return {Polygon} The closest convex region.
+		*/
+		getClosestRegion( point ) {
+
+			const regions = this.regions;
+			let closesRegion = null;
+			let minDistance = Infinity;
+
+			for ( let i = 0, l = regions.length; i < l; i ++ ) {
+
+				const region = regions[ i ];
+
+				const distance = point.squaredDistanceTo( region.centroid );
+
+				if ( distance < minDistance ) {
+
+					minDistance = distance;
+
+					closesRegion = region;
+
+				}
+
+			}
+
+			return closesRegion;
+
+		}
+
+		/**
+		* Returns at random a convex region from the navigation mesh.
+		*
+		* @return {Polygon} The convex region.
+		*/
+		getRandomRegion() {
+
+			const regions = this.regions;
+
+			let index = Math.floor( Math.random() * ( regions.length ) );
+
+			if ( index === regions.length ) index = regions.length - 1;
+
+			return regions[ index ];
+
+		}
+
+		/**
+		* Returns the region that contains the given point. The computational overhead
+		* of this method for complex navigation meshes can greatly reduced by using a spatial index.
+		* If not convex region contains the point, *null* is returned.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @param {Number} epsilon - Tolerance value for the containment test.
+		* @return {Polygon} The convex region that contains the point.
+		*/
+		getRegionForPoint( point, epsilon = 1e-3 ) {
+
+			let regions;
+
+			if ( this.spatialIndex !== null ) {
+
+				const index = this.spatialIndex.getIndexForPosition( point );
+				regions = this.spatialIndex.cells[ index ].entries;
+
+			} else {
+
+				regions = this.regions;
+
+			}
+
+			//
+
+			for ( let i = 0, l = regions.length; i < l; i ++ ) {
+
+				const region = regions[ i ];
+
+				if ( region.contains( point, epsilon ) === true ) {
+
+					return region;
+
+				}
+
+			}
+
+			return null;
+
+		}
+
+		/**
+		* Returns the shortest path that leads from the given start position to the end position.
+		* The computational overhead of this method for complex navigation meshes can greatly
+		* reduced by using a spatial index.
+		*
+		* @param {Vector3} from - The start/source position.
+		* @param {Vector3} to - The end/destination position.
+		* @return {Array} The shortest path as an array of points.
+		*/
+		findPath( from, to ) {
+
+			const graph = this.graph;
+			const path = new Array();
+
+			let fromRegion = this.getRegionForPoint( from, this.epsilonContainsTest );
+			let toRegion = this.getRegionForPoint( to, this.epsilonContainsTest );
+
+			if ( fromRegion === null || toRegion === null ) {
+
+				// if source or target are outside the navmesh, choose the nearest convex region
+
+				if ( fromRegion === null ) fromRegion = this.getClosestRegion( from );
+				if ( toRegion === null ) toRegion = this.getClosestRegion( to );
+
+			}
+
+			// check if both convex region are identical
+
+			if ( fromRegion === toRegion ) {
+
+				// no search necessary, directly create the path
+
+				path.push( new Vector3().copy( from ) );
+				path.push( new Vector3().copy( to ) );
+				return path;
+
+			} else {
+
+				// source and target are not in same region, peforme search
+
+				const source = this.regions.indexOf( fromRegion );
+				const target = this.regions.indexOf( toRegion );
+
+				const astar = new AStar( graph, source, target );
+				astar.search();
+
+				if ( astar.found === true ) {
+
+					const polygonPath = astar.getPath();
+
+					const corridor = new Corridor();
+					corridor.push( from, from );
+
+					// push sequence of portal edges to corridor
+
+					const portalEdge = { left: null, right: null };
+
+					for ( let i = 0, l = ( polygonPath.length - 1 ); i < l; i ++ ) {
+
+						const region = this.regions[ polygonPath[ i ] ];
+						const nextRegion = this.regions[ polygonPath[ i + 1 ] ];
+
+						region.getPortalEdgeTo( nextRegion, portalEdge );
+
+						corridor.push( portalEdge.left, portalEdge.right );
+
+					}
+
+					corridor.push( to, to );
+
+					path.push( ...corridor.generate() );
+
+				}
+
+				return path;
+
+			}
+
+		}
+
+		/**
+		* This method can be used to restrict the movement of a game entity on the navigation mesh.
+		* Instead of preventing any form of translation when a game entity hits a border edge, the
+		* movement is clamped along the contour of the navigation mesh.
+		*
+		* @param {Polygon} currentRegion - The current convex region of the game entity.
+		* @param {Vector3} startPosition - The original start position of the entity for the current simulation step.
+		* @param {Vector3} endPosition - The original end position of the entity for the current simulation step.
+		* @param {Vector3} clampPosition - The clamped position of the entity for the current simulation step.
+		* @return {Polygon} The new convex region the game entity is in.
+		*/
+		clampMovement( currentRegion, startPosition, endPosition, clampPosition ) {
+
+			let newRegion = this.getRegionForPoint( endPosition, this.epsilonContainsTest );
+
+			// endPosition lies outside navMesh
+
+			if ( newRegion === null ) {
+
+				if ( currentRegion === null ) throw new Error( 'YUKA.NavMesh.clampMovement(): No current region available.' );
+
+				// determine closest edge in current convex region
+
+				let closestEdge = null;
+				let minDistance = Infinity;
+
+				let edge = currentRegion.edge;
+
+				do {
+
+					// only consider border edges
+
+					if ( edge.twin === null ) {
+
+						lineSegment.set( edge.vertex, edge.next.vertex );
+						const t = lineSegment.closestPointToPointParameter( startPosition );
+						lineSegment.at( t, pointOnLineSegment );
+
+						const distance = pointOnLineSegment.squaredDistanceTo( startPosition );
+
+						if ( distance < minDistance ) {
+
+							minDistance = distance;
+
+							closestEdge = edge;
+							closestPoint.copy( pointOnLineSegment );
+
+						}
+
+					}
+
+					edge = edge.next;
+
+				} while ( edge !== currentRegion.edge );
+
+				// calculate movement and edge direction
+
+				edgeDirection.subVectors( closestEdge.next.vertex, closestEdge.vertex ).normalize();
+				const length = movementDirection.subVectors( endPosition, startPosition ).length();
+				movementDirection.divideScalar( length );
+
+				// this value influences the speed at which the entity moves along the edge
+
+				const f = edgeDirection.dot( movementDirection );
+
+				// calculate new position on the edge
+
+				newPosition.copy( closestPoint ).add( edgeDirection.multiplyScalar( f * length ) );
+
+				// the following value "t" tells us if the point exceeds the line segment
+
+				lineSegment.set( closestEdge.vertex, closestEdge.next.vertex );
+				const t = lineSegment.closestPointToPointParameter( newPosition, false );
+
+				//
+
+				if ( t >= 0 && t <= 1 ) {
+
+					// point is within line segment, we can safely use the new position
+
+					clampPosition.copy( newPosition );
+
+				} else {
+
+					// check, if the new point lies outside the navMesh
+
+					newRegion = this.getRegionForPoint( newPosition, this.epsilonContainsTest );
+
+					if ( newRegion !== null ) {
+
+						// if not, everything is fine
+
+						clampPosition.copy( newPosition );
+						return newRegion;
+
+					}
+
+					// otherwise prevent movement
+
+					clampPosition.copy( startPosition );
+
+				}
+
+				return currentRegion;
+
+			} else {
+
+				// return the new region
+
+				return newRegion;
+
+			}
+
+		}
+
+		/**
+		* Updates the spatial index by assigning all convex regions to the
+		* partitions of the spatial index.
+		*
+		* @return {NavMesh} A reference to this navigation mesh.
+		*/
+		updateSpatialIndex() {
+
+			if ( this.spatialIndex !== null ) {
+
+				this.spatialIndex.makeEmpty();
+
+				const regions = this.regions;
+
+				for ( let i = 0, l = regions.length; i < l; i ++ ) {
+
+					const region = regions[ i ];
+
+					this.spatialIndex.addPolygon( region );
+
+				}
+
+			}
+
+			return this;
+
+		}
+
+		_buildRegions( edgeList ) {
+
+			const regions = this.regions;
+
+			const cache = {
+				leftPrev: null,
+				leftNext: null,
+				rightPrev: null,
+				rightNext: null
+			};
+
+			// process edges from longest to shortest
+
+			for ( let i = 0, l = edgeList.length; i < l; i ++ ) {
+
+				const entry = edgeList[ i ];
+
+				let candidate = entry.edge;
+
+				// cache current references for possible restore
+
+				cache.prev = candidate.prev;
+				cache.next = candidate.next;
+				cache.prevTwin = candidate.twin.prev;
+				cache.nextTwin = candidate.twin.next;
+
+				// temporarily change the first polygon in order to represent both polygons
+
+				candidate.prev.next = candidate.twin.next;
+				candidate.next.prev = candidate.twin.prev;
+				candidate.twin.prev.next = candidate.next;
+				candidate.twin.next.prev = candidate.prev;
+
+				const polygon = candidate.polygon;
+				polygon.edge = candidate.prev;
+
+				if ( polygon.convex() === true && polygon.coplanar( this.epsilonCoplanarTest ) === true ) {
+
+					// correct polygon reference of all edges
+
+					let edge = polygon.edge;
+
+					do {
+
+						edge.polygon = polygon;
+
+						edge = edge.next;
+
+					} while ( edge !== polygon.edge );
+
+					// delete obsolete polygon
+
+					const index = regions.indexOf( entry.edge.twin.polygon );
+					regions.splice( index, 1 );
+
+				} else {
+
+					// restore
+
+					cache.prev.next = candidate;
+					cache.next.prev = candidate;
+					cache.prevTwin.next = candidate.twin;
+					cache.nextTwin.prev = candidate.twin;
+
+					polygon.edge = candidate;
+
+				}
+
+			}
+
+			//
+
+			for ( let i = 0, l = regions.length; i < l; i ++ ) {
+
+				const region = regions[ i ];
+
+				region.computeCentroid();
+
+			}
+
+		}
+
+		_buildGraph() {
+
+			const graph = this.graph;
+			const regions = this.regions;
+
+			// for each region, the code creates an array of directly accessible regions
+
+			const regionNeighbourhood = new Array();
+
+			for ( let i = 0, l = regions.length; i < l; i ++ ) {
+
+				const region = regions[ i ];
+
+				const regionIndices = new Array();
+				regionNeighbourhood.push( regionIndices );
+
+				let edge = region.edge;
+
+				// iterate through all egdes of the region (in other words: along its contour)
+
+				do {
+
+					// check for a portal edge
+
+					if ( edge.twin !== null ) {
+
+						const regionIndex = this.regions.indexOf( edge.twin.polygon );
+
+						regionIndices.push( regionIndex ); // the index of the adjacent region
+
+						// add node for this region to the graph if necessary
+
+						if ( graph.hasNode( this.regions.indexOf( edge.polygon ) ) === false ) {
+
+							const node = new NavNode( this.regions.indexOf( edge.polygon ), edge.polygon.centroid );
+
+							graph.addNode( node );
+
+						}
+
+					}
+
+					edge = edge.next;
+
+				} while ( edge !== region.edge );
+
+			}
+
+			// add navigation edges
+
+			for ( let i = 0, il = regionNeighbourhood.length; i < il; i ++ ) {
+
+				const indices = regionNeighbourhood[ i ];
+				const from = i;
+
+				for ( let j = 0, jl = indices.length; j < jl; j ++ ) {
+
+					const to = indices[ j ];
+
+					if ( from !== to ) {
+
+						if ( graph.hasEdge( from, to ) === false ) {
+
+							const nodeFrom = graph.getNode( from );
+							const nodeTo = graph.getNode( to );
+
+							const cost = nodeFrom.position.distanceTo( nodeTo.position );
+
+							graph.addEdge( new NavEdge( from, to, cost ) );
+
+						}
+
+					}
+
+				}
+
+			}
+
+			return this;
+
+		}
+
+	}
+
+	//
+
+	function descending( a, b ) {
+
+		return ( a.cost < b.cost ) ? 1 : ( a.cost > b.cost ) ? - 1 : 0;
+
+	}
+
+	/**
+	* Class for representing a planar polygon with an arbitrary amount of edges.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @author {@link https://github.com/robp94|robp94}
+	*/
+	class Polygon {
+
+		/**
+		* Constructs a new polygon.
+		*/
+		constructor() {
+
+			/**
+			* The centroid of this polygon.
+			* @type Vector3
+			*/
+			this.centroid = new Vector3();
+
+			/**
+			* A reference to the first half-edge of this polygon.
+			* @type HalfEdge
+			*/
+			this.edge = null;
+
+			/**
+			* A plane abstraction of this polygon.
+			* @type Plane
+			*/
+			this.plane = new Plane();
+
+		}
+
+		/**
+		* Creates the polygon based on the given array of points in 3D space.
+		* The method assumes the contour (the sequence of points) is defined
+		* in CCW order.
+		*
+		* @param {Array} points - The array of points.
+		* @return {Polygon} A reference to this polygon.
+		*/
+		fromContour( points ) {
+
+			const edges = new Array();
+
+			if ( points.length < 3 ) {
+
+				Logger.error( 'YUKA.Polygon: Unable to create polygon from contour. It needs at least three points.' );
+				return this;
+
+			}
+
+			for ( let i = 0, l = points.length; i < l; i ++ ) {
+
+				const edge = new HalfEdge( points[ i ] );
+				edges.push( edge );
+
+			}
+
+			// link edges
+
+			for ( let i = 0, l = edges.length; i < l; i ++ ) {
+
+				let current, prev, next;
+
+				if ( i === 0 ) {
+
+					current = edges[ i ];
+					prev = edges[ l - 1 ];
+				 	next = edges[ i + 1 ];
+
+				} else if ( i === ( l - 1 ) ) {
+
+					current = edges[ i ];
+				 	prev = edges[ i - 1 ];
+					next = edges[ 0 ];
+
+				} else {
+
+				 	current = edges[ i ];
+					prev = edges[ i - 1 ];
+					next = edges[ i + 1 ];
+
+				}
+
+				current.prev = prev;
+				current.next = next;
+				current.polygon = this;
+
+			}
+
+			//
+
+			this.edge = edges[ 0 ];
+
+			//
+
+			this.plane.fromCoplanarPoints( points[ 0 ], points[ 1 ], points[ 2 ] );
+
+			return this;
+
+		}
+
+		/**
+		* Computes the centroid for this polygon.
+		*
+		* @return {Polygon} A reference to this polygon.
+		*/
+		computeCentroid() {
+
+			const centroid = this.centroid;
+			let edge = this.edge;
+			let count = 0;
+
+			centroid.set( 0, 0, 0 );
+
+			do {
+
+				centroid.add( edge.from() );
+
+				count ++;
+
+				edge = edge.next;
+
+			} while ( edge !== this.edge );
+
+			centroid.divideScalar( count );
+
+			return this;
+
+		}
+
+		/**
+		* Returns true if the polygon contains the given point.
+		*
+		* @param {Vector3} point - The point to test.
+		* @param {Number} epsilon - A tolerance value.
+		* @return {Boolean} Whether this polygon contain the given point or not.
+		*/
+		contains( point, epsilon = 1e-3 ) {
+
+			const plane = this.plane;
+			let edge = this.edge;
+
+			// convex test
+
+			do {
+
+				const v1 = edge.from();
+				const v2 = edge.to();
+
+				if ( leftOn( v1, v2, point ) === false ) {
+
+					return false;
+
+				}
+
+				edge = edge.next;
+
+			} while ( edge !== this.edge );
+
+			// ensure the given point lies within a defined tolerance range
+
+			const distance = plane.distanceToPoint( point );
+
+			if ( Math.abs( distance ) > epsilon ) {
+
+				return false;
+
+			}
+
+			return true;
+
+		}
+
+		/**
+		* Returns true if the polygon is convex.
+		*
+		* @return {Boolean} Whether this polygon is convex or not.
+		*/
+		convex() {
+
+			let edge = this.edge;
+
+			do {
+
+				const v1 = edge.from();
+				const v2 = edge.to();
+				const v3 = edge.next.to();
+
+				if ( leftOn( v1, v2, v3 ) === false ) {
+
+					return false;
+
+				}
+
+				edge = edge.next;
+
+			} while ( edge !== this.edge );
+
+			return true;
+
+		}
+
+		/**
+		* Returns true if the polygon is coplanar.
+		*
+		* @param {Number} epsilon - A tolerance value.
+		* @return {Boolean} Whether this polygon is coplanar or not.
+		*/
+		coplanar( epsilon = 1e-3 ) {
+
+			const plane = this.plane;
+			let edge = this.edge;
+
+			do {
+
+				const distance = plane.distanceToPoint( edge.from() );
+
+				if ( Math.abs( distance ) > epsilon ) {
+
+					return false;
+
+				}
+
+				edge = edge.next;
+
+			} while ( edge !== this.edge );
+
+			return true;
+
+		}
+
+		/**
+		* Determines the contour (sequence of points) of this polygon and
+		* stores the result in the given array.
+		*
+		* @param {Array} result - The result array.
+		* @return {Array} The result array.
+		*/
+		getContour( result ) {
+
+			let edge = this.edge;
+
+			result.length = 0;
+
+			do {
+
+				result.push( edge.vertex );
+
+				edge = edge.next;
+
+			} while ( edge !== this.edge );
+
+			return result;
+
+		}
+
+		/**
+		* Determines the portal edge that can be used to reach the
+		* given polygon over its twin reference. The result is stored
+		* in the given portal edge data structure.
+		*
+		* @param {Polygon} polygon - The array of points.
+		* @param {Object} portalEdge - The portal edge.
+		* @return {Object} The portal edge.
+		*/
+		getPortalEdgeTo( polygon, portalEdge ) {
+
+			let edge = this.edge;
+
+			do {
+
+				if ( edge.twin !== null ) {
+
+					if ( edge.twin.polygon === polygon ) {
+
+						portalEdge.left = edge.vertex;
+						portalEdge.right = edge.next.vertex;
+						return portalEdge;
+
+					}
+
+				}
+
+				edge = edge.next;
+
+			} while ( edge !== this.edge );
+
+			portalEdge.left = null;
+			portalEdge.right = null;
+
+			return portalEdge;
+
+		}
+
+	}
+
+	// from the book "Computational Geometry in C, Joseph O'Rourke"
+
+	function leftOn( a, b, c ) {
+
+		return MathUtils.area( a, b, c ) >= 0;
+
+	}
+
+	/**
+	* Class for loading navigation meshes as glTF assets. The loader supports
+	* *glTF* and *glb* files, embedded buffers, index and non-indexed geometries.
+	* Interleaved geometry data are not yet supported.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class NavMeshLoader {
+
+		/**
+		* Loads a {@link NavMesh navigation mesh} from the given URL. The second parameter can be used
+		* to influence the parsing of the navigation mesh.
+		*
+		* @param {String} url - The URL of the glTF asset.
+		* @param {Object} options - The configuration object.
+		* @return {Promise} A promise representing the loading and parsing process.
+		*/
+		load( url, options ) {
+
+			return new Promise( ( resolve, reject ) => {
+
+				fetch( url )
+
+					.then( response => {
+
+						if ( response.status >= 200 && response.status < 300 ) {
+
+							return response.arrayBuffer();
+
+						} else {
+
+							const error = new Error( response.statusText || response.status );
+							error.response = response;
+							return Promise.reject( error );
+
+						}
+
+					} )
+
+					.then( ( arrayBuffer ) => {
+
+						const parser = new Parser();
+						const decoder = new TextDecoder();
+						let data;
+
+						const magic = decoder.decode( new Uint8Array( arrayBuffer, 0, 4 ) );
+
+						if ( magic === BINARY_EXTENSION_HEADER_MAGIC ) {
+
+							parser.parseBinary( arrayBuffer );
+
+							data = parser.extensions.get( 'BINARY' ).content;
+
+						} else {
+
+							data = decoder.decode( new Uint8Array( arrayBuffer ) );
+
+						}
+
+						const json = JSON.parse( data );
+
+						if ( json.asset === undefined || json.asset.version[ 0 ] < 2 ) {
+
+							throw new Error( 'YUKA.NavMeshLoader: Unsupported asset version.' );
+
+						} else {
+
+							const path = extractUrlBase( url );
+
+							return parser.parse( json, path, options );
+
+						}
+
+					} )
+
+					.then( ( data ) => {
+
+						resolve( data );
+
+					} )
+
+					.catch( ( error ) => {
+
+						Logger.error( 'YUKA.NavMeshLoader: Unable to load navigation mesh.', error );
+
+						reject( error );
+
+					} );
+
+			} );
+
+		}
+
+	}
+
+	class Parser {
+
+		constructor() {
+
+			this.json = null;
+			this.path = null;
+			this.cache = new Map();
+			this.extensions = new Map();
+
+		}
+
+		parse( json, path, options ) {
+
+			this.json = json;
+			this.path = path;
+
+			// read the first mesh in the glTF file
+
+			return this.getDependency( 'mesh', 0 ).then( ( data ) => {
+
+				// parse the raw geometry data into a bunch of polygons
+
+				const polygons = this.parseGeometry( data );
+
+				// create and config navMesh
+
+				const navMesh = new NavMesh();
+
+				if ( options ) {
+
+					if ( options.epsilonCoplanarTest ) navMesh.epsilonCoplanarTest = options.epsilonCoplanarTest;
+
+				}
+
+				// use polygons to setup the nav mesh
+
+				return navMesh.fromPolygons( polygons );
+
+			} );
+
+		}
+
+		parseGeometry( data ) {
+
+			const index = data.index;
+			const position = data.position;
+
+			const vertices = new Array();
+			const polygons = new Array();
+
+			// vertices
+
+			for ( let i = 0, l = position.length; i < l; i += 3 ) {
+
+				const v = new Vector3();
+
+				v.x = position[ i + 0 ];
+				v.y = position[ i + 1 ];
+				v.z = position[ i + 2 ];
+
+				vertices.push( v );
+
+			}
+
+			// polygons
+
+			if ( index ) {
+
+				// indexed geometry
+
+				for ( let i = 0, l = index.length; i < l; i += 3 ) {
+
+					const a = index[ i + 0 ];
+					const b = index[ i + 1 ];
+					const c = index[ i + 2 ];
+
+					const contour = [ vertices[ a ], vertices[ b ], vertices[ c ] ];
+
+					const polygon = new Polygon().fromContour( contour );
+
+					polygons.push( polygon );
+
+				}
+
+			} else {
+
+				// non-indexed geometry
+
+				for ( let i = 0, l = vertices.length; i < l; i += 3 ) {
+
+					const contour = [ vertices[ i + 0 ], vertices[ i + 1 ], vertices[ i + 2 ] ];
+
+					const polygon = new Polygon().fromContour( contour );
+
+					polygons.push( polygon );
+
+				}
+
+			}
+
+			return polygons;
+
+		}
+
+		getDependencies( type ) {
+
+			const cache = this.cache;
+
+			let dependencies = cache.get( type );
+
+			if ( ! dependencies ) {
+
+				const definitions = this.json[ type + ( type === 'mesh' ? 'es' : 's' ) ] || [];
+
+				dependencies = Promise.all( definitions.map( ( definition, index ) => {
+
+					return this.getDependency( type, index );
+
+				} ) );
+
+				cache.set( type, dependencies );
+
+			}
+
+			return dependencies;
+
+		}
+
+		getDependency( type, index ) {
+
+			const cache = this.cache;
+			const key = type + ':' + index;
+
+			let dependency = cache.get( key );
+
+			if ( dependency === undefined ) {
+
+				switch ( type ) {
+
+					case 'accessor':
+						dependency = this.loadAccessor( index );
+						break;
+
+					case 'buffer':
+						dependency = this.loadBuffer( index );
+						break;
+
+					case 'bufferView':
+						dependency = this.loadBufferView( index );
+						break;
+
+					case 'mesh':
+						dependency = this.loadMesh( index );
+						break;
+
+					default:
+						throw new Error( 'Unknown type: ' + type );
+
+				}
+
+				cache.set( key, dependency );
+
+			}
+
+			return dependency;
+
+		}
+
+		loadBuffer( index ) {
+
+			const json = this.json;
+			const definition = json.buffers[ index ];
+
+			if ( definition.uri === undefined && index === 0 ) {
+
+				return Promise.resolve( this.extensions.get( 'BINARY' ).body );
+
+			}
+
+			return new Promise( ( resolve, reject ) => {
+
+				const url = resolveURI( definition.uri, this.path );
+
+				fetch( url )
+
+					.then( response => {
+
+						return response.arrayBuffer();
+
+					} )
+
+					.then( ( arrayBuffer ) => {
+
+						resolve( arrayBuffer );
+
+					} ).catch( ( error ) => {
+
+						Logger.error( 'YUKA.NavMeshLoader: Unable to load buffer.', error );
+
+						reject( error );
+
+					} );
+
+			} );
+
+		}
+
+		loadBufferView( index ) {
+
+			const json = this.json;
+
+			const definition = json.bufferViews[ index ];
+
+			return this.getDependency( 'buffer', definition.buffer ).then( ( buffer ) => {
+
+				const byteLength = definition.byteLength || 0;
+				const byteOffset = definition.byteOffset || 0;
+				return buffer.slice( byteOffset, byteOffset + byteLength );
+
+			} );
+
+		}
+
+		loadAccessor( index ) {
+
+			const json = this.json;
+			const definition = json.accessors[ index ];
+
+			return this.getDependency( 'bufferView', definition.bufferView ).then( ( bufferView ) => {
+
+				const itemSize = WEBGL_TYPE_SIZES[ definition.type ];
+				const TypedArray = WEBGL_COMPONENT_TYPES[ definition.componentType ];
+				const byteOffset = definition.byteOffset || 0;
+
+				return new TypedArray( bufferView, byteOffset, definition.count * itemSize );
+
+			} );
+
+		}
+
+		loadMesh( index ) {
+
+			const json = this.json;
+			const definition = json.meshes[ index ];
+
+			return this.getDependencies( 'accessor' ).then( ( accessors ) => {
+
+				// assuming a single primitive
+
+				const primitive = definition.primitives[ 0 ];
+
+				if ( primitive.mode !== 4 ) {
+
+					throw new Error( 'YUKA.NavMeshLoader: Invalid geometry format. Please ensure to represent your geometry as triangles.' );
+
+				}
+
+				return {
+					index: accessors[ primitive.indices ],
+					position: accessors[ primitive.attributes.POSITION ],
+					normal: accessors[ primitive.attributes.NORMAL ]
+				};
+
+			} );
+
+		}
+
+		parseBinary( data ) {
+
+			const chunkView = new DataView( data, BINARY_EXTENSION_HEADER_LENGTH );
+			let chunkIndex = 0;
+
+			const decoder = new TextDecoder();
+			let content = null;
+			let body = null;
+
+			while ( chunkIndex < chunkView.byteLength ) {
+
+				const chunkLength = chunkView.getUint32( chunkIndex, true );
+				chunkIndex += 4;
+
+				const chunkType = chunkView.getUint32( chunkIndex, true );
+				chunkIndex += 4;
+
+				if ( chunkType === BINARY_EXTENSION_CHUNK_TYPES.JSON ) {
+
+					const contentArray = new Uint8Array( data, BINARY_EXTENSION_HEADER_LENGTH + chunkIndex, chunkLength );
+					content = decoder.decode( contentArray );
+
+				} else if ( chunkType === BINARY_EXTENSION_CHUNK_TYPES.BIN ) {
+
+					const byteOffset = BINARY_EXTENSION_HEADER_LENGTH + chunkIndex;
+					body = data.slice( byteOffset, byteOffset + chunkLength );
+
+				}
+
+				chunkIndex += chunkLength;
+
+			}
+
+			this.extensions.set( 'BINARY', { content: content, body: body } );
+
+		}
+
+	}
+
+	// helper functions
+
+	function extractUrlBase( url ) {
+
+		const index = url.lastIndexOf( '/' );
+
+		if ( index === - 1 ) return './';
+
+		return url.substr( 0, index + 1 );
+
+	}
+
+	function resolveURI( uri, path ) {
+
+		if ( typeof uri !== 'string' || uri === '' ) return '';
+
+		if ( /^(https?:)?\/\//i.test( uri ) ) return uri;
+
+		if ( /^data:.*,.*$/i.test( uri ) ) return uri;
+
+		if ( /^blob:.*$/i.test( uri ) ) return uri;
+
+		return path + uri;
+
+	}
+
+	//
+
+	const WEBGL_TYPE_SIZES = {
+		'SCALAR': 1,
+		'VEC2': 2,
+		'VEC3': 3,
+		'VEC4': 4,
+		'MAT2': 4,
+		'MAT3': 9,
+		'MAT4': 16
+	};
+
+	const WEBGL_COMPONENT_TYPES = {
+		5120: Int8Array,
+		5121: Uint8Array,
+		5122: Int16Array,
+		5123: Uint16Array,
+		5125: Uint32Array,
+		5126: Float32Array
+	};
+
+	const BINARY_EXTENSION_HEADER_MAGIC = 'glTF';
+	const BINARY_EXTENSION_HEADER_LENGTH = 12;
+	const BINARY_EXTENSION_CHUNK_TYPES = { JSON: 0x4E4F534A, BIN: 0x004E4942 };
 
 	// Polyfills
 
@@ -3549,6 +12765,7 @@
 	} );
 
 	var REVISION = '97';
+	var MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2 };
 	var CullFaceNone = 0;
 	var CullFaceBack = 1;
 	var CullFaceFront = 2;
@@ -50539,6 +59756,7774 @@
 	};
 
 	/**
+	 * @author qiao / https://github.com/qiao
+	 * @author mrdoob / http://mrdoob.com
+	 * @author alteredq / http://alteredqualia.com/
+	 * @author WestLangley / http://github.com/WestLangley
+	 * @author erich666 / http://erichaines.com
+	 */
+
+	function OrbitControls( object, domElement ) {
+
+		this.object = object;
+
+		this.domElement = ( domElement !== undefined ) ? domElement : document;
+
+		// Set to false to disable this control
+		this.enabled = true;
+
+		// "target" sets the location of focus, where the object orbits around
+		this.target = new Vector3$1();
+
+		// How far you can dolly in and out ( PerspectiveCamera only )
+		this.minDistance = 0;
+		this.maxDistance = Infinity;
+
+		// How far you can zoom in and out ( OrthographicCamera only )
+		this.minZoom = 0;
+		this.maxZoom = Infinity;
+
+		// How far you can orbit vertically, upper and lower limits.
+		// Range is 0 to Math.PI radians.
+		this.minPolarAngle = 0; // radians
+		this.maxPolarAngle = Math.PI; // radians
+
+		// How far you can orbit horizontally, upper and lower limits.
+		// If set, must be a sub-interval of the interval [ - Math.PI, Math.PI ].
+		this.minAzimuthAngle = - Infinity; // radians
+		this.maxAzimuthAngle = Infinity; // radians
+
+		// Set to true to enable damping (inertia)
+		// If damping is enabled, you must call controls.update() in your animation loop
+		this.enableDamping = false;
+		this.dampingFactor = 0.25;
+
+		// This option actually enables dollying in and out; left as "zoom" for backwards compatibility.
+		// Set to false to disable zooming
+		this.enableZoom = true;
+		this.zoomSpeed = 1.0;
+
+		// Set to false to disable rotating
+		this.enableRotate = true;
+		this.rotateSpeed = 1.0;
+
+		// Set to false to disable panning
+		this.enablePan = true;
+		this.panSpeed = 1.0;
+		this.screenSpacePanning = false; // if true, pan in screen-space
+		this.keyPanSpeed = 7.0;	// pixels moved per arrow key push
+
+		// Set to true to automatically rotate around the target
+		// If auto-rotate is enabled, you must call controls.update() in your animation loop
+		this.autoRotate = false;
+		this.autoRotateSpeed = 2.0; // 30 seconds per round when fps is 60
+
+		// Set to false to disable use of the keys
+		this.enableKeys = true;
+
+		// The four arrow keys
+		this.keys = { LEFT: 37, UP: 38, RIGHT: 39, BOTTOM: 40 };
+
+		// Mouse buttons
+		this.mouseButtons = { LEFT: MOUSE.LEFT, MIDDLE: MOUSE.MIDDLE, RIGHT: MOUSE.RIGHT };
+
+		// for reset
+		this.target0 = this.target.clone();
+		this.position0 = this.object.position.clone();
+		this.zoom0 = this.object.zoom;
+
+		//
+		// public methods
+		//
+
+		this.getPolarAngle = function () {
+
+			return spherical.phi;
+
+		};
+
+		this.getAzimuthalAngle = function () {
+
+			return spherical.theta;
+
+		};
+
+		this.saveState = function () {
+
+			scope.target0.copy( scope.target );
+			scope.position0.copy( scope.object.position );
+			scope.zoom0 = scope.object.zoom;
+
+		};
+
+		this.reset = function () {
+
+			scope.target.copy( scope.target0 );
+			scope.object.position.copy( scope.position0 );
+			scope.object.zoom = scope.zoom0;
+
+			scope.object.updateProjectionMatrix();
+			scope.dispatchEvent( changeEvent );
+
+			scope.update();
+
+			state = STATE.NONE;
+
+		};
+
+		// this method is exposed, but perhaps it would be better if we can make it private...
+		this.update = function () {
+
+			var offset = new Vector3$1();
+
+			// so camera.up is the orbit axis
+			var quat = new Quaternion$1().setFromUnitVectors( object.up, new Vector3$1( 0, 1, 0 ) );
+			var quatInverse = quat.clone().inverse();
+
+			var lastPosition = new Vector3$1();
+			var lastQuaternion = new Quaternion$1();
+
+			return function update() {
+
+				var position = scope.object.position;
+
+				offset.copy( position ).sub( scope.target );
+
+				// rotate offset to "y-axis-is-up" space
+				offset.applyQuaternion( quat );
+
+				// angle from z-axis around y-axis
+				spherical.setFromVector3( offset );
+
+				if ( scope.autoRotate && state === STATE.NONE ) {
+
+					rotateLeft( getAutoRotationAngle() );
+
+				}
+
+				spherical.theta += sphericalDelta.theta;
+				spherical.phi += sphericalDelta.phi;
+
+				// restrict theta to be between desired limits
+				spherical.theta = Math.max( scope.minAzimuthAngle, Math.min( scope.maxAzimuthAngle, spherical.theta ) );
+
+				// restrict phi to be between desired limits
+				spherical.phi = Math.max( scope.minPolarAngle, Math.min( scope.maxPolarAngle, spherical.phi ) );
+
+				spherical.makeSafe();
+
+
+				spherical.radius *= scale;
+
+				// restrict radius to be between desired limits
+				spherical.radius = Math.max( scope.minDistance, Math.min( scope.maxDistance, spherical.radius ) );
+
+				// move target to panned location
+				scope.target.add( panOffset );
+
+				offset.setFromSpherical( spherical );
+
+				// rotate offset back to "camera-up-vector-is-up" space
+				offset.applyQuaternion( quatInverse );
+
+				position.copy( scope.target ).add( offset );
+
+				scope.object.lookAt( scope.target );
+
+				if ( scope.enableDamping === true ) {
+
+					sphericalDelta.theta *= ( 1 - scope.dampingFactor );
+					sphericalDelta.phi *= ( 1 - scope.dampingFactor );
+
+					panOffset.multiplyScalar( 1 - scope.dampingFactor );
+
+				} else {
+
+					sphericalDelta.set( 0, 0, 0 );
+
+					panOffset.set( 0, 0, 0 );
+
+				}
+
+				scale = 1;
+
+				// update condition is:
+				// min(camera displacement, camera rotation in radians)^2 > EPS
+				// using small-angle approximation cos(x/2) = 1 - x^2 / 8
+
+				if ( zoomChanged ||
+					lastPosition.distanceToSquared( scope.object.position ) > EPS ||
+					8 * ( 1 - lastQuaternion.dot( scope.object.quaternion ) ) > EPS ) {
+
+					scope.dispatchEvent( changeEvent );
+
+					lastPosition.copy( scope.object.position );
+					lastQuaternion.copy( scope.object.quaternion );
+					zoomChanged = false;
+
+					return true;
+
+				}
+
+				return false;
+
+			};
+
+		}();
+
+		this.dispose = function () {
+
+			scope.domElement.removeEventListener( 'contextmenu', onContextMenu, false );
+			scope.domElement.removeEventListener( 'mousedown', onMouseDown, false );
+			scope.domElement.removeEventListener( 'wheel', onMouseWheel, false );
+
+			scope.domElement.removeEventListener( 'touchstart', onTouchStart, false );
+			scope.domElement.removeEventListener( 'touchend', onTouchEnd, false );
+			scope.domElement.removeEventListener( 'touchmove', onTouchMove, false );
+
+			document.removeEventListener( 'mousemove', onMouseMove, false );
+			document.removeEventListener( 'mouseup', onMouseUp, false );
+
+			window.removeEventListener( 'keydown', onKeyDown, false );
+
+			//scope.dispatchEvent( { type: 'dispose' } ); // should this be added here?
+
+		};
+
+		//
+		// internals
+		//
+
+		var scope = this;
+
+		var changeEvent = { type: 'change' };
+		var startEvent = { type: 'start' };
+		var endEvent = { type: 'end' };
+
+		var STATE = { NONE: - 1, ROTATE: 0, DOLLY: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_DOLLY_PAN: 4 };
+
+		var state = STATE.NONE;
+
+		var EPS = 0.000001;
+
+		// current position in spherical coordinates
+		var spherical = new Spherical();
+		var sphericalDelta = new Spherical();
+
+		var scale = 1;
+		var panOffset = new Vector3$1();
+		var zoomChanged = false;
+
+		var rotateStart = new Vector2();
+		var rotateEnd = new Vector2();
+		var rotateDelta = new Vector2();
+
+		var panStart = new Vector2();
+		var panEnd = new Vector2();
+		var panDelta = new Vector2();
+
+		var dollyStart = new Vector2();
+		var dollyEnd = new Vector2();
+		var dollyDelta = new Vector2();
+
+		function getAutoRotationAngle() {
+
+			return 2 * Math.PI / 60 / 60 * scope.autoRotateSpeed;
+
+		}
+
+		function getZoomScale() {
+
+			return Math.pow( 0.95, scope.zoomSpeed );
+
+		}
+
+		function rotateLeft( angle ) {
+
+			sphericalDelta.theta -= angle;
+
+		}
+
+		function rotateUp( angle ) {
+
+			sphericalDelta.phi -= angle;
+
+		}
+
+		var panLeft = function () {
+
+			var v = new Vector3$1();
+
+			return function panLeft( distance, objectMatrix ) {
+
+				v.setFromMatrixColumn( objectMatrix, 0 ); // get X column of objectMatrix
+				v.multiplyScalar( - distance );
+
+				panOffset.add( v );
+
+			};
+
+		}();
+
+		var panUp = function () {
+
+			var v = new Vector3$1();
+
+			return function panUp( distance, objectMatrix ) {
+
+				if ( scope.screenSpacePanning === true ) {
+
+					v.setFromMatrixColumn( objectMatrix, 1 );
+
+				} else {
+
+					v.setFromMatrixColumn( objectMatrix, 0 );
+					v.crossVectors( scope.object.up, v );
+
+				}
+
+				v.multiplyScalar( distance );
+
+				panOffset.add( v );
+
+			};
+
+		}();
+
+		// deltaX and deltaY are in pixels; right and down are positive
+		var pan = function () {
+
+			var offset = new Vector3$1();
+
+			return function pan( deltaX, deltaY ) {
+
+				var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+
+				if ( scope.object.isPerspectiveCamera ) {
+
+					// perspective
+					var position = scope.object.position;
+					offset.copy( position ).sub( scope.target );
+					var targetDistance = offset.length();
+
+					// half of the fov is center to top of screen
+					targetDistance *= Math.tan( ( scope.object.fov / 2 ) * Math.PI / 180.0 );
+
+					// we use only clientHeight here so aspect ratio does not distort speed
+					panLeft( 2 * deltaX * targetDistance / element.clientHeight, scope.object.matrix );
+					panUp( 2 * deltaY * targetDistance / element.clientHeight, scope.object.matrix );
+
+				} else if ( scope.object.isOrthographicCamera ) {
+
+					// orthographic
+					panLeft( deltaX * ( scope.object.right - scope.object.left ) / scope.object.zoom / element.clientWidth, scope.object.matrix );
+					panUp( deltaY * ( scope.object.top - scope.object.bottom ) / scope.object.zoom / element.clientHeight, scope.object.matrix );
+
+				} else {
+
+					// camera neither orthographic nor perspective
+					console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.' );
+					scope.enablePan = false;
+
+				}
+
+			};
+
+		}();
+
+		function dollyIn( dollyScale ) {
+
+			if ( scope.object.isPerspectiveCamera ) {
+
+				scale /= dollyScale;
+
+			} else if ( scope.object.isOrthographicCamera ) {
+
+				scope.object.zoom = Math.max( scope.minZoom, Math.min( scope.maxZoom, scope.object.zoom * dollyScale ) );
+				scope.object.updateProjectionMatrix();
+				zoomChanged = true;
+
+			} else {
+
+				console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
+				scope.enableZoom = false;
+
+			}
+
+		}
+
+		function dollyOut( dollyScale ) {
+
+			if ( scope.object.isPerspectiveCamera ) {
+
+				scale *= dollyScale;
+
+			} else if ( scope.object.isOrthographicCamera ) {
+
+				scope.object.zoom = Math.max( scope.minZoom, Math.min( scope.maxZoom, scope.object.zoom / dollyScale ) );
+				scope.object.updateProjectionMatrix();
+				zoomChanged = true;
+
+			} else {
+
+				console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
+				scope.enableZoom = false;
+
+			}
+
+		}
+
+		//
+		// event callbacks - update the object state
+		//
+
+		function handleMouseDownRotate( event ) {
+
+			//console.log( 'handleMouseDownRotate' );
+
+			rotateStart.set( event.clientX, event.clientY );
+
+		}
+
+		function handleMouseDownDolly( event ) {
+
+			//console.log( 'handleMouseDownDolly' );
+
+			dollyStart.set( event.clientX, event.clientY );
+
+		}
+
+		function handleMouseDownPan( event ) {
+
+			//console.log( 'handleMouseDownPan' );
+
+			panStart.set( event.clientX, event.clientY );
+
+		}
+
+		function handleMouseMoveRotate( event ) {
+
+			//console.log( 'handleMouseMoveRotate' );
+
+			rotateEnd.set( event.clientX, event.clientY );
+
+			rotateDelta.subVectors( rotateEnd, rotateStart ).multiplyScalar( scope.rotateSpeed );
+
+			var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+
+			rotateLeft( 2 * Math.PI * rotateDelta.x / element.clientHeight ); // yes, height
+
+			rotateUp( 2 * Math.PI * rotateDelta.y / element.clientHeight );
+
+			rotateStart.copy( rotateEnd );
+
+			scope.update();
+
+		}
+
+		function handleMouseMoveDolly( event ) {
+
+			//console.log( 'handleMouseMoveDolly' );
+
+			dollyEnd.set( event.clientX, event.clientY );
+
+			dollyDelta.subVectors( dollyEnd, dollyStart );
+
+			if ( dollyDelta.y > 0 ) {
+
+				dollyIn( getZoomScale() );
+
+			} else if ( dollyDelta.y < 0 ) {
+
+				dollyOut( getZoomScale() );
+
+			}
+
+			dollyStart.copy( dollyEnd );
+
+			scope.update();
+
+		}
+
+		function handleMouseMovePan( event ) {
+
+			//console.log( 'handleMouseMovePan' );
+
+			panEnd.set( event.clientX, event.clientY );
+
+			panDelta.subVectors( panEnd, panStart ).multiplyScalar( scope.panSpeed );
+
+			pan( panDelta.x, panDelta.y );
+
+			panStart.copy( panEnd );
+
+			scope.update();
+
+		}
+
+		function handleMouseWheel( event ) {
+
+			// console.log( 'handleMouseWheel' );
+
+			if ( event.deltaY < 0 ) {
+
+				dollyOut( getZoomScale() );
+
+			} else if ( event.deltaY > 0 ) {
+
+				dollyIn( getZoomScale() );
+
+			}
+
+			scope.update();
+
+		}
+
+		function handleKeyDown( event ) {
+
+			//console.log( 'handleKeyDown' );
+
+			switch ( event.keyCode ) {
+
+				case scope.keys.UP:
+					pan( 0, scope.keyPanSpeed );
+					scope.update();
+					break;
+
+				case scope.keys.BOTTOM:
+					pan( 0, - scope.keyPanSpeed );
+					scope.update();
+					break;
+
+				case scope.keys.LEFT:
+					pan( scope.keyPanSpeed, 0 );
+					scope.update();
+					break;
+
+				case scope.keys.RIGHT:
+					pan( - scope.keyPanSpeed, 0 );
+					scope.update();
+					break;
+
+			}
+
+		}
+
+		function handleTouchStartRotate( event ) {
+
+			//console.log( 'handleTouchStartRotate' );
+
+			rotateStart.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+
+		}
+
+		function handleTouchStartDollyPan( event ) {
+
+			//console.log( 'handleTouchStartDollyPan' );
+
+			if ( scope.enableZoom ) {
+
+				var dx = event.touches[ 0 ].pageX - event.touches[ 1 ].pageX;
+				var dy = event.touches[ 0 ].pageY - event.touches[ 1 ].pageY;
+
+				var distance = Math.sqrt( dx * dx + dy * dy );
+
+				dollyStart.set( 0, distance );
+
+			}
+
+			if ( scope.enablePan ) {
+
+				var x = 0.5 * ( event.touches[ 0 ].pageX + event.touches[ 1 ].pageX );
+				var y = 0.5 * ( event.touches[ 0 ].pageY + event.touches[ 1 ].pageY );
+
+				panStart.set( x, y );
+
+			}
+
+		}
+
+		function handleTouchMoveRotate( event ) {
+
+			//console.log( 'handleTouchMoveRotate' );
+
+			rotateEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+
+			rotateDelta.subVectors( rotateEnd, rotateStart ).multiplyScalar( scope.rotateSpeed );
+
+			var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+
+			rotateLeft( 2 * Math.PI * rotateDelta.x / element.clientHeight ); // yes, height
+
+			rotateUp( 2 * Math.PI * rotateDelta.y / element.clientHeight );
+
+			rotateStart.copy( rotateEnd );
+
+			scope.update();
+
+		}
+
+		function handleTouchMoveDollyPan( event ) {
+
+			//console.log( 'handleTouchMoveDollyPan' );
+
+			if ( scope.enableZoom ) {
+
+				var dx = event.touches[ 0 ].pageX - event.touches[ 1 ].pageX;
+				var dy = event.touches[ 0 ].pageY - event.touches[ 1 ].pageY;
+
+				var distance = Math.sqrt( dx * dx + dy * dy );
+
+				dollyEnd.set( 0, distance );
+
+				dollyDelta.set( 0, Math.pow( dollyEnd.y / dollyStart.y, scope.zoomSpeed ) );
+
+				dollyIn( dollyDelta.y );
+
+				dollyStart.copy( dollyEnd );
+
+			}
+
+			if ( scope.enablePan ) {
+
+				var x = 0.5 * ( event.touches[ 0 ].pageX + event.touches[ 1 ].pageX );
+				var y = 0.5 * ( event.touches[ 0 ].pageY + event.touches[ 1 ].pageY );
+
+				panEnd.set( x, y );
+
+				panDelta.subVectors( panEnd, panStart ).multiplyScalar( scope.panSpeed );
+
+				pan( panDelta.x, panDelta.y );
+
+				panStart.copy( panEnd );
+
+			}
+
+			scope.update();
+
+		}
+
+		//
+		// event handlers - FSM: listen for events and reset state
+		//
+
+		function onMouseDown( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			event.preventDefault();
+
+			switch ( event.button ) {
+
+				case scope.mouseButtons.LEFT:
+
+					if ( event.ctrlKey || event.metaKey ) {
+
+						if ( scope.enablePan === false ) return;
+
+						handleMouseDownPan( event );
+
+						state = STATE.PAN;
+
+					} else {
+
+						if ( scope.enableRotate === false ) return;
+
+						handleMouseDownRotate( event );
+
+						state = STATE.ROTATE;
+
+					}
+
+					break;
+
+				case scope.mouseButtons.MIDDLE:
+
+					if ( scope.enableZoom === false ) return;
+
+					handleMouseDownDolly( event );
+
+					state = STATE.DOLLY;
+
+					break;
+
+				case scope.mouseButtons.RIGHT:
+
+					if ( scope.enablePan === false ) return;
+
+					handleMouseDownPan( event );
+
+					state = STATE.PAN;
+
+					break;
+
+			}
+
+			if ( state !== STATE.NONE ) {
+
+				document.addEventListener( 'mousemove', onMouseMove, false );
+				document.addEventListener( 'mouseup', onMouseUp, false );
+
+				scope.dispatchEvent( startEvent );
+
+			}
+
+		}
+
+		function onMouseMove( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			event.preventDefault();
+
+			switch ( state ) {
+
+				case STATE.ROTATE:
+
+					if ( scope.enableRotate === false ) return;
+
+					handleMouseMoveRotate( event );
+
+					break;
+
+				case STATE.DOLLY:
+
+					if ( scope.enableZoom === false ) return;
+
+					handleMouseMoveDolly( event );
+
+					break;
+
+				case STATE.PAN:
+
+					if ( scope.enablePan === false ) return;
+
+					handleMouseMovePan( event );
+
+					break;
+
+			}
+
+		}
+
+		function onMouseUp( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			document.removeEventListener( 'mousemove', onMouseMove, false );
+			document.removeEventListener( 'mouseup', onMouseUp, false );
+
+			scope.dispatchEvent( endEvent );
+
+			state = STATE.NONE;
+
+		}
+
+		function onMouseWheel( event ) {
+
+			if ( scope.enabled === false || scope.enableZoom === false || ( state !== STATE.NONE && state !== STATE.ROTATE ) ) return;
+
+			event.preventDefault();
+			event.stopPropagation();
+
+			scope.dispatchEvent( startEvent );
+
+			handleMouseWheel( event );
+
+			scope.dispatchEvent( endEvent );
+
+		}
+
+		function onKeyDown( event ) {
+
+			if ( scope.enabled === false || scope.enableKeys === false || scope.enablePan === false ) return;
+
+			handleKeyDown( event );
+
+		}
+
+		function onTouchStart( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			event.preventDefault();
+
+			switch ( event.touches.length ) {
+
+				case 1:	// one-fingered touch: rotate
+
+					if ( scope.enableRotate === false ) return;
+
+					handleTouchStartRotate( event );
+
+					state = STATE.TOUCH_ROTATE;
+
+					break;
+
+				case 2:	// two-fingered touch: dolly-pan
+
+					if ( scope.enableZoom === false && scope.enablePan === false ) return;
+
+					handleTouchStartDollyPan( event );
+
+					state = STATE.TOUCH_DOLLY_PAN;
+
+					break;
+
+				default:
+
+					state = STATE.NONE;
+
+			}
+
+			if ( state !== STATE.NONE ) {
+
+				scope.dispatchEvent( startEvent );
+
+			}
+
+		}
+
+		function onTouchMove( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			event.preventDefault();
+			event.stopPropagation();
+
+			switch ( event.touches.length ) {
+
+				case 1: // one-fingered touch: rotate
+
+					if ( scope.enableRotate === false ) return;
+					if ( state !== STATE.TOUCH_ROTATE ) return; // is this needed?
+
+					handleTouchMoveRotate( event );
+
+					break;
+
+				case 2: // two-fingered touch: dolly-pan
+
+					if ( scope.enableZoom === false && scope.enablePan === false ) return;
+					if ( state !== STATE.TOUCH_DOLLY_PAN ) return; // is this needed?
+
+					handleTouchMoveDollyPan( event );
+
+					break;
+
+				default:
+
+					state = STATE.NONE;
+
+			}
+
+		}
+
+		function onTouchEnd( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			scope.dispatchEvent( endEvent );
+
+			state = STATE.NONE;
+
+		}
+
+		function onContextMenu( event ) {
+
+			if ( scope.enabled === false ) return;
+
+			event.preventDefault();
+
+		}
+
+		//
+
+		scope.domElement.addEventListener( 'contextmenu', onContextMenu, false );
+
+		scope.domElement.addEventListener( 'mousedown', onMouseDown, false );
+		scope.domElement.addEventListener( 'wheel', onMouseWheel, false );
+
+		scope.domElement.addEventListener( 'touchstart', onTouchStart, false );
+		scope.domElement.addEventListener( 'touchend', onTouchEnd, false );
+		scope.domElement.addEventListener( 'touchmove', onTouchMove, false );
+
+		window.addEventListener( 'keydown', onKeyDown, false );
+
+		// force an update at start
+
+		this.update();
+
+	}
+
+	OrbitControls.prototype = Object.create( EventDispatcher$1.prototype );
+	OrbitControls.prototype.constructor = OrbitControls;
+
+	/**
+	 * @author Rich Tibbett / https://github.com/richtr
+	 * @author mrdoob / http://mrdoob.com/
+	 * @author Tony Parisi / http://www.tonyparisi.com/
+	 * @author Takahiro / https://github.com/takahirox
+	 * @author Don McCurdy / https://www.donmccurdy.com
+	 */
+
+	function GLTFLoader( manager ) {
+
+		this.manager = ( manager !== undefined ) ? manager : DefaultLoadingManager;
+		this.dracoLoader = null;
+
+	}
+
+	GLTFLoader.prototype = {
+
+		constructor: GLTFLoader,
+
+		crossOrigin: 'anonymous',
+
+		load: function ( url, onLoad, onProgress, onError ) {
+
+			var scope = this;
+
+			var resourcePath;
+
+			if ( this.resourcePath !== undefined ) {
+
+				resourcePath = this.resourcePath;
+
+			} else if ( this.path !== undefined ) {
+
+				resourcePath = this.path;
+
+			} else {
+
+				resourcePath = LoaderUtils.extractUrlBase( url );
+
+			}
+
+			// Tells the LoadingManager to track an extra item, which resolves after
+			// the model is fully loaded. This means the count of items loaded will
+			// be incorrect, but ensures manager.onLoad() does not fire early.
+			scope.manager.itemStart( url );
+
+			var _onError = function ( e ) {
+
+				if ( onError ) {
+
+					onError( e );
+
+				} else {
+
+					console.error( e );
+
+				}
+
+				scope.manager.itemEnd( url );
+				scope.manager.itemError( url );
+
+			};
+
+			var loader = new FileLoader( scope.manager );
+
+			loader.setPath( this.path );
+			loader.setResponseType( 'arraybuffer' );
+
+			loader.load( url, function ( data ) {
+
+				try {
+
+					scope.parse( data, resourcePath, function ( gltf ) {
+
+						onLoad( gltf );
+
+						scope.manager.itemEnd( url );
+
+					}, _onError );
+
+				} catch ( e ) {
+
+					_onError( e );
+
+				}
+
+			}, onProgress, _onError );
+
+		},
+
+		setCrossOrigin: function ( value ) {
+
+			this.crossOrigin = value;
+			return this;
+
+		},
+
+		setPath: function ( value ) {
+
+			this.path = value;
+			return this;
+
+		},
+
+		setResourcePath: function ( value ) {
+
+			this.resourcePath = value;
+			return this;
+
+		},
+
+		setDRACOLoader: function ( dracoLoader ) {
+
+			this.dracoLoader = dracoLoader;
+			return this;
+
+		},
+
+		parse: function ( data, path, onLoad, onError ) {
+
+			var content;
+			var extensions = {};
+
+			if ( typeof data === 'string' ) {
+
+				content = data;
+
+			} else {
+
+				var magic = LoaderUtils.decodeText( new Uint8Array( data, 0, 4 ) );
+
+				if ( magic === BINARY_EXTENSION_HEADER_MAGIC$1 ) {
+
+					try {
+
+						extensions[ EXTENSIONS.KHR_BINARY_GLTF ] = new GLTFBinaryExtension( data );
+
+					} catch ( error ) {
+
+						if ( onError ) onError( error );
+						return;
+
+					}
+
+					content = extensions[ EXTENSIONS.KHR_BINARY_GLTF ].content;
+
+				} else {
+
+					content = LoaderUtils.decodeText( new Uint8Array( data ) );
+
+				}
+
+			}
+
+			var json = JSON.parse( content );
+
+			if ( json.asset === undefined || json.asset.version[ 0 ] < 2 ) {
+
+				if ( onError ) onError( new Error( 'THREE.GLTFLoader: Unsupported asset. glTF versions >=2.0 are supported. Use LegacyGLTFLoader instead.' ) );
+				return;
+
+			}
+
+			if ( json.extensionsUsed ) {
+
+				for ( var i = 0; i < json.extensionsUsed.length; ++ i ) {
+
+					var extensionName = json.extensionsUsed[ i ];
+					var extensionsRequired = json.extensionsRequired || [];
+
+					switch ( extensionName ) {
+
+						case EXTENSIONS.KHR_LIGHTS_PUNCTUAL:
+							extensions[ extensionName ] = new GLTFLightsExtension( json );
+							break;
+
+						case EXTENSIONS.KHR_MATERIALS_UNLIT:
+							extensions[ extensionName ] = new GLTFMaterialsUnlitExtension( json );
+							break;
+
+						case EXTENSIONS.KHR_MATERIALS_PBR_SPECULAR_GLOSSINESS:
+							extensions[ extensionName ] = new GLTFMaterialsPbrSpecularGlossinessExtension();
+							break;
+
+						case EXTENSIONS.KHR_DRACO_MESH_COMPRESSION:
+							extensions[ extensionName ] = new GLTFDracoMeshCompressionExtension( json, this.dracoLoader );
+							break;
+
+						default:
+
+							if ( extensionsRequired.indexOf( extensionName ) >= 0 ) {
+
+								console.warn( 'THREE.GLTFLoader: Unknown extension "' + extensionName + '".' );
+
+							}
+
+					}
+
+				}
+
+			}
+
+			var parser = new GLTFParser( json, extensions, {
+
+				path: path || this.resourcePath || '',
+				crossOrigin: this.crossOrigin,
+				manager: this.manager
+
+			} );
+
+			parser.parse( function ( scene, scenes, cameras, animations, json ) {
+
+				var glTF = {
+					scene: scene,
+					scenes: scenes,
+					cameras: cameras,
+					animations: animations,
+					asset: json.asset,
+					parser: parser,
+					userData: {}
+				};
+
+				addUnknownExtensionsToUserData( extensions, glTF, json );
+
+				onLoad( glTF );
+
+			}, onError );
+
+		}
+
+	};
+
+	/* GLTFREGISTRY */
+
+	function GLTFRegistry() {
+
+		var objects = {};
+
+		return	{
+
+			get: function ( key ) {
+
+				return objects[ key ];
+
+			},
+
+			add: function ( key, object ) {
+
+				objects[ key ] = object;
+
+			},
+
+			remove: function ( key ) {
+
+				delete objects[ key ];
+
+			},
+
+			removeAll: function () {
+
+				objects = {};
+
+			}
+
+		};
+
+	}
+
+	/*********************************/
+	/********** EXTENSIONS ***********/
+	/*********************************/
+
+	var EXTENSIONS = {
+		KHR_BINARY_GLTF: 'KHR_binary_glTF',
+		KHR_DRACO_MESH_COMPRESSION: 'KHR_draco_mesh_compression',
+		KHR_LIGHTS_PUNCTUAL: 'KHR_lights_punctual',
+		KHR_MATERIALS_PBR_SPECULAR_GLOSSINESS: 'KHR_materials_pbrSpecularGlossiness',
+		KHR_MATERIALS_UNLIT: 'KHR_materials_unlit',
+		MSFT_TEXTURE_DDS: 'MSFT_texture_dds'
+	};
+
+	/**
+	 * Lights Extension
+	 *
+	 * Specification: PENDING
+	 */
+	function GLTFLightsExtension( json ) {
+
+		this.name = EXTENSIONS.KHR_LIGHTS_PUNCTUAL;
+
+		this.lights = [];
+
+		var extension = ( json.extensions && json.extensions[ EXTENSIONS.KHR_LIGHTS_PUNCTUAL ] ) || {};
+		var lightDefs = extension.lights || [];
+
+		for ( var i = 0; i < lightDefs.length; i ++ ) {
+
+			var lightDef = lightDefs[ i ];
+			var lightNode;
+
+			var color = new Color( 0xffffff );
+			if ( lightDef.color !== undefined ) color.fromArray( lightDef.color );
+
+			var range = lightDef.range !== undefined ? lightDef.range : 0;
+
+			switch ( lightDef.type ) {
+
+				case 'directional':
+					lightNode = new DirectionalLight( color );
+					lightNode.target.position.set( 0, 0, - 1 );
+					lightNode.add( lightNode.target );
+					break;
+
+				case 'point':
+					lightNode = new PointLight( color );
+					lightNode.distance = range;
+					break;
+
+				case 'spot':
+					lightNode = new SpotLight( color );
+					lightNode.distance = range;
+					// Handle spotlight properties.
+					lightDef.spot = lightDef.spot || {};
+					lightDef.spot.innerConeAngle = lightDef.spot.innerConeAngle !== undefined ? lightDef.spot.innerConeAngle : 0;
+					lightDef.spot.outerConeAngle = lightDef.spot.outerConeAngle !== undefined ? lightDef.spot.outerConeAngle : Math.PI / 4.0;
+					lightNode.angle = lightDef.spot.outerConeAngle;
+					lightNode.penumbra = 1.0 - lightDef.spot.innerConeAngle / lightDef.spot.outerConeAngle;
+					lightNode.target.position.set( 0, 0, - 1 );
+					lightNode.add( lightNode.target );
+					break;
+
+				default:
+					throw new Error( 'THREE.GLTFLoader: Unexpected light type, "' + lightDef.type + '".' );
+
+			}
+
+			lightNode.decay = 2;
+
+			if ( lightDef.intensity !== undefined ) lightNode.intensity = lightDef.intensity;
+
+			lightNode.name = lightDef.name || ( 'light_' + i );
+
+			this.lights.push( lightNode );
+
+		}
+
+	}
+
+	/**
+	 * Unlit Materials Extension (pending)
+	 *
+	 * PR: https://github.com/KhronosGroup/glTF/pull/1163
+	 */
+	function GLTFMaterialsUnlitExtension() {
+
+		this.name = EXTENSIONS.KHR_MATERIALS_UNLIT;
+
+	}
+
+	GLTFMaterialsUnlitExtension.prototype.getMaterialType = function () {
+
+		return MeshBasicMaterial;
+
+	};
+
+	GLTFMaterialsUnlitExtension.prototype.extendParams = function ( materialParams, material, parser ) {
+
+		var pending = [];
+
+		materialParams.color = new Color( 1.0, 1.0, 1.0 );
+		materialParams.opacity = 1.0;
+
+		var metallicRoughness = material.pbrMetallicRoughness;
+
+		if ( metallicRoughness ) {
+
+			if ( Array.isArray( metallicRoughness.baseColorFactor ) ) {
+
+				var array = metallicRoughness.baseColorFactor;
+
+				materialParams.color.fromArray( array );
+				materialParams.opacity = array[ 3 ];
+
+			}
+
+			if ( metallicRoughness.baseColorTexture !== undefined ) {
+
+				pending.push( parser.assignTexture( materialParams, 'map', metallicRoughness.baseColorTexture.index ) );
+
+			}
+
+		}
+
+		return Promise.all( pending );
+
+	};
+
+	/* BINARY EXTENSION */
+
+	var BINARY_EXTENSION_HEADER_MAGIC$1 = 'glTF';
+	var BINARY_EXTENSION_HEADER_LENGTH$1 = 12;
+	var BINARY_EXTENSION_CHUNK_TYPES$1 = { JSON: 0x4E4F534A, BIN: 0x004E4942 };
+
+	function GLTFBinaryExtension( data ) {
+
+		this.name = EXTENSIONS.KHR_BINARY_GLTF;
+		this.content = null;
+		this.body = null;
+
+		var headerView = new DataView( data, 0, BINARY_EXTENSION_HEADER_LENGTH$1 );
+
+		this.header = {
+			magic: LoaderUtils.decodeText( new Uint8Array( data.slice( 0, 4 ) ) ),
+			version: headerView.getUint32( 4, true ),
+			length: headerView.getUint32( 8, true )
+		};
+
+		if ( this.header.magic !== BINARY_EXTENSION_HEADER_MAGIC$1 ) {
+
+			throw new Error( 'THREE.GLTFLoader: Unsupported glTF-Binary header.' );
+
+		} else if ( this.header.version < 2.0 ) {
+
+			throw new Error( 'THREE.GLTFLoader: Legacy binary file detected. Use LegacyGLTFLoader instead.' );
+
+		}
+
+		var chunkView = new DataView( data, BINARY_EXTENSION_HEADER_LENGTH$1 );
+		var chunkIndex = 0;
+
+		while ( chunkIndex < chunkView.byteLength ) {
+
+			var chunkLength = chunkView.getUint32( chunkIndex, true );
+			chunkIndex += 4;
+
+			var chunkType = chunkView.getUint32( chunkIndex, true );
+			chunkIndex += 4;
+
+			if ( chunkType === BINARY_EXTENSION_CHUNK_TYPES$1.JSON ) {
+
+				var contentArray = new Uint8Array( data, BINARY_EXTENSION_HEADER_LENGTH$1 + chunkIndex, chunkLength );
+				this.content = LoaderUtils.decodeText( contentArray );
+
+			} else if ( chunkType === BINARY_EXTENSION_CHUNK_TYPES$1.BIN ) {
+
+				var byteOffset = BINARY_EXTENSION_HEADER_LENGTH$1 + chunkIndex;
+				this.body = data.slice( byteOffset, byteOffset + chunkLength );
+
+			}
+
+			// Clients must ignore chunks with unknown types.
+
+			chunkIndex += chunkLength;
+
+		}
+
+		if ( this.content === null ) {
+
+			throw new Error( 'THREE.GLTFLoader: JSON content not found.' );
+
+		}
+
+	}
+
+	/**
+	 * DRACO Mesh Compression Extension
+	 *
+	 * Specification: https://github.com/KhronosGroup/glTF/pull/874
+	 */
+	function GLTFDracoMeshCompressionExtension( json, dracoLoader ) {
+
+		if ( ! dracoLoader ) {
+
+			throw new Error( 'THREE.GLTFLoader: No DRACOLoader instance provided.' );
+
+		}
+
+		this.name = EXTENSIONS.KHR_DRACO_MESH_COMPRESSION;
+		this.json = json;
+		this.dracoLoader = dracoLoader;
+
+	}
+
+	GLTFDracoMeshCompressionExtension.prototype.decodePrimitive = function ( primitive, parser ) {
+
+		var json = this.json;
+		var dracoLoader = this.dracoLoader;
+		var bufferViewIndex = primitive.extensions[ this.name ].bufferView;
+		var gltfAttributeMap = primitive.extensions[ this.name ].attributes;
+		var threeAttributeMap = {};
+		var attributeNormalizedMap = {};
+		var attributeTypeMap = {};
+
+		for ( var attributeName in gltfAttributeMap ) {
+
+			if ( ! ( attributeName in ATTRIBUTES ) ) continue;
+
+			threeAttributeMap[ ATTRIBUTES[ attributeName ] ] = gltfAttributeMap[ attributeName ];
+
+		}
+
+		for ( attributeName in primitive.attributes ) {
+
+			if ( ATTRIBUTES[ attributeName ] !== undefined && gltfAttributeMap[ attributeName ] !== undefined ) {
+
+				var accessorDef = json.accessors[ primitive.attributes[ attributeName ] ];
+				var componentType = WEBGL_COMPONENT_TYPES$1[ accessorDef.componentType ];
+
+				attributeTypeMap[ ATTRIBUTES[ attributeName ] ] = componentType;
+				attributeNormalizedMap[ ATTRIBUTES[ attributeName ] ] = accessorDef.normalized === true;
+
+			}
+
+		}
+
+		return parser.getDependency( 'bufferView', bufferViewIndex ).then( function ( bufferView ) {
+
+			return new Promise( function ( resolve ) {
+
+				dracoLoader.decodeDracoFile( bufferView, function ( geometry ) {
+
+					for ( var attributeName in geometry.attributes ) {
+
+						var attribute = geometry.attributes[ attributeName ];
+						var normalized = attributeNormalizedMap[ attributeName ];
+
+						if ( normalized !== undefined ) attribute.normalized = normalized;
+
+					}
+
+					resolve( geometry );
+
+				}, threeAttributeMap, attributeTypeMap );
+
+			} );
+
+		} );
+
+	};
+
+	/**
+	 * Specular-Glossiness Extension
+	 *
+	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness
+	 */
+	function GLTFMaterialsPbrSpecularGlossinessExtension() {
+
+		return {
+
+			name: EXTENSIONS.KHR_MATERIALS_PBR_SPECULAR_GLOSSINESS,
+
+			specularGlossinessParams: [
+				'color',
+				'map',
+				'lightMap',
+				'lightMapIntensity',
+				'aoMap',
+				'aoMapIntensity',
+				'emissive',
+				'emissiveIntensity',
+				'emissiveMap',
+				'bumpMap',
+				'bumpScale',
+				'normalMap',
+				'displacementMap',
+				'displacementScale',
+				'displacementBias',
+				'specularMap',
+				'specular',
+				'glossinessMap',
+				'glossiness',
+				'alphaMap',
+				'envMap',
+				'envMapIntensity',
+				'refractionRatio',
+			],
+
+			getMaterialType: function () {
+
+				return ShaderMaterial;
+
+			},
+
+			extendParams: function ( params, material, parser ) {
+
+				var pbrSpecularGlossiness = material.extensions[ this.name ];
+
+				var shader = ShaderLib[ 'standard' ];
+
+				var uniforms = UniformsUtils.clone( shader.uniforms );
+
+				var specularMapParsFragmentChunk = [
+					'#ifdef USE_SPECULARMAP',
+					'	uniform sampler2D specularMap;',
+					'#endif'
+				].join( '\n' );
+
+				var glossinessMapParsFragmentChunk = [
+					'#ifdef USE_GLOSSINESSMAP',
+					'	uniform sampler2D glossinessMap;',
+					'#endif'
+				].join( '\n' );
+
+				var specularMapFragmentChunk = [
+					'vec3 specularFactor = specular;',
+					'#ifdef USE_SPECULARMAP',
+					'	vec4 texelSpecular = texture2D( specularMap, vUv );',
+					'	texelSpecular = sRGBToLinear( texelSpecular );',
+					'	// reads channel RGB, compatible with a glTF Specular-Glossiness (RGBA) texture',
+					'	specularFactor *= texelSpecular.rgb;',
+					'#endif'
+				].join( '\n' );
+
+				var glossinessMapFragmentChunk = [
+					'float glossinessFactor = glossiness;',
+					'#ifdef USE_GLOSSINESSMAP',
+					'	vec4 texelGlossiness = texture2D( glossinessMap, vUv );',
+					'	// reads channel A, compatible with a glTF Specular-Glossiness (RGBA) texture',
+					'	glossinessFactor *= texelGlossiness.a;',
+					'#endif'
+				].join( '\n' );
+
+				var lightPhysicalFragmentChunk = [
+					'PhysicalMaterial material;',
+					'material.diffuseColor = diffuseColor.rgb;',
+					'material.specularRoughness = clamp( 1.0 - glossinessFactor, 0.04, 1.0 );',
+					'material.specularColor = specularFactor.rgb;',
+				].join( '\n' );
+
+				var fragmentShader = shader.fragmentShader
+					.replace( 'uniform float roughness;', 'uniform vec3 specular;' )
+					.replace( 'uniform float metalness;', 'uniform float glossiness;' )
+					.replace( '#include <roughnessmap_pars_fragment>', specularMapParsFragmentChunk )
+					.replace( '#include <metalnessmap_pars_fragment>', glossinessMapParsFragmentChunk )
+					.replace( '#include <roughnessmap_fragment>', specularMapFragmentChunk )
+					.replace( '#include <metalnessmap_fragment>', glossinessMapFragmentChunk )
+					.replace( '#include <lights_physical_fragment>', lightPhysicalFragmentChunk );
+
+				delete uniforms.roughness;
+				delete uniforms.metalness;
+				delete uniforms.roughnessMap;
+				delete uniforms.metalnessMap;
+
+				uniforms.specular = { value: new Color().setHex( 0x111111 ) };
+				uniforms.glossiness = { value: 0.5 };
+				uniforms.specularMap = { value: null };
+				uniforms.glossinessMap = { value: null };
+
+				params.vertexShader = shader.vertexShader;
+				params.fragmentShader = fragmentShader;
+				params.uniforms = uniforms;
+				params.defines = { 'STANDARD': '' };
+
+				params.color = new Color( 1.0, 1.0, 1.0 );
+				params.opacity = 1.0;
+
+				var pending = [];
+
+				if ( Array.isArray( pbrSpecularGlossiness.diffuseFactor ) ) {
+
+					var array = pbrSpecularGlossiness.diffuseFactor;
+
+					params.color.fromArray( array );
+					params.opacity = array[ 3 ];
+
+				}
+
+				if ( pbrSpecularGlossiness.diffuseTexture !== undefined ) {
+
+					pending.push( parser.assignTexture( params, 'map', pbrSpecularGlossiness.diffuseTexture.index ) );
+
+				}
+
+				params.emissive = new Color( 0.0, 0.0, 0.0 );
+				params.glossiness = pbrSpecularGlossiness.glossinessFactor !== undefined ? pbrSpecularGlossiness.glossinessFactor : 1.0;
+				params.specular = new Color( 1.0, 1.0, 1.0 );
+
+				if ( Array.isArray( pbrSpecularGlossiness.specularFactor ) ) {
+
+					params.specular.fromArray( pbrSpecularGlossiness.specularFactor );
+
+				}
+
+				if ( pbrSpecularGlossiness.specularGlossinessTexture !== undefined ) {
+
+					var specGlossIndex = pbrSpecularGlossiness.specularGlossinessTexture.index;
+					pending.push( parser.assignTexture( params, 'glossinessMap', specGlossIndex ) );
+					pending.push( parser.assignTexture( params, 'specularMap', specGlossIndex ) );
+
+				}
+
+				return Promise.all( pending );
+
+			},
+
+			createMaterial: function ( params ) {
+
+				// setup material properties based on MeshStandardMaterial for Specular-Glossiness
+
+				var material = new ShaderMaterial( {
+					defines: params.defines,
+					vertexShader: params.vertexShader,
+					fragmentShader: params.fragmentShader,
+					uniforms: params.uniforms,
+					fog: true,
+					lights: true,
+					opacity: params.opacity,
+					transparent: params.transparent
+				} );
+
+				material.isGLTFSpecularGlossinessMaterial = true;
+
+				material.color = params.color;
+
+				material.map = params.map === undefined ? null : params.map;
+
+				material.lightMap = null;
+				material.lightMapIntensity = 1.0;
+
+				material.aoMap = params.aoMap === undefined ? null : params.aoMap;
+				material.aoMapIntensity = 1.0;
+
+				material.emissive = params.emissive;
+				material.emissiveIntensity = 1.0;
+				material.emissiveMap = params.emissiveMap === undefined ? null : params.emissiveMap;
+
+				material.bumpMap = params.bumpMap === undefined ? null : params.bumpMap;
+				material.bumpScale = 1;
+
+				material.normalMap = params.normalMap === undefined ? null : params.normalMap;
+				if ( params.normalScale ) material.normalScale = params.normalScale;
+
+				material.displacementMap = null;
+				material.displacementScale = 1;
+				material.displacementBias = 0;
+
+				material.specularMap = params.specularMap === undefined ? null : params.specularMap;
+				material.specular = params.specular;
+
+				material.glossinessMap = params.glossinessMap === undefined ? null : params.glossinessMap;
+				material.glossiness = params.glossiness;
+
+				material.alphaMap = null;
+
+				material.envMap = params.envMap === undefined ? null : params.envMap;
+				material.envMapIntensity = 1.0;
+
+				material.refractionRatio = 0.98;
+
+				material.extensions.derivatives = true;
+
+				return material;
+
+			},
+
+			/**
+			 * Clones a GLTFSpecularGlossinessMaterial instance. The ShaderMaterial.copy() method can
+			 * copy only properties it knows about or inherits, and misses many properties that would
+			 * normally be defined by MeshStandardMaterial.
+			 *
+			 * This method allows GLTFSpecularGlossinessMaterials to be cloned in the process of
+			 * loading a glTF model, but cloning later (e.g. by the user) would require these changes
+			 * AND also updating `.onBeforeRender` on the parent mesh.
+			 *
+			 * @param  {THREE.ShaderMaterial} source
+			 * @return {THREE.ShaderMaterial}
+			 */
+			cloneMaterial: function ( source ) {
+
+				var target = source.clone();
+
+				target.isGLTFSpecularGlossinessMaterial = true;
+
+				var params = this.specularGlossinessParams;
+
+				for ( var i = 0, il = params.length; i < il; i ++ ) {
+
+					target[ params[ i ] ] = source[ params[ i ] ];
+
+				}
+
+				return target;
+
+			},
+
+			// Here's based on refreshUniformsCommon() and refreshUniformsStandard() in WebGLRenderer.
+			refreshUniforms: function ( renderer, scene, camera, geometry, material ) {
+
+				if ( material.isGLTFSpecularGlossinessMaterial !== true ) {
+
+					return;
+
+				}
+
+				var uniforms = material.uniforms;
+				var defines = material.defines;
+
+				uniforms.opacity.value = material.opacity;
+
+				uniforms.diffuse.value.copy( material.color );
+				uniforms.emissive.value.copy( material.emissive ).multiplyScalar( material.emissiveIntensity );
+
+				uniforms.map.value = material.map;
+				uniforms.specularMap.value = material.specularMap;
+				uniforms.alphaMap.value = material.alphaMap;
+
+				uniforms.lightMap.value = material.lightMap;
+				uniforms.lightMapIntensity.value = material.lightMapIntensity;
+
+				uniforms.aoMap.value = material.aoMap;
+				uniforms.aoMapIntensity.value = material.aoMapIntensity;
+
+				// uv repeat and offset setting priorities
+				// 1. color map
+				// 2. specular map
+				// 3. normal map
+				// 4. bump map
+				// 5. alpha map
+				// 6. emissive map
+
+				var uvScaleMap;
+
+				if ( material.map ) {
+
+					uvScaleMap = material.map;
+
+				} else if ( material.specularMap ) {
+
+					uvScaleMap = material.specularMap;
+
+				} else if ( material.displacementMap ) {
+
+					uvScaleMap = material.displacementMap;
+
+				} else if ( material.normalMap ) {
+
+					uvScaleMap = material.normalMap;
+
+				} else if ( material.bumpMap ) {
+
+					uvScaleMap = material.bumpMap;
+
+				} else if ( material.glossinessMap ) {
+
+					uvScaleMap = material.glossinessMap;
+
+				} else if ( material.alphaMap ) {
+
+					uvScaleMap = material.alphaMap;
+
+				} else if ( material.emissiveMap ) {
+
+					uvScaleMap = material.emissiveMap;
+
+				}
+
+				if ( uvScaleMap !== undefined ) {
+
+					// backwards compatibility
+					if ( uvScaleMap.isWebGLRenderTarget ) {
+
+						uvScaleMap = uvScaleMap.texture;
+
+					}
+
+					if ( uvScaleMap.matrixAutoUpdate === true ) {
+
+						uvScaleMap.updateMatrix();
+
+					}
+
+					uniforms.uvTransform.value.copy( uvScaleMap.matrix );
+
+				}
+
+				uniforms.envMap.value = material.envMap;
+				uniforms.envMapIntensity.value = material.envMapIntensity;
+				uniforms.flipEnvMap.value = ( material.envMap && material.envMap.isCubeTexture ) ? - 1 : 1;
+
+				uniforms.refractionRatio.value = material.refractionRatio;
+
+				uniforms.specular.value.copy( material.specular );
+				uniforms.glossiness.value = material.glossiness;
+
+				uniforms.glossinessMap.value = material.glossinessMap;
+
+				uniforms.emissiveMap.value = material.emissiveMap;
+				uniforms.bumpMap.value = material.bumpMap;
+				uniforms.normalMap.value = material.normalMap;
+
+				uniforms.displacementMap.value = material.displacementMap;
+				uniforms.displacementScale.value = material.displacementScale;
+				uniforms.displacementBias.value = material.displacementBias;
+
+				if ( uniforms.glossinessMap.value !== null && defines.USE_GLOSSINESSMAP === undefined ) {
+
+					defines.USE_GLOSSINESSMAP = '';
+					// set USE_ROUGHNESSMAP to enable vUv
+					defines.USE_ROUGHNESSMAP = '';
+
+				}
+
+				if ( uniforms.glossinessMap.value === null && defines.USE_GLOSSINESSMAP !== undefined ) {
+
+					delete defines.USE_GLOSSINESSMAP;
+					delete defines.USE_ROUGHNESSMAP;
+
+				}
+
+			}
+
+		};
+
+	}
+
+	/*********************************/
+	/********** INTERPOLATION ********/
+	/*********************************/
+
+	// Spline Interpolation
+	// Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#appendix-c-spline-interpolation
+	function GLTFCubicSplineInterpolant( parameterPositions, sampleValues, sampleSize, resultBuffer ) {
+
+		Interpolant.call( this, parameterPositions, sampleValues, sampleSize, resultBuffer );
+
+	}
+
+	GLTFCubicSplineInterpolant.prototype = Object.create( Interpolant.prototype );
+	GLTFCubicSplineInterpolant.prototype.constructor = GLTFCubicSplineInterpolant;
+
+	GLTFCubicSplineInterpolant.prototype.copySampleValue_ = function ( index ) {
+
+		// Copies a sample value to the result buffer. See description of glTF
+		// CUBICSPLINE values layout in interpolate_() function below.
+
+		var result = this.resultBuffer,
+			values = this.sampleValues,
+			valueSize = this.valueSize,
+			offset = index * valueSize * 3 + valueSize;
+
+		for ( var i = 0; i !== valueSize; i ++ ) {
+
+			result[ i ] = values[ offset + i ];
+
+		}
+
+		return result;
+
+	};
+
+	GLTFCubicSplineInterpolant.prototype.beforeStart_ = GLTFCubicSplineInterpolant.prototype.copySampleValue_;
+
+	GLTFCubicSplineInterpolant.prototype.afterEnd_ = GLTFCubicSplineInterpolant.prototype.copySampleValue_;
+
+	GLTFCubicSplineInterpolant.prototype.interpolate_ = function ( i1, t0, t, t1 ) {
+
+		var result = this.resultBuffer;
+		var values = this.sampleValues;
+		var stride = this.valueSize;
+
+		var stride2 = stride * 2;
+		var stride3 = stride * 3;
+
+		var td = t1 - t0;
+
+		var p = ( t - t0 ) / td;
+		var pp = p * p;
+		var ppp = pp * p;
+
+		var offset1 = i1 * stride3;
+		var offset0 = offset1 - stride3;
+
+		var s0 = 2 * ppp - 3 * pp + 1;
+		var s1 = ppp - 2 * pp + p;
+		var s2 = - 2 * ppp + 3 * pp;
+		var s3 = ppp - pp;
+
+		// Layout of keyframe output values for CUBICSPLINE animations:
+		//   [ inTangent_1, splineVertex_1, outTangent_1, inTangent_2, splineVertex_2, ... ]
+		for ( var i = 0; i !== stride; i ++ ) {
+
+			var p0 = values[ offset0 + i + stride ]; // splineVertex_k
+			var m0 = values[ offset0 + i + stride2 ] * td; // outTangent_k * (t_k+1 - t_k)
+			var p1 = values[ offset1 + i + stride ]; // splineVertex_k+1
+			var m1 = values[ offset1 + i ] * td; // inTangent_k+1 * (t_k+1 - t_k)
+
+			result[ i ] = s0 * p0 + s1 * m0 + s2 * p1 + s3 * m1;
+
+		}
+
+		return result;
+
+	};
+
+	/*********************************/
+	/********** INTERNALS ************/
+	/*********************************/
+
+	/* CONSTANTS */
+
+	var WEBGL_CONSTANTS = {
+		FLOAT: 5126,
+		//FLOAT_MAT2: 35674,
+		FLOAT_MAT3: 35675,
+		FLOAT_MAT4: 35676,
+		FLOAT_VEC2: 35664,
+		FLOAT_VEC3: 35665,
+		FLOAT_VEC4: 35666,
+		LINEAR: 9729,
+		REPEAT: 10497,
+		SAMPLER_2D: 35678,
+		POINTS: 0,
+		LINES: 1,
+		LINE_LOOP: 2,
+		LINE_STRIP: 3,
+		TRIANGLES: 4,
+		TRIANGLE_STRIP: 5,
+		TRIANGLE_FAN: 6,
+		UNSIGNED_BYTE: 5121,
+		UNSIGNED_SHORT: 5123
+	};
+
+	var WEBGL_COMPONENT_TYPES$1 = {
+		5120: Int8Array,
+		5121: Uint8Array,
+		5122: Int16Array,
+		5123: Uint16Array,
+		5125: Uint32Array,
+		5126: Float32Array
+	};
+
+	var WEBGL_FILTERS = {
+		9728: NearestFilter,
+		9729: LinearFilter,
+		9984: NearestMipMapNearestFilter,
+		9985: LinearMipMapNearestFilter,
+		9986: NearestMipMapLinearFilter,
+		9987: LinearMipMapLinearFilter
+	};
+
+	var WEBGL_WRAPPINGS = {
+		33071: ClampToEdgeWrapping,
+		33648: MirroredRepeatWrapping,
+		10497: RepeatWrapping
+	};
+
+	var WEBGL_TYPE_SIZES$1 = {
+		'SCALAR': 1,
+		'VEC2': 2,
+		'VEC3': 3,
+		'VEC4': 4,
+		'MAT2': 4,
+		'MAT3': 9,
+		'MAT4': 16
+	};
+
+	var ATTRIBUTES = {
+		POSITION: 'position',
+		NORMAL: 'normal',
+		TEXCOORD_0: 'uv',
+		TEXCOORD0: 'uv', // deprecated
+		TEXCOORD: 'uv', // deprecated
+		TEXCOORD_1: 'uv2',
+		COLOR_0: 'color',
+		COLOR0: 'color', // deprecated
+		COLOR: 'color', // deprecated
+		WEIGHTS_0: 'skinWeight',
+		WEIGHT: 'skinWeight', // deprecated
+		JOINTS_0: 'skinIndex',
+		JOINT: 'skinIndex' // deprecated
+	};
+
+	var PATH_PROPERTIES = {
+		scale: 'scale',
+		translation: 'position',
+		rotation: 'quaternion',
+		weights: 'morphTargetInfluences'
+	};
+
+	var INTERPOLATION = {
+		CUBICSPLINE: InterpolateSmooth, // We use custom interpolation GLTFCubicSplineInterpolation for CUBICSPLINE.
+		                                      // KeyframeTrack.optimize() can't handle glTF Cubic Spline output values layout,
+		                                      // using THREE.InterpolateSmooth for KeyframeTrack instantiation to prevent optimization.
+		                                      // See KeyframeTrack.optimize() for the detail.
+		LINEAR: InterpolateLinear,
+		STEP: InterpolateDiscrete
+	};
+
+	var ALPHA_MODES = {
+		OPAQUE: 'OPAQUE',
+		MASK: 'MASK',
+		BLEND: 'BLEND'
+	};
+
+	var MIME_TYPE_FORMATS = {
+		'image/png': RGBAFormat,
+		'image/jpeg': RGBFormat
+	};
+
+	/* UTILITY FUNCTIONS */
+
+	function resolveURL( url, path ) {
+
+		// Invalid URL
+		if ( typeof url !== 'string' || url === '' ) return '';
+
+		// Absolute URL http://,https://,//
+		if ( /^(https?:)?\/\//i.test( url ) ) return url;
+
+		// Data URI
+		if ( /^data:.*,.*$/i.test( url ) ) return url;
+
+		// Blob URL
+		if ( /^blob:.*$/i.test( url ) ) return url;
+
+		// Relative URL
+		return path + url;
+
+	}
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#default-material
+	 */
+	function createDefaultMaterial() {
+
+		return new MeshStandardMaterial( {
+			color: 0xFFFFFF,
+			emissive: 0x000000,
+			metalness: 1,
+			roughness: 1,
+			transparent: false,
+			depthTest: true,
+			side: FrontSide
+		} );
+
+	}
+
+	function addUnknownExtensionsToUserData( knownExtensions, object, objectDef ) {
+
+		// Add unknown glTF extensions to an object's userData.
+
+		for ( var name in objectDef.extensions ) {
+
+			if ( knownExtensions[ name ] === undefined ) {
+
+				object.userData.gltfExtensions = object.userData.gltfExtensions || {};
+				object.userData.gltfExtensions[ name ] = objectDef.extensions[ name ];
+
+			}
+
+		}
+
+	}
+
+	/**
+	 * @param {THREE.Object3D|THREE.Material|THREE.BufferGeometry} object
+	 * @param {GLTF.definition} def
+	 */
+	function assignExtrasToUserData( object, gltfDef ) {
+
+		if ( gltfDef.extras !== undefined ) {
+
+			if ( typeof gltfDef.extras === 'object' ) {
+
+				object.userData = gltfDef.extras;
+
+			} else {
+
+				console.warn( 'THREE.GLTFLoader: Ignoring primitive type .extras, ' + gltfDef.extras );
+
+			}
+
+		}
+
+	}
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#morph-targets
+	 *
+	 * @param {THREE.BufferGeometry} geometry
+	 * @param {Array<GLTF.Target>} targets
+	 * @param {Array<THREE.BufferAttribute>} accessors
+	 */
+	function addMorphTargets( geometry, targets, accessors ) {
+
+		var hasMorphPosition = false;
+		var hasMorphNormal = false;
+
+		for ( var i = 0, il = targets.length; i < il; i ++ ) {
+
+			var target = targets[ i ];
+
+			if ( target.POSITION !== undefined ) hasMorphPosition = true;
+			if ( target.NORMAL !== undefined ) hasMorphNormal = true;
+
+			if ( hasMorphPosition && hasMorphNormal ) break;
+
+		}
+
+		if ( ! hasMorphPosition && ! hasMorphNormal ) return;
+
+		var morphPositions = [];
+		var morphNormals = [];
+
+		for ( var i = 0, il = targets.length; i < il; i ++ ) {
+
+			var target = targets[ i ];
+			var attributeName = 'morphTarget' + i;
+
+			if ( hasMorphPosition ) {
+
+				// Three.js morph position is absolute value. The formula is
+				//   basePosition
+				//     + weight0 * ( morphPosition0 - basePosition )
+				//     + weight1 * ( morphPosition1 - basePosition )
+				//     ...
+				// while the glTF one is relative
+				//   basePosition
+				//     + weight0 * glTFmorphPosition0
+				//     + weight1 * glTFmorphPosition1
+				//     ...
+				// then we need to convert from relative to absolute here.
+
+				if ( target.POSITION !== undefined ) {
+
+					// Cloning not to pollute original accessor
+					var positionAttribute = cloneBufferAttribute( accessors[ target.POSITION ] );
+					positionAttribute.name = attributeName;
+
+					var position = geometry.attributes.position;
+
+					for ( var j = 0, jl = positionAttribute.count; j < jl; j ++ ) {
+
+						positionAttribute.setXYZ(
+							j,
+							positionAttribute.getX( j ) + position.getX( j ),
+							positionAttribute.getY( j ) + position.getY( j ),
+							positionAttribute.getZ( j ) + position.getZ( j )
+						);
+
+					}
+
+				} else {
+
+					positionAttribute = geometry.attributes.position;
+
+				}
+
+				morphPositions.push( positionAttribute );
+
+			}
+
+			if ( hasMorphNormal ) {
+
+				// see target.POSITION's comment
+
+				var normalAttribute;
+
+				if ( target.NORMAL !== undefined ) {
+
+					var normalAttribute = cloneBufferAttribute( accessors[ target.NORMAL ] );
+					normalAttribute.name = attributeName;
+
+					var normal = geometry.attributes.normal;
+
+					for ( var j = 0, jl = normalAttribute.count; j < jl; j ++ ) {
+
+						normalAttribute.setXYZ(
+							j,
+							normalAttribute.getX( j ) + normal.getX( j ),
+							normalAttribute.getY( j ) + normal.getY( j ),
+							normalAttribute.getZ( j ) + normal.getZ( j )
+						);
+
+					}
+
+				} else {
+
+					normalAttribute = geometry.attributes.normal;
+
+				}
+
+				morphNormals.push( normalAttribute );
+
+			}
+
+		}
+
+		if ( hasMorphPosition ) geometry.morphAttributes.position = morphPositions;
+		if ( hasMorphNormal ) geometry.morphAttributes.normal = morphNormals;
+
+	}
+
+	/**
+	 * @param {THREE.Mesh} mesh
+	 * @param {GLTF.Mesh} meshDef
+	 */
+	function updateMorphTargets( mesh, meshDef ) {
+
+		mesh.updateMorphTargets();
+
+		if ( meshDef.weights !== undefined ) {
+
+			for ( var i = 0, il = meshDef.weights.length; i < il; i ++ ) {
+
+				mesh.morphTargetInfluences[ i ] = meshDef.weights[ i ];
+
+			}
+
+		}
+
+		// .extras has user-defined data, so check that .extras.targetNames is an array.
+		if ( meshDef.extras && Array.isArray( meshDef.extras.targetNames ) ) {
+
+			var targetNames = meshDef.extras.targetNames;
+
+			if ( mesh.morphTargetInfluences.length === targetNames.length ) {
+
+				mesh.morphTargetDictionary = {};
+
+				for ( var i = 0, il = targetNames.length; i < il; i ++ ) {
+
+					mesh.morphTargetDictionary[ targetNames[ i ] ] = i;
+
+				}
+
+			} else {
+
+				console.warn( 'THREE.GLTFLoader: Invalid extras.targetNames length. Ignoring names.' );
+
+			}
+
+		}
+
+	}
+
+	function isPrimitiveEqual( a, b ) {
+
+		if ( a.indices !== b.indices ) {
+
+			return false;
+
+		}
+
+		return isObjectEqual( a.attributes, b.attributes );
+
+	}
+
+	function isObjectEqual( a, b ) {
+
+		if ( Object.keys( a ).length !== Object.keys( b ).length ) return false;
+
+		for ( var key in a ) {
+
+			if ( a[ key ] !== b[ key ] ) return false;
+
+		}
+
+		return true;
+
+	}
+
+	function isArrayEqual( a, b ) {
+
+		if ( a.length !== b.length ) return false;
+
+		for ( var i = 0, il = a.length; i < il; i ++ ) {
+
+			if ( a[ i ] !== b[ i ] ) return false;
+
+		}
+
+		return true;
+
+	}
+
+	function getCachedGeometry( cache, newPrimitive ) {
+
+		for ( var i = 0, il = cache.length; i < il; i ++ ) {
+
+			var cached = cache[ i ];
+
+			if ( isPrimitiveEqual( cached.primitive, newPrimitive ) ) return cached.promise;
+
+		}
+
+		return null;
+
+	}
+
+	function getCachedCombinedGeometry( cache, geometries ) {
+
+		for ( var i = 0, il = cache.length; i < il; i ++ ) {
+
+			var cached = cache[ i ];
+
+			if ( isArrayEqual( geometries, cached.baseGeometries ) ) return cached.geometry;
+
+		}
+
+		return null;
+
+	}
+
+	function getCachedMultiPassGeometry( cache, geometry, primitives ) {
+
+		for ( var i = 0, il = cache.length; i < il; i ++ ) {
+
+			var cached = cache[ i ];
+
+			if ( geometry === cached.baseGeometry && isArrayEqual( primitives, cached.primitives ) ) return cached.geometry;
+
+		}
+
+		return null;
+
+	}
+
+	function cloneBufferAttribute( attribute ) {
+
+		if ( attribute.isInterleavedBufferAttribute ) {
+
+			var count = attribute.count;
+			var itemSize = attribute.itemSize;
+			var array = attribute.array.slice( 0, count * itemSize );
+
+			for ( var i = 0; i < count; ++ i ) {
+
+				array[ i ] = attribute.getX( i );
+				if ( itemSize >= 2 ) array[ i + 1 ] = attribute.getY( i );
+				if ( itemSize >= 3 ) array[ i + 2 ] = attribute.getZ( i );
+				if ( itemSize >= 4 ) array[ i + 3 ] = attribute.getW( i );
+
+			}
+
+			return new BufferAttribute( array, itemSize, attribute.normalized );
+
+		}
+
+		return attribute.clone();
+
+	}
+
+	/**
+	 * Checks if we can build a single Mesh with MultiMaterial from multiple primitives.
+	 * Returns true if all primitives use the same attributes/morphAttributes/mode
+	 * and also have index. Otherwise returns false.
+	 *
+	 * @param {Array<GLTF.Primitive>} primitives
+	 * @return {Boolean}
+	 */
+	function isMultiPassGeometry( primitives ) {
+
+		if ( primitives.length < 2 ) return false;
+
+		var primitive0 = primitives[ 0 ];
+		var targets0 = primitive0.targets || [];
+
+		if ( primitive0.indices === undefined ) return false;
+
+		for ( var i = 1, il = primitives.length; i < il; i ++ ) {
+
+			var primitive = primitives[ i ];
+
+			if ( primitive0.mode !== primitive.mode ) return false;
+			if ( primitive.indices === undefined ) return false;
+			if ( ! isObjectEqual( primitive0.attributes, primitive.attributes ) ) return false;
+
+			var targets = primitive.targets || [];
+
+			if ( targets0.length !== targets.length ) return false;
+
+			for ( var j = 0, jl = targets0.length; j < jl; j ++ ) {
+
+				if ( ! isObjectEqual( targets0[ j ], targets[ j ] ) ) return false;
+
+			}
+
+		}
+
+		return true;
+
+	}
+
+	/* GLTF PARSER */
+
+	function GLTFParser( json, extensions, options ) {
+
+		this.json = json || {};
+		this.extensions = extensions || {};
+		this.options = options || {};
+
+		// loader object cache
+		this.cache = new GLTFRegistry();
+
+		// BufferGeometry caching
+		this.primitiveCache = [];
+		this.multiplePrimitivesCache = [];
+		this.multiPassGeometryCache = [];
+
+		this.textureLoader = new TextureLoader( this.options.manager );
+		this.textureLoader.setCrossOrigin( this.options.crossOrigin );
+
+		this.fileLoader = new FileLoader( this.options.manager );
+		this.fileLoader.setResponseType( 'arraybuffer' );
+
+	}
+
+	GLTFParser.prototype.parse = function ( onLoad, onError ) {
+
+		var json = this.json;
+
+		// Clear the loader cache
+		this.cache.removeAll();
+
+		// Mark the special nodes/meshes in json for efficient parse
+		this.markDefs();
+
+		// Fire the callback on complete
+		this.getMultiDependencies( [
+
+			'scene',
+			'animation',
+			'camera'
+
+		] ).then( function ( dependencies ) {
+
+			var scenes = dependencies.scenes || [];
+			var scene = scenes[ json.scene || 0 ];
+			var animations = dependencies.animations || [];
+			var cameras = dependencies.cameras || [];
+
+			onLoad( scene, scenes, cameras, animations, json );
+
+		} ).catch( onError );
+
+	};
+
+	/**
+	 * Marks the special nodes/meshes in json for efficient parse.
+	 */
+	GLTFParser.prototype.markDefs = function () {
+
+		var nodeDefs = this.json.nodes || [];
+		var skinDefs = this.json.skins || [];
+		var meshDefs = this.json.meshes || [];
+
+		var meshReferences = {};
+		var meshUses = {};
+
+		// Nothing in the node definition indicates whether it is a Bone or an
+		// Object3D. Use the skins' joint references to mark bones.
+		for ( var skinIndex = 0, skinLength = skinDefs.length; skinIndex < skinLength; skinIndex ++ ) {
+
+			var joints = skinDefs[ skinIndex ].joints;
+
+			for ( var i = 0, il = joints.length; i < il; i ++ ) {
+
+				nodeDefs[ joints[ i ] ].isBone = true;
+
+			}
+
+		}
+
+		// Meshes can (and should) be reused by multiple nodes in a glTF asset. To
+		// avoid having more than one THREE.Mesh with the same name, count
+		// references and rename instances below.
+		//
+		// Example: CesiumMilkTruck sample model reuses "Wheel" meshes.
+		for ( var nodeIndex = 0, nodeLength = nodeDefs.length; nodeIndex < nodeLength; nodeIndex ++ ) {
+
+			var nodeDef = nodeDefs[ nodeIndex ];
+
+			if ( nodeDef.mesh !== undefined ) {
+
+				if ( meshReferences[ nodeDef.mesh ] === undefined ) {
+
+					meshReferences[ nodeDef.mesh ] = meshUses[ nodeDef.mesh ] = 0;
+
+				}
+
+				meshReferences[ nodeDef.mesh ] ++;
+
+				// Nothing in the mesh definition indicates whether it is
+				// a SkinnedMesh or Mesh. Use the node's mesh reference
+				// to mark SkinnedMesh if node has skin.
+				if ( nodeDef.skin !== undefined ) {
+
+					meshDefs[ nodeDef.mesh ].isSkinnedMesh = true;
+
+				}
+
+			}
+
+		}
+
+		this.json.meshReferences = meshReferences;
+		this.json.meshUses = meshUses;
+
+	};
+
+	/**
+	 * Requests the specified dependency asynchronously, with caching.
+	 * @param {string} type
+	 * @param {number} index
+	 * @return {Promise<Object>}
+	 */
+	GLTFParser.prototype.getDependency = function ( type, index ) {
+
+		var cacheKey = type + ':' + index;
+		var dependency = this.cache.get( cacheKey );
+
+		if ( ! dependency ) {
+
+			switch ( type ) {
+
+				case 'scene':
+					dependency = this.loadScene( index );
+					break;
+
+				case 'node':
+					dependency = this.loadNode( index );
+					break;
+
+				case 'mesh':
+					dependency = this.loadMesh( index );
+					break;
+
+				case 'accessor':
+					dependency = this.loadAccessor( index );
+					break;
+
+				case 'bufferView':
+					dependency = this.loadBufferView( index );
+					break;
+
+				case 'buffer':
+					dependency = this.loadBuffer( index );
+					break;
+
+				case 'material':
+					dependency = this.loadMaterial( index );
+					break;
+
+				case 'texture':
+					dependency = this.loadTexture( index );
+					break;
+
+				case 'skin':
+					dependency = this.loadSkin( index );
+					break;
+
+				case 'animation':
+					dependency = this.loadAnimation( index );
+					break;
+
+				case 'camera':
+					dependency = this.loadCamera( index );
+					break;
+
+				default:
+					throw new Error( 'Unknown type: ' + type );
+
+			}
+
+			this.cache.add( cacheKey, dependency );
+
+		}
+
+		return dependency;
+
+	};
+
+	/**
+	 * Requests all dependencies of the specified type asynchronously, with caching.
+	 * @param {string} type
+	 * @return {Promise<Array<Object>>}
+	 */
+	GLTFParser.prototype.getDependencies = function ( type ) {
+
+		var dependencies = this.cache.get( type );
+
+		if ( ! dependencies ) {
+
+			var parser = this;
+			var defs = this.json[ type + ( type === 'mesh' ? 'es' : 's' ) ] || [];
+
+			dependencies = Promise.all( defs.map( function ( def, index ) {
+
+				return parser.getDependency( type, index );
+
+			} ) );
+
+			this.cache.add( type, dependencies );
+
+		}
+
+		return dependencies;
+
+	};
+
+	/**
+	 * Requests all multiple dependencies of the specified types asynchronously, with caching.
+	 * @param {Array<string>} types
+	 * @return {Promise<Object<Array<Object>>>}
+	 */
+	GLTFParser.prototype.getMultiDependencies = function ( types ) {
+
+		var results = {};
+		var pendings = [];
+
+		for ( var i = 0, il = types.length; i < il; i ++ ) {
+
+			var type = types[ i ];
+			var value = this.getDependencies( type );
+
+			value = value.then( function ( key, value ) {
+
+				results[ key ] = value;
+
+			}.bind( this, type + ( type === 'mesh' ? 'es' : 's' ) ) );
+
+			pendings.push( value );
+
+		}
+
+		return Promise.all( pendings ).then( function () {
+
+			return results;
+
+		} );
+
+	};
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffers-and-buffer-views
+	 * @param {number} bufferIndex
+	 * @return {Promise<ArrayBuffer>}
+	 */
+	GLTFParser.prototype.loadBuffer = function ( bufferIndex ) {
+
+		var bufferDef = this.json.buffers[ bufferIndex ];
+		var loader = this.fileLoader;
+
+		if ( bufferDef.type && bufferDef.type !== 'arraybuffer' ) {
+
+			throw new Error( 'THREE.GLTFLoader: ' + bufferDef.type + ' buffer type is not supported.' );
+
+		}
+
+		// If present, GLB container is required to be the first buffer.
+		if ( bufferDef.uri === undefined && bufferIndex === 0 ) {
+
+			return Promise.resolve( this.extensions[ EXTENSIONS.KHR_BINARY_GLTF ].body );
+
+		}
+
+		var options = this.options;
+
+		return new Promise( function ( resolve, reject ) {
+
+			loader.load( resolveURL( bufferDef.uri, options.path ), resolve, undefined, function () {
+
+				reject( new Error( 'THREE.GLTFLoader: Failed to load buffer "' + bufferDef.uri + '".' ) );
+
+			} );
+
+		} );
+
+	};
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#buffers-and-buffer-views
+	 * @param {number} bufferViewIndex
+	 * @return {Promise<ArrayBuffer>}
+	 */
+	GLTFParser.prototype.loadBufferView = function ( bufferViewIndex ) {
+
+		var bufferViewDef = this.json.bufferViews[ bufferViewIndex ];
+
+		return this.getDependency( 'buffer', bufferViewDef.buffer ).then( function ( buffer ) {
+
+			var byteLength = bufferViewDef.byteLength || 0;
+			var byteOffset = bufferViewDef.byteOffset || 0;
+			return buffer.slice( byteOffset, byteOffset + byteLength );
+
+		} );
+
+	};
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#accessors
+	 * @param {number} accessorIndex
+	 * @return {Promise<THREE.BufferAttribute|THREE.InterleavedBufferAttribute>}
+	 */
+	GLTFParser.prototype.loadAccessor = function ( accessorIndex ) {
+
+		var parser = this;
+		var json = this.json;
+
+		var accessorDef = this.json.accessors[ accessorIndex ];
+
+		if ( accessorDef.bufferView === undefined && accessorDef.sparse === undefined ) {
+
+			// Ignore empty accessors, which may be used to declare runtime
+			// information about attributes coming from another source (e.g. Draco
+			// compression extension).
+			return null;
+
+		}
+
+		var pendingBufferViews = [];
+
+		if ( accessorDef.bufferView !== undefined ) {
+
+			pendingBufferViews.push( this.getDependency( 'bufferView', accessorDef.bufferView ) );
+
+		} else {
+
+			pendingBufferViews.push( null );
+
+		}
+
+		if ( accessorDef.sparse !== undefined ) {
+
+			pendingBufferViews.push( this.getDependency( 'bufferView', accessorDef.sparse.indices.bufferView ) );
+			pendingBufferViews.push( this.getDependency( 'bufferView', accessorDef.sparse.values.bufferView ) );
+
+		}
+
+		return Promise.all( pendingBufferViews ).then( function ( bufferViews ) {
+
+			var bufferView = bufferViews[ 0 ];
+
+			var itemSize = WEBGL_TYPE_SIZES$1[ accessorDef.type ];
+			var TypedArray = WEBGL_COMPONENT_TYPES$1[ accessorDef.componentType ];
+
+			// For VEC3: itemSize is 3, elementBytes is 4, itemBytes is 12.
+			var elementBytes = TypedArray.BYTES_PER_ELEMENT;
+			var itemBytes = elementBytes * itemSize;
+			var byteOffset = accessorDef.byteOffset || 0;
+			var byteStride = accessorDef.bufferView !== undefined ? json.bufferViews[ accessorDef.bufferView ].byteStride : undefined;
+			var normalized = accessorDef.normalized === true;
+			var array, bufferAttribute;
+
+			// The buffer is not interleaved if the stride is the item size in bytes.
+			if ( byteStride && byteStride !== itemBytes ) {
+
+				var ibCacheKey = 'InterleavedBuffer:' + accessorDef.bufferView + ':' + accessorDef.componentType;
+				var ib = parser.cache.get( ibCacheKey );
+
+				if ( ! ib ) {
+
+					// Use the full buffer if it's interleaved.
+					array = new TypedArray( bufferView );
+
+					// Integer parameters to IB/IBA are in array elements, not bytes.
+					ib = new InterleavedBuffer( array, byteStride / elementBytes );
+
+					parser.cache.add( ibCacheKey, ib );
+
+				}
+
+				bufferAttribute = new InterleavedBufferAttribute( ib, itemSize, byteOffset / elementBytes, normalized );
+
+			} else {
+
+				if ( bufferView === null ) {
+
+					array = new TypedArray( accessorDef.count * itemSize );
+
+				} else {
+
+					array = new TypedArray( bufferView, byteOffset, accessorDef.count * itemSize );
+
+				}
+
+				bufferAttribute = new BufferAttribute( array, itemSize, normalized );
+
+			}
+
+			// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#sparse-accessors
+			if ( accessorDef.sparse !== undefined ) {
+
+				var itemSizeIndices = WEBGL_TYPE_SIZES$1.SCALAR;
+				var TypedArrayIndices = WEBGL_COMPONENT_TYPES$1[ accessorDef.sparse.indices.componentType ];
+
+				var byteOffsetIndices = accessorDef.sparse.indices.byteOffset || 0;
+				var byteOffsetValues = accessorDef.sparse.values.byteOffset || 0;
+
+				var sparseIndices = new TypedArrayIndices( bufferViews[ 1 ], byteOffsetIndices, accessorDef.sparse.count * itemSizeIndices );
+				var sparseValues = new TypedArray( bufferViews[ 2 ], byteOffsetValues, accessorDef.sparse.count * itemSize );
+
+				if ( bufferView !== null ) {
+
+					// Avoid modifying the original ArrayBuffer, if the bufferView wasn't initialized with zeroes.
+					bufferAttribute.setArray( bufferAttribute.array.slice() );
+
+				}
+
+				for ( var i = 0, il = sparseIndices.length; i < il; i ++ ) {
+
+					var index = sparseIndices[ i ];
+
+					bufferAttribute.setX( index, sparseValues[ i * itemSize ] );
+					if ( itemSize >= 2 ) bufferAttribute.setY( index, sparseValues[ i * itemSize + 1 ] );
+					if ( itemSize >= 3 ) bufferAttribute.setZ( index, sparseValues[ i * itemSize + 2 ] );
+					if ( itemSize >= 4 ) bufferAttribute.setW( index, sparseValues[ i * itemSize + 3 ] );
+					if ( itemSize >= 5 ) throw new Error( 'THREE.GLTFLoader: Unsupported itemSize in sparse BufferAttribute.' );
+
+				}
+
+			}
+
+			return bufferAttribute;
+
+		} );
+
+	};
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#textures
+	 * @param {number} textureIndex
+	 * @return {Promise<THREE.Texture>}
+	 */
+	GLTFParser.prototype.loadTexture = function ( textureIndex ) {
+
+		var parser = this;
+		var json = this.json;
+		var options = this.options;
+		var textureLoader = this.textureLoader;
+
+		var URL = window.URL || window.webkitURL;
+
+		var textureDef = json.textures[ textureIndex ];
+
+		var textureExtensions = textureDef.extensions || {};
+
+		var source;
+
+		if ( textureExtensions[ EXTENSIONS.MSFT_TEXTURE_DDS ] ) {
+
+			source = json.images[ textureExtensions[ EXTENSIONS.MSFT_TEXTURE_DDS ].source ];
+
+		} else {
+
+			source = json.images[ textureDef.source ];
+
+		}
+
+		var sourceURI = source.uri;
+		var isObjectURL = false;
+
+		if ( source.bufferView !== undefined ) {
+
+			// Load binary image data from bufferView, if provided.
+
+			sourceURI = parser.getDependency( 'bufferView', source.bufferView ).then( function ( bufferView ) {
+
+				isObjectURL = true;
+				var blob = new Blob( [ bufferView ], { type: source.mimeType } );
+				sourceURI = URL.createObjectURL( blob );
+				return sourceURI;
+
+			} );
+
+		}
+
+		return Promise.resolve( sourceURI ).then( function ( sourceURI ) {
+
+			// Load Texture resource.
+
+			var loader = Loader.Handlers.get( sourceURI );
+
+			if ( ! loader ) {
+
+				loader = textureExtensions[ EXTENSIONS.MSFT_TEXTURE_DDS ]
+					? parser.extensions[ EXTENSIONS.MSFT_TEXTURE_DDS ].ddsLoader
+					: textureLoader;
+
+			}
+
+			return new Promise( function ( resolve, reject ) {
+
+				loader.load( resolveURL( sourceURI, options.path ), resolve, undefined, reject );
+
+			} );
+
+		} ).then( function ( texture ) {
+
+			// Clean up resources and configure Texture.
+
+			if ( isObjectURL === true ) {
+
+				URL.revokeObjectURL( sourceURI );
+
+			}
+
+			texture.flipY = false;
+
+			if ( textureDef.name !== undefined ) texture.name = textureDef.name;
+
+			// Ignore unknown mime types, like DDS files.
+			if ( source.mimeType in MIME_TYPE_FORMATS ) {
+
+				texture.format = MIME_TYPE_FORMATS[ source.mimeType ];
+
+			}
+
+			var samplers = json.samplers || {};
+			var sampler = samplers[ textureDef.sampler ] || {};
+
+			texture.magFilter = WEBGL_FILTERS[ sampler.magFilter ] || LinearFilter;
+			texture.minFilter = WEBGL_FILTERS[ sampler.minFilter ] || LinearMipMapLinearFilter;
+			texture.wrapS = WEBGL_WRAPPINGS[ sampler.wrapS ] || RepeatWrapping;
+			texture.wrapT = WEBGL_WRAPPINGS[ sampler.wrapT ] || RepeatWrapping;
+
+			return texture;
+
+		} );
+
+	};
+
+	/**
+	 * Asynchronously assigns a texture to the given material parameters.
+	 * @param {Object} materialParams
+	 * @param {string} textureName
+	 * @param {number} textureIndex
+	 * @return {Promise}
+	 */
+	GLTFParser.prototype.assignTexture = function ( materialParams, textureName, textureIndex ) {
+
+		return this.getDependency( 'texture', textureIndex ).then( function ( texture ) {
+
+			materialParams[ textureName ] = texture;
+
+		} );
+
+	};
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#materials
+	 * @param {number} materialIndex
+	 * @return {Promise<THREE.Material>}
+	 */
+	GLTFParser.prototype.loadMaterial = function ( materialIndex ) {
+
+		var parser = this;
+		var json = this.json;
+		var extensions = this.extensions;
+		var materialDef = json.materials[ materialIndex ];
+
+		var materialType;
+		var materialParams = {};
+		var materialExtensions = materialDef.extensions || {};
+
+		var pending = [];
+
+		if ( materialExtensions[ EXTENSIONS.KHR_MATERIALS_PBR_SPECULAR_GLOSSINESS ] ) {
+
+			var sgExtension = extensions[ EXTENSIONS.KHR_MATERIALS_PBR_SPECULAR_GLOSSINESS ];
+			materialType = sgExtension.getMaterialType( materialDef );
+			pending.push( sgExtension.extendParams( materialParams, materialDef, parser ) );
+
+		} else if ( materialExtensions[ EXTENSIONS.KHR_MATERIALS_UNLIT ] ) {
+
+			var kmuExtension = extensions[ EXTENSIONS.KHR_MATERIALS_UNLIT ];
+			materialType = kmuExtension.getMaterialType( materialDef );
+			pending.push( kmuExtension.extendParams( materialParams, materialDef, parser ) );
+
+		} else {
+
+			// Specification:
+			// https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#metallic-roughness-material
+
+			materialType = MeshStandardMaterial;
+
+			var metallicRoughness = materialDef.pbrMetallicRoughness || {};
+
+			materialParams.color = new Color( 1.0, 1.0, 1.0 );
+			materialParams.opacity = 1.0;
+
+			if ( Array.isArray( metallicRoughness.baseColorFactor ) ) {
+
+				var array = metallicRoughness.baseColorFactor;
+
+				materialParams.color.fromArray( array );
+				materialParams.opacity = array[ 3 ];
+
+			}
+
+			if ( metallicRoughness.baseColorTexture !== undefined ) {
+
+				pending.push( parser.assignTexture( materialParams, 'map', metallicRoughness.baseColorTexture.index ) );
+
+			}
+
+			materialParams.metalness = metallicRoughness.metallicFactor !== undefined ? metallicRoughness.metallicFactor : 1.0;
+			materialParams.roughness = metallicRoughness.roughnessFactor !== undefined ? metallicRoughness.roughnessFactor : 1.0;
+
+			if ( metallicRoughness.metallicRoughnessTexture !== undefined ) {
+
+				var textureIndex = metallicRoughness.metallicRoughnessTexture.index;
+				pending.push( parser.assignTexture( materialParams, 'metalnessMap', textureIndex ) );
+				pending.push( parser.assignTexture( materialParams, 'roughnessMap', textureIndex ) );
+
+			}
+
+		}
+
+		if ( materialDef.doubleSided === true ) {
+
+			materialParams.side = DoubleSide;
+
+		}
+
+		var alphaMode = materialDef.alphaMode || ALPHA_MODES.OPAQUE;
+
+		if ( alphaMode === ALPHA_MODES.BLEND ) {
+
+			materialParams.transparent = true;
+
+		} else {
+
+			materialParams.transparent = false;
+
+			if ( alphaMode === ALPHA_MODES.MASK ) {
+
+				materialParams.alphaTest = materialDef.alphaCutoff !== undefined ? materialDef.alphaCutoff : 0.5;
+
+			}
+
+		}
+
+		if ( materialDef.normalTexture !== undefined && materialType !== MeshBasicMaterial ) {
+
+			pending.push( parser.assignTexture( materialParams, 'normalMap', materialDef.normalTexture.index ) );
+
+			materialParams.normalScale = new Vector2( 1, 1 );
+
+			if ( materialDef.normalTexture.scale !== undefined ) {
+
+				materialParams.normalScale.set( materialDef.normalTexture.scale, materialDef.normalTexture.scale );
+
+			}
+
+		}
+
+		if ( materialDef.occlusionTexture !== undefined && materialType !== MeshBasicMaterial ) {
+
+			pending.push( parser.assignTexture( materialParams, 'aoMap', materialDef.occlusionTexture.index ) );
+
+			if ( materialDef.occlusionTexture.strength !== undefined ) {
+
+				materialParams.aoMapIntensity = materialDef.occlusionTexture.strength;
+
+			}
+
+		}
+
+		if ( materialDef.emissiveFactor !== undefined && materialType !== MeshBasicMaterial ) {
+
+			materialParams.emissive = new Color().fromArray( materialDef.emissiveFactor );
+
+		}
+
+		if ( materialDef.emissiveTexture !== undefined && materialType !== MeshBasicMaterial ) {
+
+			pending.push( parser.assignTexture( materialParams, 'emissiveMap', materialDef.emissiveTexture.index ) );
+
+		}
+
+		return Promise.all( pending ).then( function () {
+
+			var material;
+
+			if ( materialType === ShaderMaterial ) {
+
+				material = extensions[ EXTENSIONS.KHR_MATERIALS_PBR_SPECULAR_GLOSSINESS ].createMaterial( materialParams );
+
+			} else {
+
+				material = new materialType( materialParams );
+
+			}
+
+			if ( materialDef.name !== undefined ) material.name = materialDef.name;
+
+			// Normal map textures use OpenGL conventions:
+			// https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#materialnormaltexture
+			if ( material.normalScale ) {
+
+				material.normalScale.y = - material.normalScale.y;
+
+			}
+
+			// baseColorTexture, emissiveTexture, and specularGlossinessTexture use sRGB encoding.
+			if ( material.map ) material.map.encoding = sRGBEncoding;
+			if ( material.emissiveMap ) material.emissiveMap.encoding = sRGBEncoding;
+			if ( material.specularMap ) material.specularMap.encoding = sRGBEncoding;
+
+			assignExtrasToUserData( material, materialDef );
+
+			if ( materialDef.extensions ) addUnknownExtensionsToUserData( extensions, material, materialDef );
+
+			return material;
+
+		} );
+
+	};
+
+	/**
+	 * @param  {THREE.BufferGeometry} geometry
+	 * @param  {GLTF.Primitive} primitiveDef
+	 * @param  {Array<THREE.BufferAttribute>} accessors
+	 */
+	function addPrimitiveAttributes( geometry, primitiveDef, accessors ) {
+
+		var attributes = primitiveDef.attributes;
+
+		for ( var gltfAttributeName in attributes ) {
+
+			var threeAttributeName = ATTRIBUTES[ gltfAttributeName ];
+			var bufferAttribute = accessors[ attributes[ gltfAttributeName ] ];
+
+			// Skip attributes already provided by e.g. Draco extension.
+			if ( ! threeAttributeName ) continue;
+			if ( threeAttributeName in geometry.attributes ) continue;
+
+			geometry.addAttribute( threeAttributeName, bufferAttribute );
+
+		}
+
+		if ( primitiveDef.indices !== undefined && ! geometry.index ) {
+
+			geometry.setIndex( accessors[ primitiveDef.indices ] );
+
+		}
+
+		if ( primitiveDef.targets !== undefined ) {
+
+			addMorphTargets( geometry, primitiveDef.targets, accessors );
+
+		}
+
+		assignExtrasToUserData( geometry, primitiveDef );
+
+	}
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#geometry
+	 *
+	 * Creates BufferGeometries from primitives.
+	 * If we can build a single BufferGeometry with .groups from multiple primitives, returns one BufferGeometry.
+	 * Otherwise, returns BufferGeometries without .groups as many as primitives.
+	 *
+	 * @param {Array<Object>} primitives
+	 * @return {Promise<Array<THREE.BufferGeometry>>}
+	 */
+	GLTFParser.prototype.loadGeometries = function ( primitives ) {
+
+		var parser = this;
+		var extensions = this.extensions;
+		var cache = this.primitiveCache;
+
+		var isMultiPass = isMultiPassGeometry( primitives );
+		var originalPrimitives;
+
+		if ( isMultiPass ) {
+
+			originalPrimitives = primitives; // save original primitives and use later
+
+			// We build a single BufferGeometry with .groups from multiple primitives
+			// because all primitives share the same attributes/morph/mode and have indices.
+
+			primitives = [ primitives[ 0 ] ];
+
+			// Sets .groups and combined indices to a geometry later in this method.
+
+		}
+
+		return this.getDependencies( 'accessor' ).then( function ( accessors ) {
+
+			var pending = [];
+
+			for ( var i = 0, il = primitives.length; i < il; i ++ ) {
+
+				var primitive = primitives[ i ];
+
+				// See if we've already created this geometry
+				var cached = getCachedGeometry( cache, primitive );
+
+				if ( cached ) {
+
+					// Use the cached geometry if it exists
+					pending.push( cached );
+
+				} else if ( primitive.extensions && primitive.extensions[ EXTENSIONS.KHR_DRACO_MESH_COMPRESSION ] ) {
+
+					// Use DRACO geometry if available
+					var geometryPromise = extensions[ EXTENSIONS.KHR_DRACO_MESH_COMPRESSION ]
+						.decodePrimitive( primitive, parser )
+						.then( function ( geometry ) {
+
+							addPrimitiveAttributes( geometry, primitive, accessors );
+
+							return geometry;
+
+						} );
+
+					cache.push( { primitive: primitive, promise: geometryPromise } );
+
+					pending.push( geometryPromise );
+
+				} else {
+
+					// Otherwise create a new geometry
+					var geometry = new BufferGeometry();
+
+					addPrimitiveAttributes( geometry, primitive, accessors );
+
+					var geometryPromise = Promise.resolve( geometry );
+
+					// Cache this geometry
+					cache.push( { primitive: primitive, promise: geometryPromise } );
+
+					pending.push( geometryPromise );
+
+				}
+
+			}
+
+			return Promise.all( pending ).then( function ( geometries ) {
+
+				if ( isMultiPass ) {
+
+					var baseGeometry = geometries[ 0 ];
+
+					// See if we've already created this combined geometry
+					var cache = parser.multiPassGeometryCache;
+					var cached = getCachedMultiPassGeometry( cache, baseGeometry, originalPrimitives );
+
+					if ( cached !== null ) return [ cached.geometry ];
+
+					// Cloning geometry because of index override.
+					// Attributes can be reused so cloning by myself here.
+					var geometry = new BufferGeometry();
+
+					geometry.name = baseGeometry.name;
+					geometry.userData = baseGeometry.userData;
+
+					for ( var key in baseGeometry.attributes ) geometry.addAttribute( key, baseGeometry.attributes[ key ] );
+					for ( var key in baseGeometry.morphAttributes ) geometry.morphAttributes[ key ] = baseGeometry.morphAttributes[ key ];
+
+					var indices = [];
+					var offset = 0;
+
+					for ( var i = 0, il = originalPrimitives.length; i < il; i ++ ) {
+
+						var accessor = accessors[ originalPrimitives[ i ].indices ];
+
+						for ( var j = 0, jl = accessor.count; j < jl; j ++ ) indices.push( accessor.array[ j ] );
+
+						geometry.addGroup( offset, accessor.count, i );
+
+						offset += accessor.count;
+
+					}
+
+					geometry.setIndex( indices );
+
+					cache.push( { geometry: geometry, baseGeometry: baseGeometry, primitives: originalPrimitives } );
+
+					return [ geometry ];
+
+				} else if ( geometries.length > 1 && BufferGeometryUtils !== undefined ) {
+
+					// Tries to merge geometries with BufferGeometryUtils if possible
+
+					for ( var i = 1, il = primitives.length; i < il; i ++ ) {
+
+						// can't merge if draw mode is different
+						if ( primitives[ 0 ].mode !== primitives[ i ].mode ) return geometries;
+
+					}
+
+					// See if we've already created this combined geometry
+					var cache = parser.multiplePrimitivesCache;
+					var cached = getCachedCombinedGeometry( cache, geometries );
+
+					if ( cached ) {
+
+						if ( cached.geometry !== null ) return [ cached.geometry ];
+
+					} else {
+
+						var geometry = BufferGeometryUtils.mergeBufferGeometries( geometries, true );
+
+						cache.push( { geometry: geometry, baseGeometries: geometries } );
+
+						if ( geometry !== null ) return [ geometry ];
+
+					}
+
+				}
+
+				return geometries;
+
+			} );
+
+		} );
+
+	};
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#meshes
+	 * @param {number} meshIndex
+	 * @return {Promise<THREE.Group|THREE.Mesh|THREE.SkinnedMesh>}
+	 */
+	GLTFParser.prototype.loadMesh = function ( meshIndex ) {
+
+		var scope = this;
+		var json = this.json;
+		var extensions = this.extensions;
+
+		var meshDef = json.meshes[ meshIndex ];
+
+		return this.getMultiDependencies( [
+
+			'accessor',
+			'material'
+
+		] ).then( function ( dependencies ) {
+
+			var primitives = meshDef.primitives;
+			var originalMaterials = [];
+
+			for ( var i = 0, il = primitives.length; i < il; i ++ ) {
+
+				originalMaterials[ i ] = primitives[ i ].material === undefined
+					? createDefaultMaterial()
+					: dependencies.materials[ primitives[ i ].material ];
+
+			}
+
+			return scope.loadGeometries( primitives ).then( function ( geometries ) {
+
+				var isMultiMaterial = geometries.length === 1 && geometries[ 0 ].groups.length > 0;
+
+				var meshes = [];
+
+				for ( var i = 0, il = geometries.length; i < il; i ++ ) {
+
+					var geometry = geometries[ i ];
+					var primitive = primitives[ i ];
+
+					// 1. create Mesh
+
+					var mesh;
+
+					var material = isMultiMaterial ? originalMaterials : originalMaterials[ i ];
+
+					if ( primitive.mode === WEBGL_CONSTANTS.TRIANGLES ||
+						primitive.mode === WEBGL_CONSTANTS.TRIANGLE_STRIP ||
+						primitive.mode === WEBGL_CONSTANTS.TRIANGLE_FAN ||
+						primitive.mode === undefined ) {
+
+						// .isSkinnedMesh isn't in glTF spec. See .markDefs()
+						mesh = meshDef.isSkinnedMesh === true
+							? new SkinnedMesh( geometry, material )
+							: new Mesh( geometry, material );
+
+						if ( primitive.mode === WEBGL_CONSTANTS.TRIANGLE_STRIP ) {
+
+							mesh.drawMode = TriangleStripDrawMode;
+
+						} else if ( primitive.mode === WEBGL_CONSTANTS.TRIANGLE_FAN ) {
+
+							mesh.drawMode = TriangleFanDrawMode;
+
+						}
+
+					} else if ( primitive.mode === WEBGL_CONSTANTS.LINES ) {
+
+						mesh = new LineSegments( geometry, material );
+
+					} else if ( primitive.mode === WEBGL_CONSTANTS.LINE_STRIP ) {
+
+						mesh = new Line( geometry, material );
+
+					} else if ( primitive.mode === WEBGL_CONSTANTS.LINE_LOOP ) {
+
+						mesh = new LineLoop( geometry, material );
+
+					} else if ( primitive.mode === WEBGL_CONSTANTS.POINTS ) {
+
+						mesh = new Points( geometry, material );
+
+					} else {
+
+						throw new Error( 'THREE.GLTFLoader: Primitive mode unsupported: ' + primitive.mode );
+
+					}
+
+					if ( Object.keys( mesh.geometry.morphAttributes ).length > 0 ) {
+
+						updateMorphTargets( mesh, meshDef );
+
+					}
+
+					mesh.name = meshDef.name || ( 'mesh_' + meshIndex );
+
+					if ( geometries.length > 1 ) mesh.name += '_' + i;
+
+					assignExtrasToUserData( mesh, meshDef );
+
+					meshes.push( mesh );
+
+					// 2. update Material depending on Mesh and BufferGeometry
+
+					var materials = isMultiMaterial ? mesh.material : [ mesh.material ];
+
+					var useVertexColors = geometry.attributes.color !== undefined;
+					var useFlatShading = geometry.attributes.normal === undefined;
+					var useSkinning = mesh.isSkinnedMesh === true;
+					var useMorphTargets = Object.keys( geometry.morphAttributes ).length > 0;
+					var useMorphNormals = useMorphTargets && geometry.morphAttributes.normal !== undefined;
+
+					for ( var j = 0, jl = materials.length; j < jl; j ++ ) {
+
+						var material = materials[ j ];
+
+						if ( mesh.isPoints ) {
+
+							var cacheKey = 'PointsMaterial:' + material.uuid;
+
+							var pointsMaterial = scope.cache.get( cacheKey );
+
+							if ( ! pointsMaterial ) {
+
+								pointsMaterial = new PointsMaterial();
+								Material.prototype.copy.call( pointsMaterial, material );
+								pointsMaterial.color.copy( material.color );
+								pointsMaterial.map = material.map;
+								pointsMaterial.lights = false; // PointsMaterial doesn't support lights yet
+
+								scope.cache.add( cacheKey, pointsMaterial );
+
+							}
+
+							material = pointsMaterial;
+
+						} else if ( mesh.isLine ) {
+
+							var cacheKey = 'LineBasicMaterial:' + material.uuid;
+
+							var lineMaterial = scope.cache.get( cacheKey );
+
+							if ( ! lineMaterial ) {
+
+								lineMaterial = new LineBasicMaterial();
+								Material.prototype.copy.call( lineMaterial, material );
+								lineMaterial.color.copy( material.color );
+								lineMaterial.lights = false; // LineBasicMaterial doesn't support lights yet
+
+								scope.cache.add( cacheKey, lineMaterial );
+
+							}
+
+							material = lineMaterial;
+
+						}
+
+						// Clone the material if it will be modified
+						if ( useVertexColors || useFlatShading || useSkinning || useMorphTargets ) {
+
+							var cacheKey = 'ClonedMaterial:' + material.uuid + ':';
+
+							if ( material.isGLTFSpecularGlossinessMaterial ) cacheKey += 'specular-glossiness:';
+							if ( useSkinning ) cacheKey += 'skinning:';
+							if ( useVertexColors ) cacheKey += 'vertex-colors:';
+							if ( useFlatShading ) cacheKey += 'flat-shading:';
+							if ( useMorphTargets ) cacheKey += 'morph-targets:';
+							if ( useMorphNormals ) cacheKey += 'morph-normals:';
+
+							var cachedMaterial = scope.cache.get( cacheKey );
+
+							if ( ! cachedMaterial ) {
+
+								cachedMaterial = material.isGLTFSpecularGlossinessMaterial
+									? extensions[ EXTENSIONS.KHR_MATERIALS_PBR_SPECULAR_GLOSSINESS ].cloneMaterial( material )
+									: material.clone();
+
+								if ( useSkinning ) cachedMaterial.skinning = true;
+								if ( useVertexColors ) cachedMaterial.vertexColors = VertexColors;
+								if ( useFlatShading ) cachedMaterial.flatShading = true;
+								if ( useMorphTargets ) cachedMaterial.morphTargets = true;
+								if ( useMorphNormals ) cachedMaterial.morphNormals = true;
+
+								scope.cache.add( cacheKey, cachedMaterial );
+
+							}
+
+							material = cachedMaterial;
+
+						}
+
+						materials[ j ] = material;
+
+						// workarounds for mesh and geometry
+
+						if ( material.aoMap && geometry.attributes.uv2 === undefined && geometry.attributes.uv !== undefined ) {
+
+							console.log( 'THREE.GLTFLoader: Duplicating UVs to support aoMap.' );
+							geometry.addAttribute( 'uv2', new BufferAttribute( geometry.attributes.uv.array, 2 ) );
+
+						}
+
+						if ( material.isGLTFSpecularGlossinessMaterial ) {
+
+							// for GLTFSpecularGlossinessMaterial(ShaderMaterial) uniforms runtime update
+							mesh.onBeforeRender = extensions[ EXTENSIONS.KHR_MATERIALS_PBR_SPECULAR_GLOSSINESS ].refreshUniforms;
+
+						}
+
+					}
+
+					mesh.material = isMultiMaterial ? materials : materials[ 0 ];
+
+				}
+
+				if ( meshes.length === 1 ) {
+
+					return meshes[ 0 ];
+
+				}
+
+				var group = new Group();
+
+				for ( var i = 0, il = meshes.length; i < il; i ++ ) {
+
+					group.add( meshes[ i ] );
+
+				}
+
+				return group;
+
+			} );
+
+		} );
+
+	};
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#cameras
+	 * @param {number} cameraIndex
+	 * @return {Promise<THREE.Camera>}
+	 */
+	GLTFParser.prototype.loadCamera = function ( cameraIndex ) {
+
+		var camera;
+		var cameraDef = this.json.cameras[ cameraIndex ];
+		var params = cameraDef[ cameraDef.type ];
+
+		if ( ! params ) {
+
+			console.warn( 'THREE.GLTFLoader: Missing camera parameters.' );
+			return;
+
+		}
+
+		if ( cameraDef.type === 'perspective' ) {
+
+			camera = new PerspectiveCamera( _Math.radToDeg( params.yfov ), params.aspectRatio || 1, params.znear || 1, params.zfar || 2e6 );
+
+		} else if ( cameraDef.type === 'orthographic' ) {
+
+			camera = new OrthographicCamera( params.xmag / - 2, params.xmag / 2, params.ymag / 2, params.ymag / - 2, params.znear, params.zfar );
+
+		}
+
+		if ( cameraDef.name !== undefined ) camera.name = cameraDef.name;
+
+		assignExtrasToUserData( camera, cameraDef );
+
+		return Promise.resolve( camera );
+
+	};
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#skins
+	 * @param {number} skinIndex
+	 * @return {Promise<Object>}
+	 */
+	GLTFParser.prototype.loadSkin = function ( skinIndex ) {
+
+		var skinDef = this.json.skins[ skinIndex ];
+
+		var skinEntry = { joints: skinDef.joints };
+
+		if ( skinDef.inverseBindMatrices === undefined ) {
+
+			return Promise.resolve( skinEntry );
+
+		}
+
+		return this.getDependency( 'accessor', skinDef.inverseBindMatrices ).then( function ( accessor ) {
+
+			skinEntry.inverseBindMatrices = accessor;
+
+			return skinEntry;
+
+		} );
+
+	};
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#animations
+	 * @param {number} animationIndex
+	 * @return {Promise<THREE.AnimationClip>}
+	 */
+	GLTFParser.prototype.loadAnimation = function ( animationIndex ) {
+
+		var json = this.json;
+
+		var animationDef = json.animations[ animationIndex ];
+
+		return this.getMultiDependencies( [
+
+			'accessor',
+			'node'
+
+		] ).then( function ( dependencies ) {
+
+			var tracks = [];
+
+			for ( var i = 0, il = animationDef.channels.length; i < il; i ++ ) {
+
+				var channel = animationDef.channels[ i ];
+				var sampler = animationDef.samplers[ channel.sampler ];
+
+				if ( sampler ) {
+
+					var target = channel.target;
+					var name = target.node !== undefined ? target.node : target.id; // NOTE: target.id is deprecated.
+					var input = animationDef.parameters !== undefined ? animationDef.parameters[ sampler.input ] : sampler.input;
+					var output = animationDef.parameters !== undefined ? animationDef.parameters[ sampler.output ] : sampler.output;
+
+					var inputAccessor = dependencies.accessors[ input ];
+					var outputAccessor = dependencies.accessors[ output ];
+
+					var node = dependencies.nodes[ name ];
+
+					if ( node ) {
+
+						node.updateMatrix();
+						node.matrixAutoUpdate = true;
+
+						var TypedKeyframeTrack;
+
+						switch ( PATH_PROPERTIES[ target.path ] ) {
+
+							case PATH_PROPERTIES.weights:
+
+								TypedKeyframeTrack = NumberKeyframeTrack;
+								break;
+
+							case PATH_PROPERTIES.rotation:
+
+								TypedKeyframeTrack = QuaternionKeyframeTrack;
+								break;
+
+							case PATH_PROPERTIES.position:
+							case PATH_PROPERTIES.scale:
+							default:
+
+								TypedKeyframeTrack = VectorKeyframeTrack;
+								break;
+
+						}
+
+						var targetName = node.name ? node.name : node.uuid;
+
+						var interpolation = sampler.interpolation !== undefined ? INTERPOLATION[ sampler.interpolation ] : InterpolateLinear;
+
+						var targetNames = [];
+
+						if ( PATH_PROPERTIES[ target.path ] === PATH_PROPERTIES.weights ) {
+
+							// node can be THREE.Group here but
+							// PATH_PROPERTIES.weights(morphTargetInfluences) should be
+							// the property of a mesh object under group.
+
+							node.traverse( function ( object ) {
+
+								if ( object.isMesh === true && object.morphTargetInfluences ) {
+
+									targetNames.push( object.name ? object.name : object.uuid );
+
+								}
+
+							} );
+
+						} else {
+
+							targetNames.push( targetName );
+
+						}
+
+						// KeyframeTrack.optimize() will modify given 'times' and 'values'
+						// buffers before creating a truncated copy to keep. Because buffers may
+						// be reused by other tracks, make copies here.
+						for ( var j = 0, jl = targetNames.length; j < jl; j ++ ) {
+
+							var track = new TypedKeyframeTrack(
+								targetNames[ j ] + '.' + PATH_PROPERTIES[ target.path ],
+								AnimationUtils.arraySlice( inputAccessor.array, 0 ),
+								AnimationUtils.arraySlice( outputAccessor.array, 0 ),
+								interpolation
+							);
+
+							// Here is the trick to enable custom interpolation.
+							// Overrides .createInterpolant in a factory method which creates custom interpolation.
+							if ( sampler.interpolation === 'CUBICSPLINE' ) {
+
+								track.createInterpolant = function InterpolantFactoryMethodGLTFCubicSpline( result ) {
+
+									// A CUBICSPLINE keyframe in glTF has three output values for each input value,
+									// representing inTangent, splineVertex, and outTangent. As a result, track.getValueSize()
+									// must be divided by three to get the interpolant's sampleSize argument.
+
+									return new GLTFCubicSplineInterpolant( this.times, this.values, this.getValueSize() / 3, result );
+
+								};
+
+								// Workaround, provide an alternate way to know if the interpolant type is cubis spline to track.
+								// track.getInterpolation() doesn't return valid value for custom interpolant.
+								track.createInterpolant.isInterpolantFactoryMethodGLTFCubicSpline = true;
+
+							}
+
+							tracks.push( track );
+
+						}
+
+					}
+
+				}
+
+			}
+
+			var name = animationDef.name !== undefined ? animationDef.name : 'animation_' + animationIndex;
+
+			return new AnimationClip( name, undefined, tracks );
+
+		} );
+
+	};
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#nodes-and-hierarchy
+	 * @param {number} nodeIndex
+	 * @return {Promise<THREE.Object3D>}
+	 */
+	GLTFParser.prototype.loadNode = function ( nodeIndex ) {
+
+		var json = this.json;
+		var extensions = this.extensions;
+
+		var meshReferences = json.meshReferences;
+		var meshUses = json.meshUses;
+
+		var nodeDef = json.nodes[ nodeIndex ];
+
+		return this.getMultiDependencies( [
+
+			'mesh',
+			'skin',
+			'camera',
+			'light'
+
+		] ).then( function ( dependencies ) {
+
+			var node;
+
+			// .isBone isn't in glTF spec. See .markDefs
+			if ( nodeDef.isBone === true ) {
+
+				node = new Bone();
+
+			} else if ( nodeDef.mesh !== undefined ) {
+
+				var mesh = dependencies.meshes[ nodeDef.mesh ];
+
+				if ( meshReferences[ nodeDef.mesh ] > 1 ) {
+
+					var instanceNum = meshUses[ nodeDef.mesh ] ++;
+
+					node = mesh.clone();
+					node.name += '_instance_' + instanceNum;
+
+					// onBeforeRender copy for Specular-Glossiness
+					node.onBeforeRender = mesh.onBeforeRender;
+
+					for ( var i = 0, il = node.children.length; i < il; i ++ ) {
+
+						node.children[ i ].name += '_instance_' + instanceNum;
+						node.children[ i ].onBeforeRender = mesh.children[ i ].onBeforeRender;
+
+					}
+
+				} else {
+
+					node = mesh;
+
+				}
+
+			} else if ( nodeDef.camera !== undefined ) {
+
+				node = dependencies.cameras[ nodeDef.camera ];
+
+			} else if ( nodeDef.extensions
+					 && nodeDef.extensions[ EXTENSIONS.KHR_LIGHTS_PUNCTUAL ]
+					 && nodeDef.extensions[ EXTENSIONS.KHR_LIGHTS_PUNCTUAL ].light !== undefined ) {
+
+				var lights = extensions[ EXTENSIONS.KHR_LIGHTS_PUNCTUAL ].lights;
+				node = lights[ nodeDef.extensions[ EXTENSIONS.KHR_LIGHTS_PUNCTUAL ].light ];
+
+			} else {
+
+				node = new Object3D();
+
+			}
+
+			if ( nodeDef.name !== undefined ) {
+
+				node.name = PropertyBinding.sanitizeNodeName( nodeDef.name );
+
+			}
+
+			assignExtrasToUserData( node, nodeDef );
+
+			if ( nodeDef.extensions ) addUnknownExtensionsToUserData( extensions, node, nodeDef );
+
+			if ( nodeDef.matrix !== undefined ) {
+
+				var matrix = new Matrix4$1();
+				matrix.fromArray( nodeDef.matrix );
+				node.applyMatrix( matrix );
+
+			} else {
+
+				if ( nodeDef.translation !== undefined ) {
+
+					node.position.fromArray( nodeDef.translation );
+
+				}
+
+				if ( nodeDef.rotation !== undefined ) {
+
+					node.quaternion.fromArray( nodeDef.rotation );
+
+				}
+
+				if ( nodeDef.scale !== undefined ) {
+
+					node.scale.fromArray( nodeDef.scale );
+
+				}
+
+			}
+
+			return node;
+
+		} );
+
+	};
+
+	/**
+	 * Specification: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#scenes
+	 * @param {number} sceneIndex
+	 * @return {Promise<THREE.Scene>}
+	 */
+	GLTFParser.prototype.loadScene = function () {
+
+		// scene node hierachy builder
+
+		function buildNodeHierachy( nodeId, parentObject, json, allNodes, skins ) {
+
+			var node = allNodes[ nodeId ];
+			var nodeDef = json.nodes[ nodeId ];
+
+			// build skeleton here as well
+
+			if ( nodeDef.skin !== undefined ) {
+
+				var meshes = node.isGroup === true ? node.children : [ node ];
+
+				for ( var i = 0, il = meshes.length; i < il; i ++ ) {
+
+					var mesh = meshes[ i ];
+					var skinEntry = skins[ nodeDef.skin ];
+
+					var bones = [];
+					var boneInverses = [];
+
+					for ( var j = 0, jl = skinEntry.joints.length; j < jl; j ++ ) {
+
+						var jointId = skinEntry.joints[ j ];
+						var jointNode = allNodes[ jointId ];
+
+						if ( jointNode ) {
+
+							bones.push( jointNode );
+
+							var mat = new Matrix4$1();
+
+							if ( skinEntry.inverseBindMatrices !== undefined ) {
+
+								mat.fromArray( skinEntry.inverseBindMatrices.array, j * 16 );
+
+							}
+
+							boneInverses.push( mat );
+
+						} else {
+
+							console.warn( 'THREE.GLTFLoader: Joint "%s" could not be found.', jointId );
+
+						}
+
+					}
+
+					mesh.bind( new Skeleton( bones, boneInverses ), mesh.matrixWorld );
+
+				}
+
+			}
+
+			// build node hierachy
+
+			parentObject.add( node );
+
+			if ( nodeDef.children ) {
+
+				var children = nodeDef.children;
+
+				for ( var i = 0, il = children.length; i < il; i ++ ) {
+
+					var child = children[ i ];
+					buildNodeHierachy( child, node, json, allNodes, skins );
+
+				}
+
+			}
+
+		}
+
+		return function loadScene( sceneIndex ) {
+
+			var json = this.json;
+			var extensions = this.extensions;
+			var sceneDef = this.json.scenes[ sceneIndex ];
+
+			return this.getMultiDependencies( [
+
+				'node',
+				'skin'
+
+			] ).then( function ( dependencies ) {
+
+				var scene = new Scene();
+				if ( sceneDef.name !== undefined ) scene.name = sceneDef.name;
+
+				assignExtrasToUserData( scene, sceneDef );
+
+				if ( sceneDef.extensions ) addUnknownExtensionsToUserData( extensions, scene, sceneDef );
+
+				var nodeIds = sceneDef.nodes || [];
+
+				for ( var i = 0, il = nodeIds.length; i < il; i ++ ) {
+
+					buildNodeHierachy( nodeIds[ i ], scene, json, dependencies.nodes, dependencies.skins );
+
+				}
+
+				return scene;
+
+			} );
+
+		};
+
+	}();
+
+	/**
+	 * @author Mugen87 / https://github.com/Mugen87
+	 */
+
+	class AssetManager {
+
+		constructor() {
+
+			this.loadingManager = new LoadingManager();
+
+			this.audioLoader = new AudioLoader( this.loadingManager );
+			this.textureLoader = new TextureLoader( this.loadingManager );
+			this.gltfLoader = new GLTFLoader( this.loadingManager );
+			this.navMeshLoader = new NavMeshLoader();
+
+			this.listener = new AudioListener();
+
+			this.animations = new Map();
+			this.audios = new Map();
+			this.models = new Map();
+
+			this.navMesh = null;
+
+		}
+
+		init() {
+
+			this._loadAudios();
+			this._loadModels();
+			this._loadNavMesh();
+
+			const loadingManager = this.loadingManager;
+
+			return new Promise( ( resolve ) => {
+
+				loadingManager.onLoad = () => {
+
+					resolve();
+
+				};
+
+			} );
+
+		}
+
+		_loadAudios() {
+
+		}
+
+		_loadModels() {
+
+			const gltfLoader = this.gltfLoader;
+			const models = this.models;
+			const animations = this.animations;
+
+			// soldier
+
+			gltfLoader.load( './models/soldier.glb', ( gltf ) => {
+
+				const renderComponent = gltf.scene;
+				renderComponent.animations = gltf.animations;
+
+				renderComponent.updateMatrixWorld();
+				renderComponent.matrixAutoUpdate = false;
+
+				renderComponent.traverse( ( object ) => {
+
+					if ( object.isMesh ) {
+
+						object.material.side = DoubleSide;
+						object.matrixAutoUpdate = false;
+
+
+					}
+
+				} );
+
+				models.set( 'soldier', renderComponent );
+
+				for ( let animation of gltf.animations ) {
+
+					animations.set( animation.name, animation );
+
+				}
+
+			} );
+
+			// ground
+
+			gltfLoader.load( './models/ground.glb', ( gltf ) => {
+
+				const renderComponent = gltf.scene;
+				renderComponent.updateMatrixWorld();
+				renderComponent.matrixAutoUpdate = false;
+
+				renderComponent.traverse( ( object ) => {
+
+					object.matrixAutoUpdate = false;
+
+				} );
+
+				models.set( 'ground', renderComponent );
+
+			} );
+
+		}
+
+		_loadNavMesh() {
+
+			const navMeshLoader = this.navMeshLoader;
+			const loadingManager = this.loadingManager;
+
+			loadingManager.itemStart( 'navmesh' );
+
+			navMeshLoader.load( './navmeshes/navmesh.glb' ).then( ( navMesh ) => {
+
+				this.navMesh = navMesh;
+
+				loadingManager.itemEnd( 'navmesh' );
+
+			} );
+
+		}
+
+	}
+
+	/**
+	 * @author Mugen87 / https://github.com/Mugen87
+	 */
+
+	class NavMeshUtils {
+
+		static createConvexRegionHelper( navMesh ) {
+
+			const regions = navMesh.regions;
+
+			const geometry = new BufferGeometry();
+			const material = new MeshBasicMaterial( { vertexColors: VertexColors, depthWrite: false, polygonOffset: true, polygonOffsetFactor: - 4 } );
+
+			const mesh = new Mesh( geometry, material );
+
+			const positions = [];
+			const colors = [];
+
+			const color = new Color();
+
+			for ( let region of regions ) {
+
+				// one color for each convex region
+
+				color.setHex( Math.random() * 0xffffff );
+
+				// count edges
+
+				let edge = region.edge;
+				const edges = [];
+
+				do {
+
+					edges.push( edge );
+
+					edge = edge.next;
+
+				} while ( edge !== region.edge );
+
+				// triangulate
+
+				const triangleCount = ( edges.length - 2 );
+
+				for ( let i = 1, l = triangleCount; i <= l; i ++ ) {
+
+					const v1 = edges[ 0 ].from();
+					const v2 = edges[ i + 0 ].from();
+					const v3 = edges[ i + 1 ].from();
+
+					positions.push( v1.x, v1.y, v1.z );
+					positions.push( v2.x, v2.y, v2.z );
+					positions.push( v3.x, v3.y, v3.z );
+
+					colors.push( color.r, color.g, color.b );
+					colors.push( color.r, color.g, color.b );
+					colors.push( color.r, color.g, color.b );
+
+				}
+
+			}
+
+			geometry.addAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
+			geometry.addAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
+
+			return mesh;
+
+		}
+
+	}
+
+	/**
+	 * @author Mugen87 / https://github.com/Mugen87
+	 */
+
+	class Enemy extends Vehicle {
+
+		constructor( navMesh, mixer ) {
+
+			super();
+
+			this.navMesh = navMesh;
+
+			this.currentTime = 0;
+
+			this.mixer = mixer;
+			this.animations = new Map();
+
+		}
+
+		start() {
+
+			// const idle = this.animations.get( 'idle' );
+			// idle.enabled = true;
+
+			const run = this.animations.get( 'run' );
+			run.enabled = true;
+
+		}
+
+		update( delta ) {
+
+			this.currentTime += delta;
+
+			this.mixer.update( delta );
+
+		}
+
+	}
+
+	/**
+	 * dat-gui JavaScript Controller Library
+	 * http://code.google.com/p/dat-gui
+	 *
+	 * Copyright 2011 Data Arts Team, Google Creative Lab
+	 *
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 * http://www.apache.org/licenses/LICENSE-2.0
+	 */
+
+	function ___$insertStyle( css ) {
+
+		if ( ! css ) {
+
+			return;
+		
+	}
+		if ( typeof window === 'undefined' ) {
+
+			return;
+		
+	}
+
+		var style = document.createElement( 'style' );
+
+		style.setAttribute( 'type', 'text/css' );
+		style.innerHTML = css;
+		document.head.appendChild( style );
+
+		return css;
+
+	}
+
+	function colorToString( color, forceCSSHex ) {
+
+		var colorFormat = color.__state.conversionName.toString();
+		var r = Math.round( color.r );
+		var g = Math.round( color.g );
+		var b = Math.round( color.b );
+		var a = color.a;
+		var h = Math.round( color.h );
+		var s = color.s.toFixed( 1 );
+		var v = color.v.toFixed( 1 );
+		if ( forceCSSHex || colorFormat === 'THREE_CHAR_HEX' || colorFormat === 'SIX_CHAR_HEX' ) {
+
+			var str = color.hex.toString( 16 );
+			while ( str.length < 6 ) {
+
+				str = '0' + str;
+			
+	}
+			return '#' + str;
+		
+	} else if ( colorFormat === 'CSS_RGB' ) {
+
+			return 'rgb(' + r + ',' + g + ',' + b + ')';
+		
+	} else if ( colorFormat === 'CSS_RGBA' ) {
+
+			return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+		
+	} else if ( colorFormat === 'HEX' ) {
+
+			return '0x' + color.hex.toString( 16 );
+		
+	} else if ( colorFormat === 'RGB_ARRAY' ) {
+
+			return '[' + r + ',' + g + ',' + b + ']';
+		
+	} else if ( colorFormat === 'RGBA_ARRAY' ) {
+
+			return '[' + r + ',' + g + ',' + b + ',' + a + ']';
+		
+	} else if ( colorFormat === 'RGB_OBJ' ) {
+
+			return '{r:' + r + ',g:' + g + ',b:' + b + '}';
+		
+	} else if ( colorFormat === 'RGBA_OBJ' ) {
+
+			return '{r:' + r + ',g:' + g + ',b:' + b + ',a:' + a + '}';
+		
+	} else if ( colorFormat === 'HSV_OBJ' ) {
+
+			return '{h:' + h + ',s:' + s + ',v:' + v + '}';
+		
+	} else if ( colorFormat === 'HSVA_OBJ' ) {
+
+			return '{h:' + h + ',s:' + s + ',v:' + v + ',a:' + a + '}';
+		
+	}
+		return 'unknown format';
+
+	}
+
+	var ARR_EACH = Array.prototype.forEach;
+	var ARR_SLICE = Array.prototype.slice;
+	var Common = {
+		BREAK: {},
+		extend: function extend( target ) {
+
+			this.each( ARR_SLICE.call( arguments, 1 ), function ( obj ) {
+
+				var keys = this.isObject( obj ) ? Object.keys( obj ) : [];
+				keys.forEach( function ( key ) {
+
+					if ( ! this.isUndefined( obj[ key ] ) ) {
+
+						target[ key ] = obj[ key ];
+					
+	}
+				
+	}.bind( this ) );
+			
+	}, this );
+			return target;
+		
+	},
+		defaults: function defaults( target ) {
+
+			this.each( ARR_SLICE.call( arguments, 1 ), function ( obj ) {
+
+				var keys = this.isObject( obj ) ? Object.keys( obj ) : [];
+				keys.forEach( function ( key ) {
+
+					if ( this.isUndefined( target[ key ] ) ) {
+
+						target[ key ] = obj[ key ];
+					
+	}
+				
+	}.bind( this ) );
+			
+	}, this );
+			return target;
+		
+	},
+		compose: function compose() {
+
+			var toCall = ARR_SLICE.call( arguments );
+			return function () {
+
+				var args = ARR_SLICE.call( arguments );
+				for ( var i = toCall.length - 1; i >= 0; i -- ) {
+
+					args = [ toCall[ i ].apply( this, args ) ];
+				
+	}
+				return args[ 0 ];
+			
+	};
+		
+	},
+		each: function each( obj, itr, scope ) {
+
+			if ( ! obj ) {
+
+				return;
+			
+	}
+			if ( ARR_EACH && obj.forEach && obj.forEach === ARR_EACH ) {
+
+				obj.forEach( itr, scope );
+			
+	} else if ( obj.length === obj.length + 0 ) {
+
+				var key = void 0;
+				var l = void 0;
+				for ( key = 0, l = obj.length; key < l; key ++ ) {
+
+					if ( key in obj && itr.call( scope, obj[ key ], key ) === this.BREAK ) {
+
+						return;
+					
+	}
+				
+	}
+			
+	} else {
+
+				for ( var _key in obj ) {
+
+					if ( itr.call( scope, obj[ _key ], _key ) === this.BREAK ) {
+
+						return;
+					
+	}
+				
+	}
+			
+	}
+		
+	},
+		defer: function defer( fnc ) {
+
+			setTimeout( fnc, 0 );
+		
+	},
+		debounce: function debounce( func, threshold, callImmediately ) {
+
+			var timeout = void 0;
+			return function () {
+
+				var obj = this;
+				var args = arguments;
+				function delayed() {
+
+					timeout = null;
+					if ( ! callImmediately ) func.apply( obj, args );
+				
+	}
+				var callNow = callImmediately || ! timeout;
+				clearTimeout( timeout );
+				timeout = setTimeout( delayed, threshold );
+				if ( callNow ) {
+
+					func.apply( obj, args );
+				
+	}
+			
+	};
+		
+	},
+		toArray: function toArray( obj ) {
+
+			if ( obj.toArray ) return obj.toArray();
+			return ARR_SLICE.call( obj );
+		
+	},
+		isUndefined: function isUndefined( obj ) {
+
+			return obj === undefined;
+		
+	},
+		isNull: function isNull( obj ) {
+
+			return obj === null;
+		
+	},
+		isNaN: function ( _isNaN ) {
+
+			function isNaN( _x ) {
+
+				return _isNaN.apply( this, arguments );
+			
+	}
+			isNaN.toString = function () {
+
+				return _isNaN.toString();
+			
+	};
+			return isNaN;
+		
+	}( function ( obj ) {
+
+			return isNaN( obj );
+		
+	} ),
+		isArray: Array.isArray || function ( obj ) {
+
+			return obj.constructor === Array;
+		
+	},
+		isObject: function isObject( obj ) {
+
+			return obj === Object( obj );
+		
+	},
+		isNumber: function isNumber( obj ) {
+
+			return obj === obj + 0;
+		
+	},
+		isString: function isString( obj ) {
+
+			return obj === obj + '';
+		
+	},
+		isBoolean: function isBoolean( obj ) {
+
+			return obj === false || obj === true;
+		
+	},
+		isFunction: function isFunction( obj ) {
+
+			return Object.prototype.toString.call( obj ) === '[object Function]';
+		
+	}
+	};
+
+	var INTERPRETATIONS = [
+		{
+			litmus: Common.isString,
+			conversions: {
+				THREE_CHAR_HEX: {
+					read: function read( original ) {
+
+						var test = original.match( /^#([A-F0-9])([A-F0-9])([A-F0-9])$/i );
+						if ( test === null ) {
+
+							return false;
+						
+	}
+						return {
+							space: 'HEX',
+							hex: parseInt( '0x' + test[ 1 ].toString() + test[ 1 ].toString() + test[ 2 ].toString() + test[ 2 ].toString() + test[ 3 ].toString() + test[ 3 ].toString(), 0 )
+						};
+					
+	},
+					write: colorToString
+				},
+				SIX_CHAR_HEX: {
+					read: function read( original ) {
+
+						var test = original.match( /^#([A-F0-9]{6})$/i );
+						if ( test === null ) {
+
+							return false;
+						
+	}
+						return {
+							space: 'HEX',
+							hex: parseInt( '0x' + test[ 1 ].toString(), 0 )
+						};
+					
+	},
+					write: colorToString
+				},
+				CSS_RGB: {
+					read: function read( original ) {
+
+						var test = original.match( /^rgb\(\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*\)/ );
+						if ( test === null ) {
+
+							return false;
+						
+	}
+						return {
+							space: 'RGB',
+							r: parseFloat( test[ 1 ] ),
+							g: parseFloat( test[ 2 ] ),
+							b: parseFloat( test[ 3 ] )
+						};
+					
+	},
+					write: colorToString
+				},
+				CSS_RGBA: {
+					read: function read( original ) {
+
+						var test = original.match( /^rgba\(\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*\)/ );
+						if ( test === null ) {
+
+							return false;
+						
+	}
+						return {
+							space: 'RGB',
+							r: parseFloat( test[ 1 ] ),
+							g: parseFloat( test[ 2 ] ),
+							b: parseFloat( test[ 3 ] ),
+							a: parseFloat( test[ 4 ] )
+						};
+					
+	},
+					write: colorToString
+				}
+			}
+		},
+		{
+			litmus: Common.isNumber,
+			conversions: {
+				HEX: {
+					read: function read( original ) {
+
+						return {
+							space: 'HEX',
+							hex: original,
+							conversionName: 'HEX'
+						};
+					
+	},
+					write: function write( color ) {
+
+						return color.hex;
+					
+	}
+				}
+			}
+		},
+		{
+			litmus: Common.isArray,
+			conversions: {
+				RGB_ARRAY: {
+					read: function read( original ) {
+
+						if ( original.length !== 3 ) {
+
+							return false;
+						
+	}
+						return {
+							space: 'RGB',
+							r: original[ 0 ],
+							g: original[ 1 ],
+							b: original[ 2 ]
+						};
+					
+	},
+					write: function write( color ) {
+
+						return [ color.r, color.g, color.b ];
+					
+	}
+				},
+				RGBA_ARRAY: {
+					read: function read( original ) {
+
+						if ( original.length !== 4 ) return false;
+						return {
+							space: 'RGB',
+							r: original[ 0 ],
+							g: original[ 1 ],
+							b: original[ 2 ],
+							a: original[ 3 ]
+						};
+					
+	},
+					write: function write( color ) {
+
+						return [ color.r, color.g, color.b, color.a ];
+					
+	}
+				}
+			}
+		},
+		{
+			litmus: Common.isObject,
+			conversions: {
+				RGBA_OBJ: {
+					read: function read( original ) {
+
+						if ( Common.isNumber( original.r ) && Common.isNumber( original.g ) && Common.isNumber( original.b ) && Common.isNumber( original.a ) ) {
+
+							return {
+								space: 'RGB',
+								r: original.r,
+								g: original.g,
+								b: original.b,
+								a: original.a
+							};
+						
+	}
+						return false;
+					
+	},
+					write: function write( color ) {
+
+						return {
+							r: color.r,
+							g: color.g,
+							b: color.b,
+							a: color.a
+						};
+					
+	}
+				},
+				RGB_OBJ: {
+					read: function read( original ) {
+
+						if ( Common.isNumber( original.r ) && Common.isNumber( original.g ) && Common.isNumber( original.b ) ) {
+
+							return {
+								space: 'RGB',
+								r: original.r,
+								g: original.g,
+								b: original.b
+							};
+						
+	}
+						return false;
+					
+	},
+					write: function write( color ) {
+
+						return {
+							r: color.r,
+							g: color.g,
+							b: color.b
+						};
+					
+	}
+				},
+				HSVA_OBJ: {
+					read: function read( original ) {
+
+						if ( Common.isNumber( original.h ) && Common.isNumber( original.s ) && Common.isNumber( original.v ) && Common.isNumber( original.a ) ) {
+
+							return {
+								space: 'HSV',
+								h: original.h,
+								s: original.s,
+								v: original.v,
+								a: original.a
+							};
+						
+	}
+						return false;
+					
+	},
+					write: function write( color ) {
+
+						return {
+							h: color.h,
+							s: color.s,
+							v: color.v,
+							a: color.a
+						};
+					
+	}
+				},
+				HSV_OBJ: {
+					read: function read( original ) {
+
+						if ( Common.isNumber( original.h ) && Common.isNumber( original.s ) && Common.isNumber( original.v ) ) {
+
+							return {
+								space: 'HSV',
+								h: original.h,
+								s: original.s,
+								v: original.v
+							};
+						
+	}
+						return false;
+					
+	},
+					write: function write( color ) {
+
+						return {
+							h: color.h,
+							s: color.s,
+							v: color.v
+						};
+					
+	}
+				}
+			}
+		} ];
+	var result = void 0;
+	var toReturn = void 0;
+	var interpret = function interpret() {
+
+		toReturn = false;
+		var original = arguments.length > 1 ? Common.toArray( arguments ) : arguments[ 0 ];
+		Common.each( INTERPRETATIONS, function ( family ) {
+
+			if ( family.litmus( original ) ) {
+
+				Common.each( family.conversions, function ( conversion, conversionName ) {
+
+					result = conversion.read( original );
+					if ( toReturn === false && result !== false ) {
+
+						toReturn = result;
+						result.conversionName = conversionName;
+						result.conversion = conversion;
+						return Common.BREAK;
+					
+	}
+				
+	} );
+				return Common.BREAK;
+			
+	}
+		
+	} );
+		return toReturn;
+
+	};
+
+	var tmpComponent = void 0;
+	var ColorMath = {
+		hsv_to_rgb: function hsv_to_rgb( h, s, v ) {
+
+			var hi = Math.floor( h / 60 ) % 6;
+			var f = h / 60 - Math.floor( h / 60 );
+			var p = v * ( 1.0 - s );
+			var q = v * ( 1.0 - f * s );
+			var t = v * ( 1.0 - ( 1.0 - f ) * s );
+			var c = [[ v, t, p ], [ q, v, p ], [ p, v, t ], [ p, q, v ], [ t, p, v ], [ v, p, q ]][ hi ];
+			return {
+				r: c[ 0 ] * 255,
+				g: c[ 1 ] * 255,
+				b: c[ 2 ] * 255
+			};
+		
+	},
+		rgb_to_hsv: function rgb_to_hsv( r, g, b ) {
+
+			var min = Math.min( r, g, b );
+			var max = Math.max( r, g, b );
+			var delta = max - min;
+			var h = void 0;
+			var s = void 0;
+			if ( max !== 0 ) {
+
+				s = delta / max;
+			
+	} else {
+
+				return {
+					h: NaN,
+					s: 0,
+					v: 0
+				};
+			
+	}
+			if ( r === max ) {
+
+				h = ( g - b ) / delta;
+			
+	} else if ( g === max ) {
+
+				h = 2 + ( b - r ) / delta;
+			
+	} else {
+
+				h = 4 + ( r - g ) / delta;
+			
+	}
+			h /= 6;
+			if ( h < 0 ) {
+
+				h += 1;
+			
+	}
+			return {
+				h: h * 360,
+				s: s,
+				v: max / 255
+			};
+		
+	},
+		rgb_to_hex: function rgb_to_hex( r, g, b ) {
+
+			var hex = this.hex_with_component( 0, 2, r );
+			hex = this.hex_with_component( hex, 1, g );
+			hex = this.hex_with_component( hex, 0, b );
+			return hex;
+		
+	},
+		component_from_hex: function component_from_hex( hex, componentIndex ) {
+
+			return hex >> componentIndex * 8 & 0xFF;
+		
+	},
+		hex_with_component: function hex_with_component( hex, componentIndex, value ) {
+
+			return value << ( tmpComponent = componentIndex * 8 ) | hex & ~ ( 0xFF << tmpComponent );
+		
+	}
+	};
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function ( obj ) {
+
+		return typeof obj;
+
+	} : function ( obj ) {
+
+		return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+
+	};
+
+
+
+
+
+
+
+
+
+
+
+	var classCallCheck = function ( instance, Constructor ) {
+
+		if ( ! ( instance instanceof Constructor ) ) {
+
+			throw new TypeError( "Cannot call a class as a function" );
+		
+	}
+
+	};
+
+	var createClass = function () {
+
+		function defineProperties( target, props ) {
+
+			for ( var i = 0; i < props.length; i ++ ) {
+
+				var descriptor = props[ i ];
+				descriptor.enumerable = descriptor.enumerable || false;
+				descriptor.configurable = true;
+				if ( "value" in descriptor ) descriptor.writable = true;
+				Object.defineProperty( target, descriptor.key, descriptor );
+			
+	}
+		
+	}
+
+		return function ( Constructor, protoProps, staticProps ) {
+
+			if ( protoProps ) defineProperties( Constructor.prototype, protoProps );
+			if ( staticProps ) defineProperties( Constructor, staticProps );
+			return Constructor;
+		
+	};
+
+	}();
+
+
+
+
+
+
+
+	var get = function get( object, property, receiver ) {
+
+		if ( object === null ) object = Function.prototype;
+		var desc = Object.getOwnPropertyDescriptor( object, property );
+
+		if ( desc === undefined ) {
+
+			var parent = Object.getPrototypeOf( object );
+
+			if ( parent === null ) {
+
+				return undefined;
+			
+	} else {
+
+				return get( parent, property, receiver );
+			
+	}
+		
+	} else if ( "value" in desc ) {
+
+			return desc.value;
+		
+	} else {
+
+			var getter = desc.get;
+
+			if ( getter === undefined ) {
+
+				return undefined;
+			
+	}
+
+			return getter.call( receiver );
+		
+	}
+
+	};
+
+	var inherits = function ( subClass, superClass ) {
+
+		if ( typeof superClass !== "function" && superClass !== null ) {
+
+			throw new TypeError( "Super expression must either be null or a function, not " + typeof superClass );
+		
+	}
+
+		subClass.prototype = Object.create( superClass && superClass.prototype, {
+			constructor: {
+				value: subClass,
+				enumerable: false,
+				writable: true,
+				configurable: true
+			}
+		} );
+		if ( superClass ) Object.setPrototypeOf ? Object.setPrototypeOf( subClass, superClass ) : subClass.__proto__ = superClass;
+
+	};
+
+
+
+
+
+
+
+
+
+
+
+	var possibleConstructorReturn = function ( self, call ) {
+
+		if ( ! self ) {
+
+			throw new ReferenceError( "this hasn't been initialised - super() hasn't been called" );
+		
+	}
+
+		return call && ( typeof call === "object" || typeof call === "function" ) ? call : self;
+
+	};
+
+	var Color$1 = function () {
+
+		function Color() {
+
+			classCallCheck( this, Color );
+			this.__state = interpret.apply( this, arguments );
+			if ( this.__state === false ) {
+
+				throw new Error( 'Failed to interpret color arguments' );
+			
+	}
+			this.__state.a = this.__state.a || 1;
+		
+	}
+		createClass( Color, [ {
+			key: 'toString',
+			value: function toString() {
+
+				return colorToString( this );
+			
+	}
+		}, {
+			key: 'toHexString',
+			value: function toHexString() {
+
+				return colorToString( this, true );
+			
+	}
+		}, {
+			key: 'toOriginal',
+			value: function toOriginal() {
+
+				return this.__state.conversion.write( this );
+			
+	}
+		} ] );
+		return Color;
+
+	}();
+	function defineRGBComponent( target, component, componentHexIndex ) {
+
+		Object.defineProperty( target, component, {
+			get: function get$$1() {
+
+				if ( this.__state.space === 'RGB' ) {
+
+					return this.__state[ component ];
+				
+	}
+				Color$1.recalculateRGB( this, component, componentHexIndex );
+				return this.__state[ component ];
+			
+	},
+			set: function set$$1( v ) {
+
+				if ( this.__state.space !== 'RGB' ) {
+
+					Color$1.recalculateRGB( this, component, componentHexIndex );
+					this.__state.space = 'RGB';
+				
+	}
+				this.__state[ component ] = v;
+			
+	}
+		} );
+
+	}
+	function defineHSVComponent( target, component ) {
+
+		Object.defineProperty( target, component, {
+			get: function get$$1() {
+
+				if ( this.__state.space === 'HSV' ) {
+
+					return this.__state[ component ];
+				
+	}
+				Color$1.recalculateHSV( this );
+				return this.__state[ component ];
+			
+	},
+			set: function set$$1( v ) {
+
+				if ( this.__state.space !== 'HSV' ) {
+
+					Color$1.recalculateHSV( this );
+					this.__state.space = 'HSV';
+				
+	}
+				this.__state[ component ] = v;
+			
+	}
+		} );
+
+	}
+	Color$1.recalculateRGB = function ( color, component, componentHexIndex ) {
+
+		if ( color.__state.space === 'HEX' ) {
+
+			color.__state[ component ] = ColorMath.component_from_hex( color.__state.hex, componentHexIndex );
+		
+	} else if ( color.__state.space === 'HSV' ) {
+
+			Common.extend( color.__state, ColorMath.hsv_to_rgb( color.__state.h, color.__state.s, color.__state.v ) );
+		
+	} else {
+
+			throw new Error( 'Corrupted color state' );
+		
+	}
+
+	};
+	Color$1.recalculateHSV = function ( color ) {
+
+		var result = ColorMath.rgb_to_hsv( color.r, color.g, color.b );
+		Common.extend( color.__state, {
+			s: result.s,
+			v: result.v
+		} );
+		if ( ! Common.isNaN( result.h ) ) {
+
+			color.__state.h = result.h;
+		
+	} else if ( Common.isUndefined( color.__state.h ) ) {
+
+			color.__state.h = 0;
+		
+	}
+
+	};
+	Color$1.COMPONENTS = [ 'r', 'g', 'b', 'h', 's', 'v', 'hex', 'a' ];
+	defineRGBComponent( Color$1.prototype, 'r', 2 );
+	defineRGBComponent( Color$1.prototype, 'g', 1 );
+	defineRGBComponent( Color$1.prototype, 'b', 0 );
+	defineHSVComponent( Color$1.prototype, 'h' );
+	defineHSVComponent( Color$1.prototype, 's' );
+	defineHSVComponent( Color$1.prototype, 'v' );
+	Object.defineProperty( Color$1.prototype, 'a', {
+		get: function get$$1() {
+
+			return this.__state.a;
+		
+	},
+		set: function set$$1( v ) {
+
+			this.__state.a = v;
+		
+	}
+	} );
+	Object.defineProperty( Color$1.prototype, 'hex', {
+		get: function get$$1() {
+
+			if ( ! this.__state.space !== 'HEX' ) {
+
+				this.__state.hex = ColorMath.rgb_to_hex( this.r, this.g, this.b );
+			
+	}
+			return this.__state.hex;
+		
+	},
+		set: function set$$1( v ) {
+
+			this.__state.space = 'HEX';
+			this.__state.hex = v;
+		
+	}
+	} );
+
+	var Controller = function () {
+
+		function Controller( object, property ) {
+
+			classCallCheck( this, Controller );
+			this.initialValue = object[ property ];
+			this.domElement = document.createElement( 'div' );
+			this.object = object;
+			this.property = property;
+			this.__onChange = undefined;
+			this.__onFinishChange = undefined;
+		
+	}
+		createClass( Controller, [ {
+			key: 'onChange',
+			value: function onChange( fnc ) {
+
+				this.__onChange = fnc;
+				return this;
+			
+	}
+		}, {
+			key: 'onFinishChange',
+			value: function onFinishChange( fnc ) {
+
+				this.__onFinishChange = fnc;
+				return this;
+			
+	}
+		}, {
+			key: 'setValue',
+			value: function setValue( newValue ) {
+
+				this.object[ this.property ] = newValue;
+				if ( this.__onChange ) {
+
+					this.__onChange.call( this, newValue );
+				
+	}
+				this.updateDisplay();
+				return this;
+			
+	}
+		}, {
+			key: 'getValue',
+			value: function getValue() {
+
+				return this.object[ this.property ];
+			
+	}
+		}, {
+			key: 'updateDisplay',
+			value: function updateDisplay() {
+
+				return this;
+			
+	}
+		}, {
+			key: 'isModified',
+			value: function isModified() {
+
+				return this.initialValue !== this.getValue();
+			
+	}
+		} ] );
+		return Controller;
+
+	}();
+
+	var EVENT_MAP = {
+		HTMLEvents: [ 'change' ],
+		MouseEvents: [ 'click', 'mousemove', 'mousedown', 'mouseup', 'mouseover' ],
+		KeyboardEvents: [ 'keydown' ]
+	};
+	var EVENT_MAP_INV = {};
+	Common.each( EVENT_MAP, function ( v, k ) {
+
+		Common.each( v, function ( e ) {
+
+			EVENT_MAP_INV[ e ] = k;
+		
+	} );
+
+	} );
+	var CSS_VALUE_PIXELS = /(\d+(\.\d+)?)px/;
+	function cssValueToPixels( val ) {
+
+		if ( val === '0' || Common.isUndefined( val ) ) {
+
+			return 0;
+		
+	}
+		var match = val.match( CSS_VALUE_PIXELS );
+		if ( ! Common.isNull( match ) ) {
+
+			return parseFloat( match[ 1 ] );
+		
+	}
+		return 0;
+
+	}
+	var dom = {
+		makeSelectable: function makeSelectable( elem, selectable ) {
+
+			if ( elem === undefined || elem.style === undefined ) return;
+			elem.onselectstart = selectable ? function () {
+
+				return false;
+			
+	} : function () {};
+			elem.style.MozUserSelect = selectable ? 'auto' : 'none';
+			elem.style.KhtmlUserSelect = selectable ? 'auto' : 'none';
+			elem.unselectable = selectable ? 'on' : 'off';
+		
+	},
+		makeFullscreen: function makeFullscreen( elem, hor, vert ) {
+
+			var vertical = vert;
+			var horizontal = hor;
+			if ( Common.isUndefined( horizontal ) ) {
+
+				horizontal = true;
+			
+	}
+			if ( Common.isUndefined( vertical ) ) {
+
+				vertical = true;
+			
+	}
+			elem.style.position = 'absolute';
+			if ( horizontal ) {
+
+				elem.style.left = 0;
+				elem.style.right = 0;
+			
+	}
+			if ( vertical ) {
+
+				elem.style.top = 0;
+				elem.style.bottom = 0;
+			
+	}
+		
+	},
+		fakeEvent: function fakeEvent( elem, eventType, pars, aux ) {
+
+			var params = pars || {};
+			var className = EVENT_MAP_INV[ eventType ];
+			if ( ! className ) {
+
+				throw new Error( 'Event type ' + eventType + ' not supported.' );
+			
+	}
+			var evt = document.createEvent( className );
+			switch ( className ) {
+
+				case 'MouseEvents':
+				{
+
+					var clientX = params.x || params.clientX || 0;
+					var clientY = params.y || params.clientY || 0;
+					evt.initMouseEvent( eventType, params.bubbles || false, params.cancelable || true, window, params.clickCount || 1, 0,
+						0,
+						clientX,
+						clientY,
+						false, false, false, false, 0, null );
+					break;
+				
+	}
+				case 'KeyboardEvents':
+				{
+
+					var init = evt.initKeyboardEvent || evt.initKeyEvent;
+					Common.defaults( params, {
+						cancelable: true,
+						ctrlKey: false,
+						altKey: false,
+						shiftKey: false,
+						metaKey: false,
+						keyCode: undefined,
+						charCode: undefined
+					} );
+					init( eventType, params.bubbles || false, params.cancelable, window, params.ctrlKey, params.altKey, params.shiftKey, params.metaKey, params.keyCode, params.charCode );
+					break;
+				
+	}
+				default:
+				{
+
+					evt.initEvent( eventType, params.bubbles || false, params.cancelable || true );
+					break;
+				
+	}
+			
+	}
+			Common.defaults( evt, aux );
+			elem.dispatchEvent( evt );
+		
+	},
+		bind: function bind( elem, event, func, newBool ) {
+
+			var bool = newBool || false;
+			if ( elem.addEventListener ) {
+
+				elem.addEventListener( event, func, bool );
+			
+	} else if ( elem.attachEvent ) {
+
+				elem.attachEvent( 'on' + event, func );
+			
+	}
+			return dom;
+		
+	},
+		unbind: function unbind( elem, event, func, newBool ) {
+
+			var bool = newBool || false;
+			if ( elem.removeEventListener ) {
+
+				elem.removeEventListener( event, func, bool );
+			
+	} else if ( elem.detachEvent ) {
+
+				elem.detachEvent( 'on' + event, func );
+			
+	}
+			return dom;
+		
+	},
+		addClass: function addClass( elem, className ) {
+
+			if ( elem.className === undefined ) {
+
+				elem.className = className;
+			
+	} else if ( elem.className !== className ) {
+
+				var classes = elem.className.split( / +/ );
+				if ( classes.indexOf( className ) === - 1 ) {
+
+					classes.push( className );
+					elem.className = classes.join( ' ' ).replace( /^\s+/, '' ).replace( /\s+$/, '' );
+				
+	}
+			
+	}
+			return dom;
+		
+	},
+		removeClass: function removeClass( elem, className ) {
+
+			if ( className ) {
+
+				if ( elem.className === className ) {
+
+					elem.removeAttribute( 'class' );
+				
+	} else {
+
+					var classes = elem.className.split( / +/ );
+					var index = classes.indexOf( className );
+					if ( index !== - 1 ) {
+
+						classes.splice( index, 1 );
+						elem.className = classes.join( ' ' );
+					
+	}
+				
+	}
+			
+	} else {
+
+				elem.className = undefined;
+			
+	}
+			return dom;
+		
+	},
+		hasClass: function hasClass( elem, className ) {
+
+			return new RegExp( '(?:^|\\s+)' + className + '(?:\\s+|$)' ).test( elem.className ) || false;
+		
+	},
+		getWidth: function getWidth( elem ) {
+
+			var style = getComputedStyle( elem );
+			return cssValueToPixels( style[ 'border-left-width' ] ) + cssValueToPixels( style[ 'border-right-width' ] ) + cssValueToPixels( style[ 'padding-left' ] ) + cssValueToPixels( style[ 'padding-right' ] ) + cssValueToPixels( style.width );
+		
+	},
+		getHeight: function getHeight( elem ) {
+
+			var style = getComputedStyle( elem );
+			return cssValueToPixels( style[ 'border-top-width' ] ) + cssValueToPixels( style[ 'border-bottom-width' ] ) + cssValueToPixels( style[ 'padding-top' ] ) + cssValueToPixels( style[ 'padding-bottom' ] ) + cssValueToPixels( style.height );
+		
+	},
+		getOffset: function getOffset( el ) {
+
+			var elem = el;
+			var offset = { left: 0, top: 0 };
+			if ( elem.offsetParent ) {
+
+				do {
+
+					offset.left += elem.offsetLeft;
+					offset.top += elem.offsetTop;
+					elem = elem.offsetParent;
+				
+	} while ( elem );
+			
+	}
+			return offset;
+		
+	},
+		isActive: function isActive( elem ) {
+
+			return elem === document.activeElement && ( elem.type || elem.href );
+		
+	}
+	};
+
+	var BooleanController = function ( _Controller ) {
+
+		inherits( BooleanController, _Controller );
+		function BooleanController( object, property ) {
+
+			classCallCheck( this, BooleanController );
+			var _this2 = possibleConstructorReturn( this, ( BooleanController.__proto__ || Object.getPrototypeOf( BooleanController ) ).call( this, object, property ) );
+			var _this = _this2;
+			_this2.__prev = _this2.getValue();
+			_this2.__checkbox = document.createElement( 'input' );
+			_this2.__checkbox.setAttribute( 'type', 'checkbox' );
+			function onChange() {
+
+				_this.setValue( ! _this.__prev );
+			
+	}
+			dom.bind( _this2.__checkbox, 'change', onChange, false );
+			_this2.domElement.appendChild( _this2.__checkbox );
+			_this2.updateDisplay();
+			return _this2;
+		
+	}
+		createClass( BooleanController, [ {
+			key: 'setValue',
+			value: function setValue( v ) {
+
+				var toReturn = get( BooleanController.prototype.__proto__ || Object.getPrototypeOf( BooleanController.prototype ), 'setValue', this ).call( this, v );
+				if ( this.__onFinishChange ) {
+
+					this.__onFinishChange.call( this, this.getValue() );
+				
+	}
+				this.__prev = this.getValue();
+				return toReturn;
+			
+	}
+		}, {
+			key: 'updateDisplay',
+			value: function updateDisplay() {
+
+				if ( this.getValue() === true ) {
+
+					this.__checkbox.setAttribute( 'checked', 'checked' );
+					this.__checkbox.checked = true;
+					this.__prev = true;
+				
+	} else {
+
+					this.__checkbox.checked = false;
+					this.__prev = false;
+				
+	}
+				return get( BooleanController.prototype.__proto__ || Object.getPrototypeOf( BooleanController.prototype ), 'updateDisplay', this ).call( this );
+			
+	}
+		} ] );
+		return BooleanController;
+
+	}( Controller );
+
+	var OptionController = function ( _Controller ) {
+
+		inherits( OptionController, _Controller );
+		function OptionController( object, property, opts ) {
+
+			classCallCheck( this, OptionController );
+			var _this2 = possibleConstructorReturn( this, ( OptionController.__proto__ || Object.getPrototypeOf( OptionController ) ).call( this, object, property ) );
+			var options = opts;
+			var _this = _this2;
+			_this2.__select = document.createElement( 'select' );
+			if ( Common.isArray( options ) ) {
+
+				var map = {};
+				Common.each( options, function ( element ) {
+
+					map[ element ] = element;
+				
+	} );
+				options = map;
+			
+	}
+			Common.each( options, function ( value, key ) {
+
+				var opt = document.createElement( 'option' );
+				opt.innerHTML = key;
+				opt.setAttribute( 'value', value );
+				_this.__select.appendChild( opt );
+			
+	} );
+			_this2.updateDisplay();
+			dom.bind( _this2.__select, 'change', function () {
+
+				var desiredValue = this.options[ this.selectedIndex ].value;
+				_this.setValue( desiredValue );
+			
+	} );
+			_this2.domElement.appendChild( _this2.__select );
+			return _this2;
+		
+	}
+		createClass( OptionController, [ {
+			key: 'setValue',
+			value: function setValue( v ) {
+
+				var toReturn = get( OptionController.prototype.__proto__ || Object.getPrototypeOf( OptionController.prototype ), 'setValue', this ).call( this, v );
+				if ( this.__onFinishChange ) {
+
+					this.__onFinishChange.call( this, this.getValue() );
+				
+	}
+				return toReturn;
+			
+	}
+		}, {
+			key: 'updateDisplay',
+			value: function updateDisplay() {
+
+				if ( dom.isActive( this.__select ) ) return this;
+				this.__select.value = this.getValue();
+				return get( OptionController.prototype.__proto__ || Object.getPrototypeOf( OptionController.prototype ), 'updateDisplay', this ).call( this );
+			
+	}
+		} ] );
+		return OptionController;
+
+	}( Controller );
+
+	var StringController = function ( _Controller ) {
+
+		inherits( StringController, _Controller );
+		function StringController( object, property ) {
+
+			classCallCheck( this, StringController );
+			var _this2 = possibleConstructorReturn( this, ( StringController.__proto__ || Object.getPrototypeOf( StringController ) ).call( this, object, property ) );
+			var _this = _this2;
+			function onChange() {
+
+				_this.setValue( _this.__input.value );
+			
+	}
+			function onBlur() {
+
+				if ( _this.__onFinishChange ) {
+
+					_this.__onFinishChange.call( _this, _this.getValue() );
+				
+	}
+			
+	}
+			_this2.__input = document.createElement( 'input' );
+			_this2.__input.setAttribute( 'type', 'text' );
+			dom.bind( _this2.__input, 'keyup', onChange );
+			dom.bind( _this2.__input, 'change', onChange );
+			dom.bind( _this2.__input, 'blur', onBlur );
+			dom.bind( _this2.__input, 'keydown', function ( e ) {
+
+				if ( e.keyCode === 13 ) {
+
+					this.blur();
+				
+	}
+			
+	} );
+			_this2.updateDisplay();
+			_this2.domElement.appendChild( _this2.__input );
+			return _this2;
+		
+	}
+		createClass( StringController, [ {
+			key: 'updateDisplay',
+			value: function updateDisplay() {
+
+				if ( ! dom.isActive( this.__input ) ) {
+
+					this.__input.value = this.getValue();
+				
+	}
+				return get( StringController.prototype.__proto__ || Object.getPrototypeOf( StringController.prototype ), 'updateDisplay', this ).call( this );
+			
+	}
+		} ] );
+		return StringController;
+
+	}( Controller );
+
+	function numDecimals( x ) {
+
+		var _x = x.toString();
+		if ( _x.indexOf( '.' ) > - 1 ) {
+
+			return _x.length - _x.indexOf( '.' ) - 1;
+		
+	}
+		return 0;
+
+	}
+	var NumberController = function ( _Controller ) {
+
+		inherits( NumberController, _Controller );
+		function NumberController( object, property, params ) {
+
+			classCallCheck( this, NumberController );
+			var _this = possibleConstructorReturn( this, ( NumberController.__proto__ || Object.getPrototypeOf( NumberController ) ).call( this, object, property ) );
+			var _params = params || {};
+			_this.__min = _params.min;
+			_this.__max = _params.max;
+			_this.__step = _params.step;
+			if ( Common.isUndefined( _this.__step ) ) {
+
+				if ( _this.initialValue === 0 ) {
+
+					_this.__impliedStep = 1;
+				
+	} else {
+
+					_this.__impliedStep = Math.pow( 10, Math.floor( Math.log( Math.abs( _this.initialValue ) ) / Math.LN10 ) ) / 10;
+				
+	}
+			
+	} else {
+
+				_this.__impliedStep = _this.__step;
+			
+	}
+			_this.__precision = numDecimals( _this.__impliedStep );
+			return _this;
+		
+	}
+		createClass( NumberController, [ {
+			key: 'setValue',
+			value: function setValue( v ) {
+
+				var _v = v;
+				if ( this.__min !== undefined && _v < this.__min ) {
+
+					_v = this.__min;
+				
+	} else if ( this.__max !== undefined && _v > this.__max ) {
+
+					_v = this.__max;
+				
+	}
+				if ( this.__step !== undefined && _v % this.__step !== 0 ) {
+
+					_v = Math.round( _v / this.__step ) * this.__step;
+				
+	}
+				return get( NumberController.prototype.__proto__ || Object.getPrototypeOf( NumberController.prototype ), 'setValue', this ).call( this, _v );
+			
+	}
+		}, {
+			key: 'min',
+			value: function min( minValue ) {
+
+				this.__min = minValue;
+				return this;
+			
+	}
+		}, {
+			key: 'max',
+			value: function max( maxValue ) {
+
+				this.__max = maxValue;
+				return this;
+			
+	}
+		}, {
+			key: 'step',
+			value: function step( stepValue ) {
+
+				this.__step = stepValue;
+				this.__impliedStep = stepValue;
+				this.__precision = numDecimals( stepValue );
+				return this;
+			
+	}
+		} ] );
+		return NumberController;
+
+	}( Controller );
+
+	function roundToDecimal( value, decimals ) {
+
+		var tenTo = Math.pow( 10, decimals );
+		return Math.round( value * tenTo ) / tenTo;
+
+	}
+	var NumberControllerBox = function ( _NumberController ) {
+
+		inherits( NumberControllerBox, _NumberController );
+		function NumberControllerBox( object, property, params ) {
+
+			classCallCheck( this, NumberControllerBox );
+			var _this2 = possibleConstructorReturn( this, ( NumberControllerBox.__proto__ || Object.getPrototypeOf( NumberControllerBox ) ).call( this, object, property, params ) );
+			_this2.__truncationSuspended = false;
+			var _this = _this2;
+			var prevY = void 0;
+			function onChange() {
+
+				var attempted = parseFloat( _this.__input.value );
+				if ( ! Common.isNaN( attempted ) ) {
+
+					_this.setValue( attempted );
+				
+	}
+			
+	}
+			function onFinish() {
+
+				if ( _this.__onFinishChange ) {
+
+					_this.__onFinishChange.call( _this, _this.getValue() );
+				
+	}
+			
+	}
+			function onBlur() {
+
+				onFinish();
+			
+	}
+			function onMouseDrag( e ) {
+
+				var diff = prevY - e.clientY;
+				_this.setValue( _this.getValue() + diff * _this.__impliedStep );
+				prevY = e.clientY;
+			
+	}
+			function onMouseUp() {
+
+				dom.unbind( window, 'mousemove', onMouseDrag );
+				dom.unbind( window, 'mouseup', onMouseUp );
+				onFinish();
+			
+	}
+			function onMouseDown( e ) {
+
+				dom.bind( window, 'mousemove', onMouseDrag );
+				dom.bind( window, 'mouseup', onMouseUp );
+				prevY = e.clientY;
+			
+	}
+			_this2.__input = document.createElement( 'input' );
+			_this2.__input.setAttribute( 'type', 'text' );
+			dom.bind( _this2.__input, 'change', onChange );
+			dom.bind( _this2.__input, 'blur', onBlur );
+			dom.bind( _this2.__input, 'mousedown', onMouseDown );
+			dom.bind( _this2.__input, 'keydown', function ( e ) {
+
+				if ( e.keyCode === 13 ) {
+
+					_this.__truncationSuspended = true;
+					this.blur();
+					_this.__truncationSuspended = false;
+					onFinish();
+				
+	}
+			
+	} );
+			_this2.updateDisplay();
+			_this2.domElement.appendChild( _this2.__input );
+			return _this2;
+		
+	}
+		createClass( NumberControllerBox, [ {
+			key: 'updateDisplay',
+			value: function updateDisplay() {
+
+				this.__input.value = this.__truncationSuspended ? this.getValue() : roundToDecimal( this.getValue(), this.__precision );
+				return get( NumberControllerBox.prototype.__proto__ || Object.getPrototypeOf( NumberControllerBox.prototype ), 'updateDisplay', this ).call( this );
+			
+	}
+		} ] );
+		return NumberControllerBox;
+
+	}( NumberController );
+
+	function map( v, i1, i2, o1, o2 ) {
+
+		return o1 + ( o2 - o1 ) * ( ( v - i1 ) / ( i2 - i1 ) );
+
+	}
+	var NumberControllerSlider = function ( _NumberController ) {
+
+		inherits( NumberControllerSlider, _NumberController );
+		function NumberControllerSlider( object, property, min, max, step ) {
+
+			classCallCheck( this, NumberControllerSlider );
+			var _this2 = possibleConstructorReturn( this, ( NumberControllerSlider.__proto__ || Object.getPrototypeOf( NumberControllerSlider ) ).call( this, object, property, { min: min, max: max, step: step } ) );
+			var _this = _this2;
+			_this2.__background = document.createElement( 'div' );
+			_this2.__foreground = document.createElement( 'div' );
+			dom.bind( _this2.__background, 'mousedown', onMouseDown );
+			dom.bind( _this2.__background, 'touchstart', onTouchStart );
+			dom.addClass( _this2.__background, 'slider' );
+			dom.addClass( _this2.__foreground, 'slider-fg' );
+			function onMouseDown( e ) {
+
+				document.activeElement.blur();
+				dom.bind( window, 'mousemove', onMouseDrag );
+				dom.bind( window, 'mouseup', onMouseUp );
+				onMouseDrag( e );
+			
+	}
+			function onMouseDrag( e ) {
+
+				e.preventDefault();
+				var bgRect = _this.__background.getBoundingClientRect();
+				_this.setValue( map( e.clientX, bgRect.left, bgRect.right, _this.__min, _this.__max ) );
+				return false;
+			
+	}
+			function onMouseUp() {
+
+				dom.unbind( window, 'mousemove', onMouseDrag );
+				dom.unbind( window, 'mouseup', onMouseUp );
+				if ( _this.__onFinishChange ) {
+
+					_this.__onFinishChange.call( _this, _this.getValue() );
+				
+	}
+			
+	}
+			function onTouchStart( e ) {
+
+				if ( e.touches.length !== 1 ) {
+
+					return;
+				
+	}
+				dom.bind( window, 'touchmove', onTouchMove );
+				dom.bind( window, 'touchend', onTouchEnd );
+				onTouchMove( e );
+			
+	}
+			function onTouchMove( e ) {
+
+				var clientX = e.touches[ 0 ].clientX;
+				var bgRect = _this.__background.getBoundingClientRect();
+				_this.setValue( map( clientX, bgRect.left, bgRect.right, _this.__min, _this.__max ) );
+			
+	}
+			function onTouchEnd() {
+
+				dom.unbind( window, 'touchmove', onTouchMove );
+				dom.unbind( window, 'touchend', onTouchEnd );
+				if ( _this.__onFinishChange ) {
+
+					_this.__onFinishChange.call( _this, _this.getValue() );
+				
+	}
+			
+	}
+			_this2.updateDisplay();
+			_this2.__background.appendChild( _this2.__foreground );
+			_this2.domElement.appendChild( _this2.__background );
+			return _this2;
+		
+	}
+		createClass( NumberControllerSlider, [ {
+			key: 'updateDisplay',
+			value: function updateDisplay() {
+
+				var pct = ( this.getValue() - this.__min ) / ( this.__max - this.__min );
+				this.__foreground.style.width = pct * 100 + '%';
+				return get( NumberControllerSlider.prototype.__proto__ || Object.getPrototypeOf( NumberControllerSlider.prototype ), 'updateDisplay', this ).call( this );
+			
+	}
+		} ] );
+		return NumberControllerSlider;
+
+	}( NumberController );
+
+	var FunctionController = function ( _Controller ) {
+
+		inherits( FunctionController, _Controller );
+		function FunctionController( object, property, text ) {
+
+			classCallCheck( this, FunctionController );
+			var _this2 = possibleConstructorReturn( this, ( FunctionController.__proto__ || Object.getPrototypeOf( FunctionController ) ).call( this, object, property ) );
+			var _this = _this2;
+			_this2.__button = document.createElement( 'div' );
+			_this2.__button.innerHTML = text === undefined ? 'Fire' : text;
+			dom.bind( _this2.__button, 'click', function ( e ) {
+
+				e.preventDefault();
+				_this.fire();
+				return false;
+			
+	} );
+			dom.addClass( _this2.__button, 'button' );
+			_this2.domElement.appendChild( _this2.__button );
+			return _this2;
+		
+	}
+		createClass( FunctionController, [ {
+			key: 'fire',
+			value: function fire() {
+
+				if ( this.__onChange ) {
+
+					this.__onChange.call( this );
+				
+	}
+				this.getValue().call( this.object );
+				if ( this.__onFinishChange ) {
+
+					this.__onFinishChange.call( this, this.getValue() );
+				
+	}
+			
+	}
+		} ] );
+		return FunctionController;
+
+	}( Controller );
+
+	var ColorController = function ( _Controller ) {
+
+		inherits( ColorController, _Controller );
+		function ColorController( object, property ) {
+
+			classCallCheck( this, ColorController );
+			var _this2 = possibleConstructorReturn( this, ( ColorController.__proto__ || Object.getPrototypeOf( ColorController ) ).call( this, object, property ) );
+			_this2.__color = new Color$1( _this2.getValue() );
+			_this2.__temp = new Color$1( 0 );
+			var _this = _this2;
+			_this2.domElement = document.createElement( 'div' );
+			dom.makeSelectable( _this2.domElement, false );
+			_this2.__selector = document.createElement( 'div' );
+			_this2.__selector.className = 'selector';
+			_this2.__saturation_field = document.createElement( 'div' );
+			_this2.__saturation_field.className = 'saturation-field';
+			_this2.__field_knob = document.createElement( 'div' );
+			_this2.__field_knob.className = 'field-knob';
+			_this2.__field_knob_border = '2px solid ';
+			_this2.__hue_knob = document.createElement( 'div' );
+			_this2.__hue_knob.className = 'hue-knob';
+			_this2.__hue_field = document.createElement( 'div' );
+			_this2.__hue_field.className = 'hue-field';
+			_this2.__input = document.createElement( 'input' );
+			_this2.__input.type = 'text';
+			_this2.__input_textShadow = '0 1px 1px ';
+			dom.bind( _this2.__input, 'keydown', function ( e ) {
+
+				if ( e.keyCode === 13 ) {
+
+					onBlur.call( this );
+				
+	}
+			
+	} );
+			dom.bind( _this2.__input, 'blur', onBlur );
+			dom.bind( _this2.__selector, 'mousedown', function () {
+
+				dom.addClass( this, 'drag' ).bind( window, 'mouseup', function () {
+
+					dom.removeClass( _this.__selector, 'drag' );
+				
+	} );
+			
+	} );
+			dom.bind( _this2.__selector, 'touchstart', function () {
+
+				dom.addClass( this, 'drag' ).bind( window, 'touchend', function () {
+
+					dom.removeClass( _this.__selector, 'drag' );
+				
+	} );
+			
+	} );
+			var valueField = document.createElement( 'div' );
+			Common.extend( _this2.__selector.style, {
+				width: '122px',
+				height: '102px',
+				padding: '3px',
+				backgroundColor: '#222',
+				boxShadow: '0px 1px 3px rgba(0,0,0,0.3)'
+			} );
+			Common.extend( _this2.__field_knob.style, {
+				position: 'absolute',
+				width: '12px',
+				height: '12px',
+				border: _this2.__field_knob_border + ( _this2.__color.v < 0.5 ? '#fff' : '#000' ),
+				boxShadow: '0px 1px 3px rgba(0,0,0,0.5)',
+				borderRadius: '12px',
+				zIndex: 1
+			} );
+			Common.extend( _this2.__hue_knob.style, {
+				position: 'absolute',
+				width: '15px',
+				height: '2px',
+				borderRight: '4px solid #fff',
+				zIndex: 1
+			} );
+			Common.extend( _this2.__saturation_field.style, {
+				width: '100px',
+				height: '100px',
+				border: '1px solid #555',
+				marginRight: '3px',
+				display: 'inline-block',
+				cursor: 'pointer'
+			} );
+			Common.extend( valueField.style, {
+				width: '100%',
+				height: '100%',
+				background: 'none'
+			} );
+			linearGradient( valueField, 'top', 'rgba(0,0,0,0)', '#000' );
+			Common.extend( _this2.__hue_field.style, {
+				width: '15px',
+				height: '100px',
+				border: '1px solid #555',
+				cursor: 'ns-resize',
+				position: 'absolute',
+				top: '3px',
+				right: '3px'
+			} );
+			hueGradient( _this2.__hue_field );
+			Common.extend( _this2.__input.style, {
+				outline: 'none',
+				textAlign: 'center',
+				color: '#fff',
+				border: 0,
+				fontWeight: 'bold',
+				textShadow: _this2.__input_textShadow + 'rgba(0,0,0,0.7)'
+			} );
+			dom.bind( _this2.__saturation_field, 'mousedown', fieldDown );
+			dom.bind( _this2.__saturation_field, 'touchstart', fieldDown );
+			dom.bind( _this2.__field_knob, 'mousedown', fieldDown );
+			dom.bind( _this2.__field_knob, 'touchstart', fieldDown );
+			dom.bind( _this2.__hue_field, 'mousedown', fieldDownH );
+			dom.bind( _this2.__hue_field, 'touchstart', fieldDownH );
+			function fieldDown( e ) {
+
+				setSV( e );
+				dom.bind( window, 'mousemove', setSV );
+				dom.bind( window, 'touchmove', setSV );
+				dom.bind( window, 'mouseup', fieldUpSV );
+				dom.bind( window, 'touchend', fieldUpSV );
+			
+	}
+			function fieldDownH( e ) {
+
+				setH( e );
+				dom.bind( window, 'mousemove', setH );
+				dom.bind( window, 'touchmove', setH );
+				dom.bind( window, 'mouseup', fieldUpH );
+				dom.bind( window, 'touchend', fieldUpH );
+			
+	}
+			function fieldUpSV() {
+
+				dom.unbind( window, 'mousemove', setSV );
+				dom.unbind( window, 'touchmove', setSV );
+				dom.unbind( window, 'mouseup', fieldUpSV );
+				dom.unbind( window, 'touchend', fieldUpSV );
+				onFinish();
+			
+	}
+			function fieldUpH() {
+
+				dom.unbind( window, 'mousemove', setH );
+				dom.unbind( window, 'touchmove', setH );
+				dom.unbind( window, 'mouseup', fieldUpH );
+				dom.unbind( window, 'touchend', fieldUpH );
+				onFinish();
+			
+	}
+			function onBlur() {
+
+				var i = interpret( this.value );
+				if ( i !== false ) {
+
+					_this.__color.__state = i;
+					_this.setValue( _this.__color.toOriginal() );
+				
+	} else {
+
+					this.value = _this.__color.toString();
+				
+	}
+			
+	}
+			function onFinish() {
+
+				if ( _this.__onFinishChange ) {
+
+					_this.__onFinishChange.call( _this, _this.__color.toOriginal() );
+				
+	}
+			
+	}
+			_this2.__saturation_field.appendChild( valueField );
+			_this2.__selector.appendChild( _this2.__field_knob );
+			_this2.__selector.appendChild( _this2.__saturation_field );
+			_this2.__selector.appendChild( _this2.__hue_field );
+			_this2.__hue_field.appendChild( _this2.__hue_knob );
+			_this2.domElement.appendChild( _this2.__input );
+			_this2.domElement.appendChild( _this2.__selector );
+			_this2.updateDisplay();
+			function setSV( e ) {
+
+				if ( e.type.indexOf( 'touch' ) === - 1 ) {
+
+					e.preventDefault();
+				
+	}
+				var fieldRect = _this.__saturation_field.getBoundingClientRect();
+				var _ref = e.touches && e.touches[ 0 ] || e,
+					clientX = _ref.clientX,
+					clientY = _ref.clientY;
+				var s = ( clientX - fieldRect.left ) / ( fieldRect.right - fieldRect.left );
+				var v = 1 - ( clientY - fieldRect.top ) / ( fieldRect.bottom - fieldRect.top );
+				if ( v > 1 ) {
+
+					v = 1;
+				
+	} else if ( v < 0 ) {
+
+					v = 0;
+				
+	}
+				if ( s > 1 ) {
+
+					s = 1;
+				
+	} else if ( s < 0 ) {
+
+					s = 0;
+				
+	}
+				_this.__color.v = v;
+				_this.__color.s = s;
+				_this.setValue( _this.__color.toOriginal() );
+				return false;
+			
+	}
+			function setH( e ) {
+
+				if ( e.type.indexOf( 'touch' ) === - 1 ) {
+
+					e.preventDefault();
+				
+	}
+				var fieldRect = _this.__hue_field.getBoundingClientRect();
+				var _ref2 = e.touches && e.touches[ 0 ] || e,
+					clientY = _ref2.clientY;
+				var h = 1 - ( clientY - fieldRect.top ) / ( fieldRect.bottom - fieldRect.top );
+				if ( h > 1 ) {
+
+					h = 1;
+				
+	} else if ( h < 0 ) {
+
+					h = 0;
+				
+	}
+				_this.__color.h = h * 360;
+				_this.setValue( _this.__color.toOriginal() );
+				return false;
+			
+	}
+			return _this2;
+		
+	}
+		createClass( ColorController, [ {
+			key: 'updateDisplay',
+			value: function updateDisplay() {
+
+				var i = interpret( this.getValue() );
+				if ( i !== false ) {
+
+					var mismatch = false;
+					Common.each( Color$1.COMPONENTS, function ( component ) {
+
+						if ( ! Common.isUndefined( i[ component ] ) && ! Common.isUndefined( this.__color.__state[ component ] ) && i[ component ] !== this.__color.__state[ component ] ) {
+
+							mismatch = true;
+							return {};
+						
+	}
+					
+	}, this );
+					if ( mismatch ) {
+
+						Common.extend( this.__color.__state, i );
+					
+	}
+				
+	}
+				Common.extend( this.__temp.__state, this.__color.__state );
+				this.__temp.a = 1;
+				var flip = this.__color.v < 0.5 || this.__color.s > 0.5 ? 255 : 0;
+				var _flip = 255 - flip;
+				Common.extend( this.__field_knob.style, {
+					marginLeft: 100 * this.__color.s - 7 + 'px',
+					marginTop: 100 * ( 1 - this.__color.v ) - 7 + 'px',
+					backgroundColor: this.__temp.toHexString(),
+					border: this.__field_knob_border + 'rgb(' + flip + ',' + flip + ',' + flip + ')'
+				} );
+				this.__hue_knob.style.marginTop = ( 1 - this.__color.h / 360 ) * 100 + 'px';
+				this.__temp.s = 1;
+				this.__temp.v = 1;
+				linearGradient( this.__saturation_field, 'left', '#fff', this.__temp.toHexString() );
+				this.__input.value = this.__color.toString();
+				Common.extend( this.__input.style, {
+					backgroundColor: this.__color.toHexString(),
+					color: 'rgb(' + flip + ',' + flip + ',' + flip + ')',
+					textShadow: this.__input_textShadow + 'rgba(' + _flip + ',' + _flip + ',' + _flip + ',.7)'
+				} );
+			
+	}
+		} ] );
+		return ColorController;
+
+	}( Controller );
+	var vendors = [ '-moz-', '-o-', '-webkit-', '-ms-', '' ];
+	function linearGradient( elem, x, a, b ) {
+
+		elem.style.background = '';
+		Common.each( vendors, function ( vendor ) {
+
+			elem.style.cssText += 'background: ' + vendor + 'linear-gradient(' + x + ', ' + a + ' 0%, ' + b + ' 100%); ';
+		
+	} );
+
+	}
+	function hueGradient( elem ) {
+
+		elem.style.background = '';
+		elem.style.cssText += 'background: -moz-linear-gradient(top,  #ff0000 0%, #ff00ff 17%, #0000ff 34%, #00ffff 50%, #00ff00 67%, #ffff00 84%, #ff0000 100%);';
+		elem.style.cssText += 'background: -webkit-linear-gradient(top,  #ff0000 0%,#ff00ff 17%,#0000ff 34%,#00ffff 50%,#00ff00 67%,#ffff00 84%,#ff0000 100%);';
+		elem.style.cssText += 'background: -o-linear-gradient(top,  #ff0000 0%,#ff00ff 17%,#0000ff 34%,#00ffff 50%,#00ff00 67%,#ffff00 84%,#ff0000 100%);';
+		elem.style.cssText += 'background: -ms-linear-gradient(top,  #ff0000 0%,#ff00ff 17%,#0000ff 34%,#00ffff 50%,#00ff00 67%,#ffff00 84%,#ff0000 100%);';
+		elem.style.cssText += 'background: linear-gradient(top,  #ff0000 0%,#ff00ff 17%,#0000ff 34%,#00ffff 50%,#00ff00 67%,#ffff00 84%,#ff0000 100%);';
+
+	}
+
+	var css = {
+		load: function load( url, indoc ) {
+
+			var doc = indoc || document;
+			var link = doc.createElement( 'link' );
+			link.type = 'text/css';
+			link.rel = 'stylesheet';
+			link.href = url;
+			doc.getElementsByTagName( 'head' )[ 0 ].appendChild( link );
+		
+	},
+		inject: function inject( cssContent, indoc ) {
+
+			var doc = indoc || document;
+			var injected = document.createElement( 'style' );
+			injected.type = 'text/css';
+			injected.innerHTML = cssContent;
+			var head = doc.getElementsByTagName( 'head' )[ 0 ];
+			try {
+
+				head.appendChild( injected );
+			
+	} catch ( e ) {
+			}
+		
+	}
+	};
+
+	var saveDialogContents = "<div id=\"dg-save\" class=\"dg dialogue\">\n\n  Here's the new load parameter for your <code>GUI</code>'s constructor:\n\n  <textarea id=\"dg-new-constructor\"></textarea>\n\n  <div id=\"dg-save-locally\">\n\n    <input id=\"dg-local-storage\" type=\"checkbox\"/> Automatically save\n    values to <code>localStorage</code> on exit.\n\n    <div id=\"dg-local-explain\">The values saved to <code>localStorage</code> will\n      override those passed to <code>dat.GUI</code>'s constructor. This makes it\n      easier to work incrementally, but <code>localStorage</code> is fragile,\n      and your friends may not see the same values you do.\n\n    </div>\n\n  </div>\n\n</div>";
+
+	var ControllerFactory = function ControllerFactory( object, property ) {
+
+		var initialValue = object[ property ];
+		if ( Common.isArray( arguments[ 2 ] ) || Common.isObject( arguments[ 2 ] ) ) {
+
+			return new OptionController( object, property, arguments[ 2 ] );
+		
+	}
+		if ( Common.isNumber( initialValue ) ) {
+
+			if ( Common.isNumber( arguments[ 2 ] ) && Common.isNumber( arguments[ 3 ] ) ) {
+
+				if ( Common.isNumber( arguments[ 4 ] ) ) {
+
+					return new NumberControllerSlider( object, property, arguments[ 2 ], arguments[ 3 ], arguments[ 4 ] );
+				
+	}
+				return new NumberControllerSlider( object, property, arguments[ 2 ], arguments[ 3 ] );
+			
+	}
+			if ( Common.isNumber( arguments[ 4 ] ) ) {
+
+				return new NumberControllerBox( object, property, { min: arguments[ 2 ], max: arguments[ 3 ], step: arguments[ 4 ] } );
+			
+	}
+			return new NumberControllerBox( object, property, { min: arguments[ 2 ], max: arguments[ 3 ] } );
+		
+	}
+		if ( Common.isString( initialValue ) ) {
+
+			return new StringController( object, property );
+		
+	}
+		if ( Common.isFunction( initialValue ) ) {
+
+			return new FunctionController( object, property, '' );
+		
+	}
+		if ( Common.isBoolean( initialValue ) ) {
+
+			return new BooleanController( object, property );
+		
+	}
+		return null;
+
+	};
+
+	function requestAnimationFrame$1( callback ) {
+
+		setTimeout( callback, 1000 / 60 );
+
+	}
+	var requestAnimationFrame$1$1 = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || requestAnimationFrame$1;
+
+	var CenteredDiv = function () {
+
+		function CenteredDiv() {
+
+			classCallCheck( this, CenteredDiv );
+			this.backgroundElement = document.createElement( 'div' );
+			Common.extend( this.backgroundElement.style, {
+				backgroundColor: 'rgba(0,0,0,0.8)',
+				top: 0,
+				left: 0,
+				display: 'none',
+				zIndex: '1000',
+				opacity: 0,
+				WebkitTransition: 'opacity 0.2s linear',
+				transition: 'opacity 0.2s linear'
+			} );
+			dom.makeFullscreen( this.backgroundElement );
+			this.backgroundElement.style.position = 'fixed';
+			this.domElement = document.createElement( 'div' );
+			Common.extend( this.domElement.style, {
+				position: 'fixed',
+				display: 'none',
+				zIndex: '1001',
+				opacity: 0,
+				WebkitTransition: '-webkit-transform 0.2s ease-out, opacity 0.2s linear',
+				transition: 'transform 0.2s ease-out, opacity 0.2s linear'
+			} );
+			document.body.appendChild( this.backgroundElement );
+			document.body.appendChild( this.domElement );
+			var _this = this;
+			dom.bind( this.backgroundElement, 'click', function () {
+
+				_this.hide();
+			
+	} );
+		
+	}
+		createClass( CenteredDiv, [ {
+			key: 'show',
+			value: function show() {
+
+				var _this = this;
+				this.backgroundElement.style.display = 'block';
+				this.domElement.style.display = 'block';
+				this.domElement.style.opacity = 0;
+				this.domElement.style.webkitTransform = 'scale(1.1)';
+				this.layout();
+				Common.defer( function () {
+
+					_this.backgroundElement.style.opacity = 1;
+					_this.domElement.style.opacity = 1;
+					_this.domElement.style.webkitTransform = 'scale(1)';
+				
+	} );
+			
+	}
+		}, {
+			key: 'hide',
+			value: function hide() {
+
+				var _this = this;
+				var hide = function hide() {
+
+					_this.domElement.style.display = 'none';
+					_this.backgroundElement.style.display = 'none';
+					dom.unbind( _this.domElement, 'webkitTransitionEnd', hide );
+					dom.unbind( _this.domElement, 'transitionend', hide );
+					dom.unbind( _this.domElement, 'oTransitionEnd', hide );
+				
+	};
+				dom.bind( this.domElement, 'webkitTransitionEnd', hide );
+				dom.bind( this.domElement, 'transitionend', hide );
+				dom.bind( this.domElement, 'oTransitionEnd', hide );
+				this.backgroundElement.style.opacity = 0;
+				this.domElement.style.opacity = 0;
+				this.domElement.style.webkitTransform = 'scale(1.1)';
+			
+	}
+		}, {
+			key: 'layout',
+			value: function layout() {
+
+				this.domElement.style.left = window.innerWidth / 2 - dom.getWidth( this.domElement ) / 2 + 'px';
+				this.domElement.style.top = window.innerHeight / 2 - dom.getHeight( this.domElement ) / 2 + 'px';
+			
+	}
+		} ] );
+		return CenteredDiv;
+
+	}();
+
+	var styleSheet = ___$insertStyle( ".dg ul{list-style:none;margin:0;padding:0;width:100%;clear:both}.dg.ac{position:fixed;top:0;left:0;right:0;height:0;z-index:0}.dg:not(.ac) .main{overflow:hidden}.dg.main{-webkit-transition:opacity .1s linear;-o-transition:opacity .1s linear;-moz-transition:opacity .1s linear;transition:opacity .1s linear}.dg.main.taller-than-window{overflow-y:auto}.dg.main.taller-than-window .close-button{opacity:1;margin-top:-1px;border-top:1px solid #2c2c2c}.dg.main ul.closed .close-button{opacity:1 !important}.dg.main:hover .close-button,.dg.main .close-button.drag{opacity:1}.dg.main .close-button{-webkit-transition:opacity .1s linear;-o-transition:opacity .1s linear;-moz-transition:opacity .1s linear;transition:opacity .1s linear;border:0;line-height:19px;height:20px;cursor:pointer;text-align:center;background-color:#000}.dg.main .close-button.close-top{position:relative}.dg.main .close-button.close-bottom{position:absolute}.dg.main .close-button:hover{background-color:#111}.dg.a{float:right;margin-right:15px;overflow-y:visible}.dg.a.has-save>ul.close-top{margin-top:0}.dg.a.has-save>ul.close-bottom{margin-top:27px}.dg.a.has-save>ul.closed{margin-top:0}.dg.a .save-row{top:0;z-index:1002}.dg.a .save-row.close-top{position:relative}.dg.a .save-row.close-bottom{position:fixed}.dg li{-webkit-transition:height .1s ease-out;-o-transition:height .1s ease-out;-moz-transition:height .1s ease-out;transition:height .1s ease-out;-webkit-transition:overflow .1s linear;-o-transition:overflow .1s linear;-moz-transition:overflow .1s linear;transition:overflow .1s linear}.dg li:not(.folder){cursor:auto;height:27px;line-height:27px;padding:0 4px 0 5px}.dg li.folder{padding:0;border-left:4px solid rgba(0,0,0,0)}.dg li.title{cursor:pointer;margin-left:-4px}.dg .closed li:not(.title),.dg .closed ul li,.dg .closed ul li>*{height:0;overflow:hidden;border:0}.dg .cr{clear:both;padding-left:3px;height:27px;overflow:hidden}.dg .property-name{cursor:default;float:left;clear:left;width:40%;overflow:hidden;text-overflow:ellipsis}.dg .c{float:left;width:60%;position:relative}.dg .c input[type=text]{border:0;margin-top:4px;padding:3px;width:100%;float:right}.dg .has-slider input[type=text]{width:30%;margin-left:0}.dg .slider{float:left;width:66%;margin-left:-5px;margin-right:0;height:19px;margin-top:4px}.dg .slider-fg{height:100%}.dg .c input[type=checkbox]{margin-top:7px}.dg .c select{margin-top:5px}.dg .cr.function,.dg .cr.function .property-name,.dg .cr.function *,.dg .cr.boolean,.dg .cr.boolean *{cursor:pointer}.dg .cr.color{overflow:visible}.dg .selector{display:none;position:absolute;margin-left:-9px;margin-top:23px;z-index:10}.dg .c:hover .selector,.dg .selector.drag{display:block}.dg li.save-row{padding:0}.dg li.save-row .button{display:inline-block;padding:0px 6px}.dg.dialogue{background-color:#222;width:460px;padding:15px;font-size:13px;line-height:15px}#dg-new-constructor{padding:10px;color:#222;font-family:Monaco, monospace;font-size:10px;border:0;resize:none;box-shadow:inset 1px 1px 1px #888;word-wrap:break-word;margin:12px 0;display:block;width:440px;overflow-y:scroll;height:100px;position:relative}#dg-local-explain{display:none;font-size:11px;line-height:17px;border-radius:3px;background-color:#333;padding:8px;margin-top:10px}#dg-local-explain code{font-size:10px}#dat-gui-save-locally{display:none}.dg{color:#eee;font:11px 'Lucida Grande', sans-serif;text-shadow:0 -1px 0 #111}.dg.main::-webkit-scrollbar{width:5px;background:#1a1a1a}.dg.main::-webkit-scrollbar-corner{height:0;display:none}.dg.main::-webkit-scrollbar-thumb{border-radius:5px;background:#676767}.dg li:not(.folder){background:#1a1a1a;border-bottom:1px solid #2c2c2c}.dg li.save-row{line-height:25px;background:#dad5cb;border:0}.dg li.save-row select{margin-left:5px;width:108px}.dg li.save-row .button{margin-left:5px;margin-top:1px;border-radius:2px;font-size:9px;line-height:7px;padding:4px 4px 5px 4px;background:#c5bdad;color:#fff;text-shadow:0 1px 0 #b0a58f;box-shadow:0 -1px 0 #b0a58f;cursor:pointer}.dg li.save-row .button.gears{background:#c5bdad url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAANCAYAAAB/9ZQ7AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAQJJREFUeNpiYKAU/P//PwGIC/ApCABiBSAW+I8AClAcgKxQ4T9hoMAEUrxx2QSGN6+egDX+/vWT4e7N82AMYoPAx/evwWoYoSYbACX2s7KxCxzcsezDh3evFoDEBYTEEqycggWAzA9AuUSQQgeYPa9fPv6/YWm/Acx5IPb7ty/fw+QZblw67vDs8R0YHyQhgObx+yAJkBqmG5dPPDh1aPOGR/eugW0G4vlIoTIfyFcA+QekhhHJhPdQxbiAIguMBTQZrPD7108M6roWYDFQiIAAv6Aow/1bFwXgis+f2LUAynwoIaNcz8XNx3Dl7MEJUDGQpx9gtQ8YCueB+D26OECAAQDadt7e46D42QAAAABJRU5ErkJggg==) 2px 1px no-repeat;height:7px;width:8px}.dg li.save-row .button:hover{background-color:#bab19e;box-shadow:0 -1px 0 #b0a58f}.dg li.folder{border-bottom:0}.dg li.title{padding-left:16px;background:#000 url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlI+hKgFxoCgAOw==) 6px 10px no-repeat;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.2)}.dg .closed li.title{background-image:url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlGIWqMCbWAEAOw==)}.dg .cr.boolean{border-left:3px solid #806787}.dg .cr.color{border-left:3px solid}.dg .cr.function{border-left:3px solid #e61d5f}.dg .cr.number{border-left:3px solid #2FA1D6}.dg .cr.number input[type=text]{color:#2FA1D6}.dg .cr.string{border-left:3px solid #1ed36f}.dg .cr.string input[type=text]{color:#1ed36f}.dg .cr.function:hover,.dg .cr.boolean:hover{background:#111}.dg .c input[type=text]{background:#303030;outline:none}.dg .c input[type=text]:hover{background:#3c3c3c}.dg .c input[type=text]:focus{background:#494949;color:#fff}.dg .c .slider{background:#303030;cursor:ew-resize}.dg .c .slider-fg{background:#2FA1D6;max-width:100%}.dg .c .slider:hover{background:#3c3c3c}.dg .c .slider:hover .slider-fg{background:#44abda}\n" );
+
+	css.inject( styleSheet );
+	var CSS_NAMESPACE = 'dg';
+	var HIDE_KEY_CODE = 72;
+	var CLOSE_BUTTON_HEIGHT = 20;
+	var DEFAULT_DEFAULT_PRESET_NAME = 'Default';
+	var SUPPORTS_LOCAL_STORAGE = function () {
+
+		try {
+
+			return !! window.localStorage;
+		
+	} catch ( e ) {
+
+			return false;
+		
+	}
+
+	}();
+	var SAVE_DIALOGUE = void 0;
+	var autoPlaceVirgin = true;
+	var autoPlaceContainer = void 0;
+	var hide = false;
+	var hideableGuis = [];
+	var GUI = function GUI( pars ) {
+
+		var _this = this;
+		var params = pars || {};
+		this.domElement = document.createElement( 'div' );
+		this.__ul = document.createElement( 'ul' );
+		this.domElement.appendChild( this.__ul );
+		dom.addClass( this.domElement, CSS_NAMESPACE );
+		this.__folders = {};
+		this.__controllers = [];
+		this.__rememberedObjects = [];
+		this.__rememberedObjectIndecesToControllers = [];
+		this.__listening = [];
+		params = Common.defaults( params, {
+			closeOnTop: false,
+			autoPlace: true,
+			width: GUI.DEFAULT_WIDTH
+		} );
+		params = Common.defaults( params, {
+			resizable: params.autoPlace,
+			hideable: params.autoPlace
+		} );
+		if ( ! Common.isUndefined( params.load ) ) {
+
+			if ( params.preset ) {
+
+				params.load.preset = params.preset;
+			
+	}
+		
+	} else {
+
+			params.load = { preset: DEFAULT_DEFAULT_PRESET_NAME };
+		
+	}
+		if ( Common.isUndefined( params.parent ) && params.hideable ) {
+
+			hideableGuis.push( this );
+		
+	}
+		params.resizable = Common.isUndefined( params.parent ) && params.resizable;
+		if ( params.autoPlace && Common.isUndefined( params.scrollable ) ) {
+
+			params.scrollable = true;
+		
+	}
+		var useLocalStorage = SUPPORTS_LOCAL_STORAGE && localStorage.getItem( getLocalStorageHash( this, 'isLocal' ) ) === 'true';
+		var saveToLocalStorage = void 0;
+		Object.defineProperties( this,
+			{
+				parent: {
+					get: function get$$1() {
+
+						return params.parent;
+					
+	}
+				},
+				scrollable: {
+					get: function get$$1() {
+
+						return params.scrollable;
+					
+	}
+				},
+				autoPlace: {
+					get: function get$$1() {
+
+						return params.autoPlace;
+					
+	}
+				},
+				closeOnTop: {
+					get: function get$$1() {
+
+						return params.closeOnTop;
+					
+	}
+				},
+				preset: {
+					get: function get$$1() {
+
+						if ( _this.parent ) {
+
+							return _this.getRoot().preset;
+						
+	}
+						return params.load.preset;
+					
+	},
+					set: function set$$1( v ) {
+
+						if ( _this.parent ) {
+
+							_this.getRoot().preset = v;
+						
+	} else {
+
+							params.load.preset = v;
+						
+	}
+						setPresetSelectIndex( this );
+						_this.revert();
+					
+	}
+				},
+				width: {
+					get: function get$$1() {
+
+						return params.width;
+					
+	},
+					set: function set$$1( v ) {
+
+						params.width = v;
+						setWidth( _this, v );
+					
+	}
+				},
+				name: {
+					get: function get$$1() {
+
+						return params.name;
+					
+	},
+					set: function set$$1( v ) {
+
+						params.name = v;
+						if ( titleRowName ) {
+
+							titleRowName.innerHTML = params.name;
+						
+	}
+					
+	}
+				},
+				closed: {
+					get: function get$$1() {
+
+						return params.closed;
+					
+	},
+					set: function set$$1( v ) {
+
+						params.closed = v;
+						if ( params.closed ) {
+
+							dom.addClass( _this.__ul, GUI.CLASS_CLOSED );
+						
+	} else {
+
+							dom.removeClass( _this.__ul, GUI.CLASS_CLOSED );
+						
+	}
+						this.onResize();
+						if ( _this.__closeButton ) {
+
+							_this.__closeButton.innerHTML = v ? GUI.TEXT_OPEN : GUI.TEXT_CLOSED;
+						
+	}
+					
+	}
+				},
+				load: {
+					get: function get$$1() {
+
+						return params.load;
+					
+	}
+				},
+				useLocalStorage: {
+					get: function get$$1() {
+
+						return useLocalStorage;
+					
+	},
+					set: function set$$1( bool ) {
+
+						if ( SUPPORTS_LOCAL_STORAGE ) {
+
+							useLocalStorage = bool;
+							if ( bool ) {
+
+								dom.bind( window, 'unload', saveToLocalStorage );
+							
+	} else {
+
+								dom.unbind( window, 'unload', saveToLocalStorage );
+							
+	}
+							localStorage.setItem( getLocalStorageHash( _this, 'isLocal' ), bool );
+						
+	}
+					
+	}
+				}
+			} );
+		if ( Common.isUndefined( params.parent ) ) {
+
+			params.closed = false;
+			dom.addClass( this.domElement, GUI.CLASS_MAIN );
+			dom.makeSelectable( this.domElement, false );
+			if ( SUPPORTS_LOCAL_STORAGE ) {
+
+				if ( useLocalStorage ) {
+
+					_this.useLocalStorage = true;
+					var savedGui = localStorage.getItem( getLocalStorageHash( this, 'gui' ) );
+					if ( savedGui ) {
+
+						params.load = JSON.parse( savedGui );
+					
+	}
+				
+	}
+			
+	}
+			this.__closeButton = document.createElement( 'div' );
+			this.__closeButton.innerHTML = GUI.TEXT_CLOSED;
+			dom.addClass( this.__closeButton, GUI.CLASS_CLOSE_BUTTON );
+			if ( params.closeOnTop ) {
+
+				dom.addClass( this.__closeButton, GUI.CLASS_CLOSE_TOP );
+				this.domElement.insertBefore( this.__closeButton, this.domElement.childNodes[ 0 ] );
+			
+	} else {
+
+				dom.addClass( this.__closeButton, GUI.CLASS_CLOSE_BOTTOM );
+				this.domElement.appendChild( this.__closeButton );
+			
+	}
+			dom.bind( this.__closeButton, 'click', function () {
+
+				_this.closed = ! _this.closed;
+			
+	} );
+		
+	} else {
+
+			if ( params.closed === undefined ) {
+
+				params.closed = true;
+			
+	}
+			var _titleRowName = document.createTextNode( params.name );
+			dom.addClass( _titleRowName, 'controller-name' );
+			var titleRow = addRow( _this, _titleRowName );
+			var onClickTitle = function onClickTitle( e ) {
+
+				e.preventDefault();
+				_this.closed = ! _this.closed;
+				return false;
+			
+	};
+			dom.addClass( this.__ul, GUI.CLASS_CLOSED );
+			dom.addClass( titleRow, 'title' );
+			dom.bind( titleRow, 'click', onClickTitle );
+			if ( ! params.closed ) {
+
+				this.closed = false;
+			
+	}
+		
+	}
+		if ( params.autoPlace ) {
+
+			if ( Common.isUndefined( params.parent ) ) {
+
+				if ( autoPlaceVirgin ) {
+
+					autoPlaceContainer = document.createElement( 'div' );
+					dom.addClass( autoPlaceContainer, CSS_NAMESPACE );
+					dom.addClass( autoPlaceContainer, GUI.CLASS_AUTO_PLACE_CONTAINER );
+					document.body.appendChild( autoPlaceContainer );
+					autoPlaceVirgin = false;
+				
+	}
+				autoPlaceContainer.appendChild( this.domElement );
+				dom.addClass( this.domElement, GUI.CLASS_AUTO_PLACE );
+			
+	}
+			if ( ! this.parent ) {
+
+				setWidth( _this, params.width );
+			
+	}
+		
+	}
+		this.__resizeHandler = function () {
+
+			_this.onResizeDebounced();
+		
+	};
+		dom.bind( window, 'resize', this.__resizeHandler );
+		dom.bind( this.__ul, 'webkitTransitionEnd', this.__resizeHandler );
+		dom.bind( this.__ul, 'transitionend', this.__resizeHandler );
+		dom.bind( this.__ul, 'oTransitionEnd', this.__resizeHandler );
+		this.onResize();
+		if ( params.resizable ) {
+
+			addResizeHandle( this );
+		
+	}
+		saveToLocalStorage = function saveToLocalStorage() {
+
+			if ( SUPPORTS_LOCAL_STORAGE && localStorage.getItem( getLocalStorageHash( _this, 'isLocal' ) ) === 'true' ) {
+
+				localStorage.setItem( getLocalStorageHash( _this, 'gui' ), JSON.stringify( _this.getSaveObject() ) );
+			
+	}
+		
+	};
+		this.saveToLocalStorageIfPossible = saveToLocalStorage;
+		function resetWidth() {
+
+			var root = _this.getRoot();
+			root.width += 1;
+			Common.defer( function () {
+
+				root.width -= 1;
+			
+	} );
+		
+	}
+		if ( ! params.parent ) {
+
+			resetWidth();
+		
+	}
+
+	};
+	GUI.toggleHide = function () {
+
+		hide = ! hide;
+		Common.each( hideableGuis, function ( gui ) {
+
+			gui.domElement.style.display = hide ? 'none' : '';
+		
+	} );
+
+	};
+	GUI.CLASS_AUTO_PLACE = 'a';
+	GUI.CLASS_AUTO_PLACE_CONTAINER = 'ac';
+	GUI.CLASS_MAIN = 'main';
+	GUI.CLASS_CONTROLLER_ROW = 'cr';
+	GUI.CLASS_TOO_TALL = 'taller-than-window';
+	GUI.CLASS_CLOSED = 'closed';
+	GUI.CLASS_CLOSE_BUTTON = 'close-button';
+	GUI.CLASS_CLOSE_TOP = 'close-top';
+	GUI.CLASS_CLOSE_BOTTOM = 'close-bottom';
+	GUI.CLASS_DRAG = 'drag';
+	GUI.DEFAULT_WIDTH = 245;
+	GUI.TEXT_CLOSED = 'Close Controls';
+	GUI.TEXT_OPEN = 'Open Controls';
+	GUI._keydownHandler = function ( e ) {
+
+		if ( document.activeElement.type !== 'text' && ( e.which === HIDE_KEY_CODE || e.keyCode === HIDE_KEY_CODE ) ) {
+
+			GUI.toggleHide();
+		
+	}
+
+	};
+	dom.bind( window, 'keydown', GUI._keydownHandler, false );
+	Common.extend( GUI.prototype,
+		{
+			add: function add( object, property ) {
+
+				return _add( this, object, property, {
+					factoryArgs: Array.prototype.slice.call( arguments, 2 )
+				} );
+			
+	},
+			addColor: function addColor( object, property ) {
+
+				return _add( this, object, property, {
+					color: true
+				} );
+			
+	},
+			remove: function remove( controller ) {
+
+				this.__ul.removeChild( controller.__li );
+				this.__controllers.splice( this.__controllers.indexOf( controller ), 1 );
+				var _this = this;
+				Common.defer( function () {
+
+					_this.onResize();
+				
+	} );
+			
+	},
+			destroy: function destroy() {
+
+				if ( this.parent ) {
+
+					throw new Error( 'Only the root GUI should be removed with .destroy(). ' + 'For subfolders, use gui.removeFolder(folder) instead.' );
+				
+	}
+				if ( this.autoPlace ) {
+
+					autoPlaceContainer.removeChild( this.domElement );
+				
+	}
+				var _this = this;
+				Common.each( this.__folders, function ( subfolder ) {
+
+					_this.removeFolder( subfolder );
+				
+	} );
+				dom.unbind( window, 'keydown', GUI._keydownHandler, false );
+				removeListeners( this );
+			
+	},
+			addFolder: function addFolder( name ) {
+
+				if ( this.__folders[ name ] !== undefined ) {
+
+					throw new Error( 'You already have a folder in this GUI by the' + ' name "' + name + '"' );
+				
+	}
+				var newGuiParams = { name: name, parent: this };
+				newGuiParams.autoPlace = this.autoPlace;
+				if ( this.load &&
+	      this.load.folders &&
+	      this.load.folders[ name ] ) {
+
+					newGuiParams.closed = this.load.folders[ name ].closed;
+					newGuiParams.load = this.load.folders[ name ];
+				
+	}
+				var gui = new GUI( newGuiParams );
+				this.__folders[ name ] = gui;
+				var li = addRow( this, gui.domElement );
+				dom.addClass( li, 'folder' );
+				return gui;
+			
+	},
+			removeFolder: function removeFolder( folder ) {
+
+				this.__ul.removeChild( folder.domElement.parentElement );
+				delete this.__folders[ folder.name ];
+				if ( this.load &&
+	      this.load.folders &&
+	      this.load.folders[ folder.name ] ) {
+
+					delete this.load.folders[ folder.name ];
+				
+	}
+				removeListeners( folder );
+				var _this = this;
+				Common.each( folder.__folders, function ( subfolder ) {
+
+					folder.removeFolder( subfolder );
+				
+	} );
+				Common.defer( function () {
+
+					_this.onResize();
+				
+	} );
+			
+	},
+			open: function open() {
+
+				this.closed = false;
+			
+	},
+			close: function close() {
+
+				this.closed = true;
+			
+	},
+			onResize: function onResize() {
+
+				var root = this.getRoot();
+				if ( root.scrollable ) {
+
+					var top = dom.getOffset( root.__ul ).top;
+					var h = 0;
+					Common.each( root.__ul.childNodes, function ( node ) {
+
+						if ( ! ( root.autoPlace && node === root.__save_row ) ) {
+
+							h += dom.getHeight( node );
+						
+	}
+					
+	} );
+					if ( window.innerHeight - top - CLOSE_BUTTON_HEIGHT < h ) {
+
+						dom.addClass( root.domElement, GUI.CLASS_TOO_TALL );
+						root.__ul.style.height = window.innerHeight - top - CLOSE_BUTTON_HEIGHT + 'px';
+					
+	} else {
+
+						dom.removeClass( root.domElement, GUI.CLASS_TOO_TALL );
+						root.__ul.style.height = 'auto';
+					
+	}
+				
+	}
+				if ( root.__resize_handle ) {
+
+					Common.defer( function () {
+
+						root.__resize_handle.style.height = root.__ul.offsetHeight + 'px';
+					
+	} );
+				
+	}
+				if ( root.__closeButton ) {
+
+					root.__closeButton.style.width = root.width + 'px';
+				
+	}
+			
+	},
+			onResizeDebounced: Common.debounce( function () {
+
+				this.onResize();
+			
+	}, 50 ),
+			remember: function remember() {
+
+				if ( Common.isUndefined( SAVE_DIALOGUE ) ) {
+
+					SAVE_DIALOGUE = new CenteredDiv();
+					SAVE_DIALOGUE.domElement.innerHTML = saveDialogContents;
+				
+	}
+				if ( this.parent ) {
+
+					throw new Error( 'You can only call remember on a top level GUI.' );
+				
+	}
+				var _this = this;
+				Common.each( Array.prototype.slice.call( arguments ), function ( object ) {
+
+					if ( _this.__rememberedObjects.length === 0 ) {
+
+						addSaveMenu( _this );
+					
+	}
+					if ( _this.__rememberedObjects.indexOf( object ) === - 1 ) {
+
+						_this.__rememberedObjects.push( object );
+					
+	}
+				
+	} );
+				if ( this.autoPlace ) {
+
+					setWidth( this, this.width );
+				
+	}
+			
+	},
+			getRoot: function getRoot() {
+
+				var gui = this;
+				while ( gui.parent ) {
+
+					gui = gui.parent;
+				
+	}
+				return gui;
+			
+	},
+			getSaveObject: function getSaveObject() {
+
+				var toReturn = this.load;
+				toReturn.closed = this.closed;
+				if ( this.__rememberedObjects.length > 0 ) {
+
+					toReturn.preset = this.preset;
+					if ( ! toReturn.remembered ) {
+
+						toReturn.remembered = {};
+					
+	}
+					toReturn.remembered[ this.preset ] = getCurrentPreset( this );
+				
+	}
+				toReturn.folders = {};
+				Common.each( this.__folders, function ( element, key ) {
+
+					toReturn.folders[ key ] = element.getSaveObject();
+				
+	} );
+				return toReturn;
+			
+	},
+			save: function save() {
+
+				if ( ! this.load.remembered ) {
+
+					this.load.remembered = {};
+				
+	}
+				this.load.remembered[ this.preset ] = getCurrentPreset( this );
+				markPresetModified( this, false );
+				this.saveToLocalStorageIfPossible();
+			
+	},
+			saveAs: function saveAs( presetName ) {
+
+				if ( ! this.load.remembered ) {
+
+					this.load.remembered = {};
+					this.load.remembered[ DEFAULT_DEFAULT_PRESET_NAME ] = getCurrentPreset( this, true );
+				
+	}
+				this.load.remembered[ presetName ] = getCurrentPreset( this );
+				this.preset = presetName;
+				addPresetOption( this, presetName, true );
+				this.saveToLocalStorageIfPossible();
+			
+	},
+			revert: function revert( gui ) {
+
+				Common.each( this.__controllers, function ( controller ) {
+
+					if ( ! this.getRoot().load.remembered ) {
+
+						controller.setValue( controller.initialValue );
+					
+	} else {
+
+						recallSavedValue( gui || this.getRoot(), controller );
+					
+	}
+					if ( controller.__onFinishChange ) {
+
+						controller.__onFinishChange.call( controller, controller.getValue() );
+					
+	}
+				
+	}, this );
+				Common.each( this.__folders, function ( folder ) {
+
+					folder.revert( folder );
+				
+	} );
+				if ( ! gui ) {
+
+					markPresetModified( this.getRoot(), false );
+				
+	}
+			
+	},
+			listen: function listen( controller ) {
+
+				var init = this.__listening.length === 0;
+				this.__listening.push( controller );
+				if ( init ) {
+
+					updateDisplays( this.__listening );
+				
+	}
+			
+	},
+			updateDisplay: function updateDisplay() {
+
+				Common.each( this.__controllers, function ( controller ) {
+
+					controller.updateDisplay();
+				
+	} );
+				Common.each( this.__folders, function ( folder ) {
+
+					folder.updateDisplay();
+				
+	} );
+			
+	}
+		} );
+	function addRow( gui, newDom, liBefore ) {
+
+		var li = document.createElement( 'li' );
+		if ( newDom ) {
+
+			li.appendChild( newDom );
+		
+	}
+		if ( liBefore ) {
+
+			gui.__ul.insertBefore( li, liBefore );
+		
+	} else {
+
+			gui.__ul.appendChild( li );
+		
+	}
+		gui.onResize();
+		return li;
+
+	}
+	function removeListeners( gui ) {
+
+		dom.unbind( window, 'resize', gui.__resizeHandler );
+		if ( gui.saveToLocalStorageIfPossible ) {
+
+			dom.unbind( window, 'unload', gui.saveToLocalStorageIfPossible );
+		
+	}
+
+	}
+	function markPresetModified( gui, modified ) {
+
+		var opt = gui.__preset_select[ gui.__preset_select.selectedIndex ];
+		if ( modified ) {
+
+			opt.innerHTML = opt.value + '*';
+		
+	} else {
+
+			opt.innerHTML = opt.value;
+		
+	}
+
+	}
+	function augmentController( gui, li, controller ) {
+
+		controller.__li = li;
+		controller.__gui = gui;
+		Common.extend( controller, {
+			options: function options( _options ) {
+
+				if ( arguments.length > 1 ) {
+
+					var nextSibling = controller.__li.nextElementSibling;
+					controller.remove();
+					return _add( gui, controller.object, controller.property, {
+						before: nextSibling,
+						factoryArgs: [ Common.toArray( arguments ) ]
+					} );
+				
+	}
+				if ( Common.isArray( _options ) || Common.isObject( _options ) ) {
+
+					var _nextSibling = controller.__li.nextElementSibling;
+					controller.remove();
+					return _add( gui, controller.object, controller.property, {
+						before: _nextSibling,
+						factoryArgs: [ _options ]
+					} );
+				
+	}
+			
+	},
+			name: function name( _name ) {
+
+				controller.__li.firstElementChild.firstElementChild.innerHTML = _name;
+				return controller;
+			
+	},
+			listen: function listen() {
+
+				controller.__gui.listen( controller );
+				return controller;
+			
+	},
+			remove: function remove() {
+
+				controller.__gui.remove( controller );
+				return controller;
+			
+	}
+		} );
+		if ( controller instanceof NumberControllerSlider ) {
+
+			var box = new NumberControllerBox( controller.object, controller.property, { min: controller.__min, max: controller.__max, step: controller.__step } );
+			Common.each( [ 'updateDisplay', 'onChange', 'onFinishChange', 'step' ], function ( method ) {
+
+				var pc = controller[ method ];
+				var pb = box[ method ];
+				controller[ method ] = box[ method ] = function () {
+
+					var args = Array.prototype.slice.call( arguments );
+					pb.apply( box, args );
+					return pc.apply( controller, args );
+				
+	};
+			
+	} );
+			dom.addClass( li, 'has-slider' );
+			controller.domElement.insertBefore( box.domElement, controller.domElement.firstElementChild );
+		
+	} else if ( controller instanceof NumberControllerBox ) {
+
+			var r = function r( returned ) {
+
+				if ( Common.isNumber( controller.__min ) && Common.isNumber( controller.__max ) ) {
+
+					var oldName = controller.__li.firstElementChild.firstElementChild.innerHTML;
+					var wasListening = controller.__gui.__listening.indexOf( controller ) > - 1;
+					controller.remove();
+					var newController = _add( gui, controller.object, controller.property, {
+						before: controller.__li.nextElementSibling,
+						factoryArgs: [ controller.__min, controller.__max, controller.__step ]
+					} );
+					newController.name( oldName );
+					if ( wasListening ) newController.listen();
+					return newController;
+				
+	}
+				return returned;
+			
+	};
+			controller.min = Common.compose( r, controller.min );
+			controller.max = Common.compose( r, controller.max );
+		
+	} else if ( controller instanceof BooleanController ) {
+
+			dom.bind( li, 'click', function () {
+
+				dom.fakeEvent( controller.__checkbox, 'click' );
+			
+	} );
+			dom.bind( controller.__checkbox, 'click', function ( e ) {
+
+				e.stopPropagation();
+			
+	} );
+		
+	} else if ( controller instanceof FunctionController ) {
+
+			dom.bind( li, 'click', function () {
+
+				dom.fakeEvent( controller.__button, 'click' );
+			
+	} );
+			dom.bind( li, 'mouseover', function () {
+
+				dom.addClass( controller.__button, 'hover' );
+			
+	} );
+			dom.bind( li, 'mouseout', function () {
+
+				dom.removeClass( controller.__button, 'hover' );
+			
+	} );
+		
+	} else if ( controller instanceof ColorController ) {
+
+			dom.addClass( li, 'color' );
+			controller.updateDisplay = Common.compose( function ( val ) {
+
+				li.style.borderLeftColor = controller.__color.toString();
+				return val;
+			
+	}, controller.updateDisplay );
+			controller.updateDisplay();
+		
+	}
+		controller.setValue = Common.compose( function ( val ) {
+
+			if ( gui.getRoot().__preset_select && controller.isModified() ) {
+
+				markPresetModified( gui.getRoot(), true );
+			
+	}
+			return val;
+		
+	}, controller.setValue );
+
+	}
+	function recallSavedValue( gui, controller ) {
+
+		var root = gui.getRoot();
+		var matchedIndex = root.__rememberedObjects.indexOf( controller.object );
+		if ( matchedIndex !== - 1 ) {
+
+			var controllerMap = root.__rememberedObjectIndecesToControllers[ matchedIndex ];
+			if ( controllerMap === undefined ) {
+
+				controllerMap = {};
+				root.__rememberedObjectIndecesToControllers[ matchedIndex ] = controllerMap;
+			
+	}
+			controllerMap[ controller.property ] = controller;
+			if ( root.load && root.load.remembered ) {
+
+				var presetMap = root.load.remembered;
+				var preset = void 0;
+				if ( presetMap[ gui.preset ] ) {
+
+					preset = presetMap[ gui.preset ];
+				
+	} else if ( presetMap[ DEFAULT_DEFAULT_PRESET_NAME ] ) {
+
+					preset = presetMap[ DEFAULT_DEFAULT_PRESET_NAME ];
+				
+	} else {
+
+					return;
+				
+	}
+				if ( preset[ matchedIndex ] && preset[ matchedIndex ][ controller.property ] !== undefined ) {
+
+					var value = preset[ matchedIndex ][ controller.property ];
+					controller.initialValue = value;
+					controller.setValue( value );
+				
+	}
+			
+	}
+		
+	}
+
+	}
+	function _add( gui, object, property, params ) {
+
+		if ( object[ property ] === undefined ) {
+
+			throw new Error( 'Object "' + object + '" has no property "' + property + '"' );
+		
+	}
+		var controller = void 0;
+		if ( params.color ) {
+
+			controller = new ColorController( object, property );
+		
+	} else {
+
+			var factoryArgs = [ object, property ].concat( params.factoryArgs );
+			controller = ControllerFactory.apply( gui, factoryArgs );
+		
+	}
+		if ( params.before instanceof Controller ) {
+
+			params.before = params.before.__li;
+		
+	}
+		recallSavedValue( gui, controller );
+		dom.addClass( controller.domElement, 'c' );
+		var name = document.createElement( 'span' );
+		dom.addClass( name, 'property-name' );
+		name.innerHTML = controller.property;
+		var container = document.createElement( 'div' );
+		container.appendChild( name );
+		container.appendChild( controller.domElement );
+		var li = addRow( gui, container, params.before );
+		dom.addClass( li, GUI.CLASS_CONTROLLER_ROW );
+		if ( controller instanceof ColorController ) {
+
+			dom.addClass( li, 'color' );
+		
+	} else {
+
+			dom.addClass( li, _typeof( controller.getValue() ) );
+		
+	}
+		augmentController( gui, li, controller );
+		gui.__controllers.push( controller );
+		return controller;
+
+	}
+	function getLocalStorageHash( gui, key ) {
+
+		return document.location.href + '.' + key;
+
+	}
+	function addPresetOption( gui, name, setSelected ) {
+
+		var opt = document.createElement( 'option' );
+		opt.innerHTML = name;
+		opt.value = name;
+		gui.__preset_select.appendChild( opt );
+		if ( setSelected ) {
+
+			gui.__preset_select.selectedIndex = gui.__preset_select.length - 1;
+		
+	}
+
+	}
+	function showHideExplain( gui, explain ) {
+
+		explain.style.display = gui.useLocalStorage ? 'block' : 'none';
+
+	}
+	function addSaveMenu( gui ) {
+
+		var div = gui.__save_row = document.createElement( 'li' );
+		dom.addClass( gui.domElement, 'has-save' );
+		gui.__ul.insertBefore( div, gui.__ul.firstChild );
+		dom.addClass( div, 'save-row' );
+		var gears = document.createElement( 'span' );
+		gears.innerHTML = '&nbsp;';
+		dom.addClass( gears, 'button gears' );
+		var button = document.createElement( 'span' );
+		button.innerHTML = 'Save';
+		dom.addClass( button, 'button' );
+		dom.addClass( button, 'save' );
+		var button2 = document.createElement( 'span' );
+		button2.innerHTML = 'New';
+		dom.addClass( button2, 'button' );
+		dom.addClass( button2, 'save-as' );
+		var button3 = document.createElement( 'span' );
+		button3.innerHTML = 'Revert';
+		dom.addClass( button3, 'button' );
+		dom.addClass( button3, 'revert' );
+		var select = gui.__preset_select = document.createElement( 'select' );
+		if ( gui.load && gui.load.remembered ) {
+
+			Common.each( gui.load.remembered, function ( value, key ) {
+
+				addPresetOption( gui, key, key === gui.preset );
+			
+	} );
+		
+	} else {
+
+			addPresetOption( gui, DEFAULT_DEFAULT_PRESET_NAME, false );
+		
+	}
+		dom.bind( select, 'change', function () {
+
+			for ( var index = 0; index < gui.__preset_select.length; index ++ ) {
+
+				gui.__preset_select[ index ].innerHTML = gui.__preset_select[ index ].value;
+			
+	}
+			gui.preset = this.value;
+		
+	} );
+		div.appendChild( select );
+		div.appendChild( gears );
+		div.appendChild( button );
+		div.appendChild( button2 );
+		div.appendChild( button3 );
+		if ( SUPPORTS_LOCAL_STORAGE ) {
+
+			var explain = document.getElementById( 'dg-local-explain' );
+			var localStorageCheckBox = document.getElementById( 'dg-local-storage' );
+			var saveLocally = document.getElementById( 'dg-save-locally' );
+			saveLocally.style.display = 'block';
+			if ( localStorage.getItem( getLocalStorageHash( gui, 'isLocal' ) ) === 'true' ) {
+
+				localStorageCheckBox.setAttribute( 'checked', 'checked' );
+			
+	}
+			showHideExplain( gui, explain );
+			dom.bind( localStorageCheckBox, 'change', function () {
+
+				gui.useLocalStorage = ! gui.useLocalStorage;
+				showHideExplain( gui, explain );
+			
+	} );
+		
+	}
+		var newConstructorTextArea = document.getElementById( 'dg-new-constructor' );
+		dom.bind( newConstructorTextArea, 'keydown', function ( e ) {
+
+			if ( e.metaKey && ( e.which === 67 || e.keyCode === 67 ) ) {
+
+				SAVE_DIALOGUE.hide();
+			
+	}
+		
+	} );
+		dom.bind( gears, 'click', function () {
+
+			newConstructorTextArea.innerHTML = JSON.stringify( gui.getSaveObject(), undefined, 2 );
+			SAVE_DIALOGUE.show();
+			newConstructorTextArea.focus();
+			newConstructorTextArea.select();
+		
+	} );
+		dom.bind( button, 'click', function () {
+
+			gui.save();
+		
+	} );
+		dom.bind( button2, 'click', function () {
+
+			var presetName = prompt( 'Enter a new preset name.' );
+			if ( presetName ) {
+
+				gui.saveAs( presetName );
+			
+	}
+		
+	} );
+		dom.bind( button3, 'click', function () {
+
+			gui.revert();
+		
+	} );
+
+	}
+	function addResizeHandle( gui ) {
+
+		var pmouseX = void 0;
+		gui.__resize_handle = document.createElement( 'div' );
+		Common.extend( gui.__resize_handle.style, {
+			width: '6px',
+			marginLeft: '-3px',
+			height: '200px',
+			cursor: 'ew-resize',
+			position: 'absolute'
+		} );
+		function drag( e ) {
+
+			e.preventDefault();
+			gui.width += pmouseX - e.clientX;
+			gui.onResize();
+			pmouseX = e.clientX;
+			return false;
+		
+	}
+		function dragStop() {
+
+			dom.removeClass( gui.__closeButton, GUI.CLASS_DRAG );
+			dom.unbind( window, 'mousemove', drag );
+			dom.unbind( window, 'mouseup', dragStop );
+		
+	}
+		function dragStart( e ) {
+
+			e.preventDefault();
+			pmouseX = e.clientX;
+			dom.addClass( gui.__closeButton, GUI.CLASS_DRAG );
+			dom.bind( window, 'mousemove', drag );
+			dom.bind( window, 'mouseup', dragStop );
+			return false;
+		
+	}
+		dom.bind( gui.__resize_handle, 'mousedown', dragStart );
+		dom.bind( gui.__closeButton, 'mousedown', dragStart );
+		gui.domElement.insertBefore( gui.__resize_handle, gui.domElement.firstElementChild );
+
+	}
+	function setWidth( gui, w ) {
+
+		gui.domElement.style.width = w + 'px';
+		if ( gui.__save_row && gui.autoPlace ) {
+
+			gui.__save_row.style.width = w + 'px';
+		
+	}
+		if ( gui.__closeButton ) {
+
+			gui.__closeButton.style.width = w + 'px';
+		
+	}
+
+	}
+	function getCurrentPreset( gui, useInitialValues ) {
+
+		var toReturn = {};
+		Common.each( gui.__rememberedObjects, function ( val, index ) {
+
+			var savedValues = {};
+			var controllerMap = gui.__rememberedObjectIndecesToControllers[ index ];
+			Common.each( controllerMap, function ( controller, property ) {
+
+				savedValues[ property ] = useInitialValues ? controller.initialValue : controller.getValue();
+			
+	} );
+			toReturn[ index ] = savedValues;
+		
+	} );
+		return toReturn;
+
+	}
+	function setPresetSelectIndex( gui ) {
+
+		for ( var index = 0; index < gui.__preset_select.length; index ++ ) {
+
+			if ( gui.__preset_select[ index ].value === gui.preset ) {
+
+				gui.__preset_select.selectedIndex = index;
+			
+	}
+		
+	}
+
+	}
+	function updateDisplays( controllerArray ) {
+
+		if ( controllerArray.length !== 0 ) {
+
+			requestAnimationFrame$1$1.call( window, function () {
+
+				updateDisplays( controllerArray );
+			
+	} );
+		
+	}
+		Common.each( controllerArray, function ( c ) {
+
+			c.updateDisplay();
+		
+	} );
+
+	}
+	var GUI$1 = GUI;
+
+	/**
 	 * @author Mugen87 / https://github.com/Mugen87
 	 */
 
@@ -50546,53 +67531,235 @@
 
 		constructor() {
 
-			this.entityManager = null;
-			this.time = null;
+			this.entityManager = new EntityManager();
+			this.time = new Time();
+
+			this.assetManager = new AssetManager();
+
+			//
 
 			this.renderer = null;
 			this.camera = null;
 			this.scene = null;
+			this.orbitControls = null;
 
-			this.animate = animate.bind( this );
-			this.onWindowResize = onWindowResize.bind( this );
+			//
+
+			this._animate = animate.bind( this );
+			this._onWindowResize = onWindowResize.bind( this );
+
+			//
+
+			this.debug = true;
+
+			this.helpers = {
+				convexRegionHelper: null,
+				axesHelper: null
+			};
+
+			this.uiParameter = {
+				showRegions: true,
+				showAxes: true
+			};
 
 		}
 
 		init() {
 
-			// game setup
+			this.assetManager.init().then( () => {
 
-			this.entityManager = new EntityManager();
-			this.time = new Time();
+				this._initScene();
+				this._initEnemies();
+				this._initGround();
+				this._initNavMesh();
+				this._initControls();
+				this._initUI();
 
-			const entity = new GameEntity();
+				this._animate();
+
+			} );
+
+		}
+
+		add( entity ) {
+
 			this.entityManager.add( entity );
 
-			// 3D
+			if ( entity._renderComponent !== null ) {
+
+				this.scene.add( entity._renderComponent );
+
+			}
+
+		}
+
+		remove( entity ) {
+
+			this.entityManager.remove( entity );
+
+			if ( entity._renderComponent !== null ) {
+
+				this.scene.remove( entity._renderComponent );
+
+			}
+
+		}
+
+		_initScene() {
+
+			// scene
 
 			this.scene = new Scene();
+			this.scene.background = new Color( 0xffffff );
+
+			// camera
 
 			this.camera = new PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.1, 1000 );
 			this.camera.position.set( 0, 10, 15 );
+			this.camera.add( this.assetManager.listener );
 			this.camera.lookAt( this.scene.position );
 
-			const grid = new GridHelper( 10, 25 );
-			this.scene.add( grid );
+			// helpers
+
+			if ( this.debug ) {
+
+				this.helpers.axesHelper = new AxesHelper( 5 );
+				this.scene.add( this.helpers.axesHelper );
+
+			}
+
+			// lights
+
+			const hemiLight = new HemisphereLight( 0xffffff, 0x444444, 0.4 );
+			hemiLight.position.set( 0, 100, 0 );
+			this.scene.add( hemiLight );
+
+			const dirLight = new DirectionalLight( 0xffffff, 0.8 );
+			dirLight.position.set( 5, 7.5, 0 );
+			this.scene.add( dirLight );
+
+			// renderer
 
 			this.renderer = new WebGLRenderer( { antialias: true } );
-			this.renderer.setPixelRatio( window.devicePixelRatio );
 			this.renderer.setSize( window.innerWidth, window.innerHeight );
+			this.renderer.shadowMap.enabled = true;
+			this.renderer.gammaOutput = true;
+			this.renderer.gammaFactor = 2.2;
 			document.body.appendChild( this.renderer.domElement );
 
-			window.addEventListener( 'resize', this.onWindowResize, false );
+			// event listeners
 
-			this.animate();
+			window.addEventListener( 'resize', this._onWindowResize, false );
+
+		}
+
+		_initEnemies() {
+
+			const navMesh = this.assetManager.navMesh;
+			const renderComponent = this.assetManager.models.get( 'soldier' );
+			const mixer = new AnimationMixer( renderComponent );
+
+			const enemy = new Enemy( navMesh, mixer );
+			enemy.setRenderComponent( renderComponent, sync );
+
+			//
+
+			const idleClip = this.assetManager.animations.get( 'soldier_Idle' );
+			const idleAction = mixer.clipAction( idleClip );
+			idleAction.play();
+			idleAction.enabled = false;
+
+			enemy.animations.set( 'idle', idleAction );
+
+			//
+
+			const runClip = this.assetManager.animations.get( 'soldier_Run' );
+			const runAction = mixer.clipAction( runClip );
+			runAction.play();
+			runAction.enabled = false;
+
+			enemy.animations.set( 'run', runAction );
+
+			//
+
+			this.add( enemy );
+
+		}
+
+		_initGround() {
+
+			const renderComponent = this.assetManager.models.get( 'ground' );
+
+			const ground = new GameEntity();
+			ground.setRenderComponent( renderComponent, sync );
+
+			this.add( ground );
+
+		}
+
+		_initNavMesh() {
+
+			const navMesh = this.assetManager.navMesh;
+
+			if ( this.debug ) {
+
+				this.helpers.convexRegionHelper = NavMeshUtils.createConvexRegionHelper( navMesh );
+				this.scene.add( this.helpers.convexRegionHelper );
+
+			}
+
+		}
+
+		_initControls() {
+
+			if ( this.debug ) {
+
+				this.orbitControls = new OrbitControls( this.camera, this.renderer.domElement );
+
+			}
+
+		}
+
+		_initUI() {
+
+			if ( this.debug ) {
+
+				const gui$$1 = new GUI$1();
+				const params = this.uiParameter;
+
+				const folderNavMesh = gui$$1.addFolder( 'Navigation Mesh' );
+				folderNavMesh.open();
+
+				folderNavMesh.add( params, 'showRegions' ).name( 'show convex regions' ).onChange( ( value ) => {
+
+					this.helpers.convexRegionHelper.visible = value;
+
+				} );
+
+				const folderScene = gui$$1.addFolder( 'Scene' );
+				folderScene.open();
+
+				folderScene.add( params, 'showAxes' ).name( 'show axes helper' ).onChange( ( value ) => {
+
+					this.helpers.axesHelper.visible = value;
+
+				} );
+
+				gui$$1.open();
+
+			}
 
 		}
 
 	}
 
 	//
+
+	function sync( entity, renderComponent ) {
+
+		renderComponent.matrix.copy( entity.worldMatrix );
+
+	}
 
 	function onWindowResize() {
 
@@ -50605,7 +67772,7 @@
 
 	function animate() {
 
-		requestAnimationFrame( this.animate );
+		requestAnimationFrame( this._animate );
 
 		this.time.update();
 
