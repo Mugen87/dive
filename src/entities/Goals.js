@@ -23,7 +23,6 @@ class ExploreGoal extends CompositeGoal {
 
 		this.addSubgoal( new FindNextDestinationGoal( owner ) );
 		this.addSubgoal( new SeekToDestinationGoal( owner ) );
-		this.addSubgoal( new CompleteGoal( owner ) );
 
 	}
 
@@ -64,7 +63,6 @@ class FindNextDestinationGoal extends Goal {
 
 	execute() {
 
-		//???
 		this.status = Goal.STATUS.COMPLETED;
 
 	}
@@ -131,7 +129,7 @@ class SeekToDestinationGoal extends Goal {
 
 		const squaredDistance = owner.position.squaredDistanceTo( to );
 
-		if ( squaredDistance < 0.25 ) {
+		if ( squaredDistance < 1 ) {
 
 			this.status = Goal.STATUS.COMPLETED;
 
@@ -146,24 +144,6 @@ class SeekToDestinationGoal extends Goal {
 		const followPathBehavior = owner.steering.behaviors[ 0 ];
 		followPathBehavior.active = false;
 		this.owner.velocity.set( 0, 0, 0 );
-
-	}
-
-}
-
-//
-
-class CompleteGoal extends Goal {
-
-	constructor( owner ) {
-
-		super( owner );
-
-	}
-
-	execute() {
-
-		this.status = Goal.STATUS.COMPLETED;
 
 	}
 

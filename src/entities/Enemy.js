@@ -2,7 +2,7 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { Vehicle, Think, FollowPathBehavior } from '../lib/yuka.module.js';
+import { Vehicle, Regulator, Think, FollowPathBehavior } from '../lib/yuka.module.js';
 import { ExploreEvaluator } from './Evaluators.js';
 
 class Enemy extends Vehicle {
@@ -25,13 +25,16 @@ class Enemy extends Vehicle {
 		// goal-driven agent design
 
 		this.brain = new Think( this );
-
 		this.brain.addEvaluator( new ExploreEvaluator() );
+
+		this.goalArbitrationRegulator = new Regulator( 5 ); // five updates per second
+
+		// steering
 
 		const followPath = new FollowPathBehavior();
 		followPath.active = false;
-		followPath._arrive.deceleration = 1;
-		followPath._arrive.tolerance = 2;
+		followPath.nextWaypointDistance = 2;
+		followPath._arrive.deceleration = 2;
 		this.steering.add( followPath );
 
 	}
@@ -52,9 +55,20 @@ class Enemy extends Vehicle {
 
 		this.currentTime += delta;
 
+		// update goals
+
 		this.brain.execute();
 
-		this.brain.arbitrate();
+		if ( this.goalArbitrationRegulator.ready() ) {
+
+			this.brain.arbitrate();
+
+		}
+
+		// update animations
+
+		const run = this.animations.get( 'run' );
+		run.timeScale = Math.min( 0.75, this.getSpeed() / this.maxSpeed );
 
 		this.mixer.update( delta );
 

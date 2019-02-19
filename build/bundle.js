@@ -7713,6 +7713,57 @@
 	}
 
 	/**
+	* Not all components of an AI system need to be updated in each simulation step.
+	* This class can be used to control the update process by defining how many updates
+	* should be executed per second.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class Regulator {
+
+		/**
+		* Constructs a new regulator.
+		*
+		* @param {Number} updateFrequency - The amount of updates per second.
+		*/
+		constructor( updateFrequency = 0 ) {
+
+			/**
+			* The amount of updates per second.
+			* @type Number
+			* @default 0
+			*/
+			this.updateFrequency = updateFrequency;
+
+			this._time = new Time();
+			this._nextUpdateTime = 0;
+
+		}
+
+		/**
+		* Returns true if it is time to allow the next update.
+		*
+		* @return {Boolean} Whether an update is allowed or not.
+		*/
+		ready() {
+
+			this._time.update();
+
+			if ( this._time.currentTime >= this._nextUpdateTime ) {
+
+				this._nextUpdateTime = this._time.currentTime + ( 1000 / this.updateFrequency );
+
+				return true;
+
+			}
+
+			return false;
+
+		}
+
+	}
+
+	/**
 	* Base class for representing a term in a {@link FuzzyRule}.
 	*
 	* @author {@link https://github.com/Mugen87|Mugen87}
@@ -64634,7 +64685,6 @@
 
 			this.addSubgoal( new FindNextDestinationGoal( owner ) );
 			this.addSubgoal( new SeekToDestinationGoal( owner ) );
-			this.addSubgoal( new CompleteGoal( owner ) );
 
 		}
 
@@ -64675,7 +64725,6 @@
 
 		execute() {
 
-			//???
 			this.status = Goal.STATUS.COMPLETED;
 
 		}
@@ -64742,7 +64791,7 @@
 
 			const squaredDistance = owner.position.squaredDistanceTo( to );
 
-			if ( squaredDistance < 0.25 ) {
+			if ( squaredDistance < 1 ) {
 
 				this.status = Goal.STATUS.COMPLETED;
 
@@ -64757,24 +64806,6 @@
 			const followPathBehavior = owner.steering.behaviors[ 0 ];
 			followPathBehavior.active = false;
 			this.owner.velocity.set( 0, 0, 0 );
-
-		}
-
-	}
-
-	//
-
-	class CompleteGoal extends Goal {
-
-		constructor( owner ) {
-
-			super( owner );
-
-		}
-
-		execute() {
-
-			this.status = Goal.STATUS.COMPLETED;
 
 		}
 
@@ -64832,13 +64863,16 @@
 			// goal-driven agent design
 
 			this.brain = new Think( this );
-
 			this.brain.addEvaluator( new ExploreEvaluator() );
+
+			this.goalArbitrationRegulator = new Regulator( 5 ); // five updates per second
+
+			// steering
 
 			const followPath = new FollowPathBehavior();
 			followPath.active = false;
-			followPath._arrive.deceleration = 1;
-			followPath._arrive.tolerance = 2;
+			followPath.nextWaypointDistance = 2;
+			followPath._arrive.deceleration = 2;
 			this.steering.add( followPath );
 
 		}
@@ -64859,9 +64893,20 @@
 
 			this.currentTime += delta;
 
+			// update goals
+
 			this.brain.execute();
 
-			this.brain.arbitrate();
+			if ( this.goalArbitrationRegulator.ready() ) {
+
+				this.brain.arbitrate();
+
+			}
+
+			// update animations
+
+			const run = this.animations.get( 'run' );
+			run.timeScale = Math.min( 0.75, this.getSpeed() / this.maxSpeed );
 
 			this.mixer.update( delta );
 
