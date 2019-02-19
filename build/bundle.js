@@ -64472,7 +64472,6 @@
 	/**
 	 * @author Mugen87 / https://github.com/Mugen87
 	 */
-	const pathMaterial = new LineBasicMaterial( { color: 0xff0000 } );
 
 	class NavMeshUtils {
 
@@ -64484,6 +64483,7 @@
 			const material = new MeshBasicMaterial( { vertexColors: VertexColors, depthWrite: false, polygonOffset: true, polygonOffsetFactor: - 4 } );
 
 			const mesh = new Mesh( geometry, material );
+			mesh.renderOrder = 1;
 
 			const positions = [];
 			const colors = [];
@@ -64540,7 +64540,8 @@
 
 		static createPathHelper( visible ) {
 
-			const pathHelper = new Line( new BufferGeometry(), pathMaterial );
+			const pathHelper = new Line( new BufferGeometry(), new LineBasicMaterial( { color: 0xff0000 } ) );
+			pathHelper.renderOrder = 2;
 			pathHelper.visible = visible;
 			return pathHelper;
 
@@ -68420,7 +68421,7 @@
 
 			//
 
-			this.enemyCount = 3;
+			this.enemyCount = 1;
 
 			//
 
