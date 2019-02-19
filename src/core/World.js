@@ -69,7 +69,6 @@ class World {
 			this._initEnemies();
 			this._initGround();
 			this._initNavMesh();
-			this._initPathHelpers();
 			this._initControls();
 			this._initUI();
 
@@ -161,7 +160,7 @@ class World {
 			const renderComponent = SceneUtils.cloneWithSkinning( this.assetManager.models.get( 'soldier' ) );
 			const mixer = new AnimationMixer( renderComponent );
 
-			const enemy = new Enemy( navMesh, mixer );
+			const enemy = new Enemy( navMesh, mixer, this );
 			enemy.setRenderComponent( renderComponent, sync );
 
 			//
@@ -214,20 +213,14 @@ class World {
 			this.helpers.convexRegionHelper = NavMeshUtils.createConvexRegionHelper( navMesh );
 			this.scene.add( this.helpers.convexRegionHelper );
 
-		}
-
-	}
-
-	_initPathHelpers() {
-
-		if ( this.debug ) {
+			//
 
 			this.helpers.pathHelpers = new Array();
 			NavMeshUtils.pathHelpers = this.helpers.pathHelpers;
 
 			for ( let i = 0; i < this.enemyCount; i ++ ) {
 
-				const pathHelper = NavMeshUtils.createPathHelper( this.uiParameter.showPaths );
+				const pathHelper = NavMeshUtils.createPathHelper();
 				this.scene.add( pathHelper );
 				this.helpers.pathHelpers.push( pathHelper );
 

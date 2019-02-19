@@ -64538,21 +64538,12 @@
 
 		}
 
-		static createPathHelper( visible ) {
+		static createPathHelper( ) {
 
 			const pathHelper = new Line( new BufferGeometry(), new LineBasicMaterial( { color: 0xff0000 } ) );
 			pathHelper.renderOrder = 2;
-			pathHelper.visible = visible;
+			pathHelper.visible = false;
 			return pathHelper;
-
-		}
-
-		static updatePathHelper( path, index ) {
-
-			const pathHelper = NavMeshUtils.pathHelpers[ index ];
-
-			pathHelper.geometry.dispose();
-			pathHelper.geometry = new BufferGeometry().setFromPoints( path );
 
 		}
 
@@ -64627,7 +64618,7 @@
 
 	const from = new Vector3();
 	const to = new Vector3();
-	let path = null;
+
 
 	class ExploreGoal extends CompositeGoal {
 
@@ -64678,7 +64669,7 @@
 			from.copy( owner.position );
 			to.copy( owner.navMesh.getRandomRegion().centroid );
 
-			path = navMesh.findPath( from, to );
+			owner.path = navMesh.findPath( from, to );
 
 		}
 
@@ -64703,16 +64694,27 @@
 
 		activate() {
 
+
+
+
 			const owner = this.owner;
 
 			//
 
-			if ( path !== null ) {
+			if ( owner.path !== null ) {
 
 				// update path helper
+				if ( owner.world.debug ) {
 
-				const index = owner.index;
-				NavMeshUtils.updatePathHelper( path, index );
+					const index = owner.index;
+					const pathHelper = owner.world.helpers.pathHelpers[ index ];
+
+					pathHelper.geometry.dispose();
+					pathHelper.geometry = new BufferGeometry().setFromPoints( owner.path );
+					pathHelper.visible = owner.world.uiParameter.showPaths;
+
+				}
+
 
 				// update path and steering
 
@@ -64720,7 +64722,7 @@
 				followPathBehavior.active = true;
 				followPathBehavior.path.clear();
 
-				for ( const point of path ) {
+				for ( const point of owner.path ) {
 
 					followPathBehavior.path.add( point );
 
@@ -64812,7 +64814,7 @@
 
 	class Enemy extends Vehicle {
 
-		constructor( navMesh, mixer ) {
+		constructor( navMesh, mixer, world ) {
 
 			super();
 
@@ -64824,6 +64826,8 @@
 			this.mixer = mixer;
 			this.animations = new Map();
 			this.index = - 1;
+			this.path = null;
+			this.world = world;
 
 			// goal-driven agent design
 
@@ -64833,6 +64837,8 @@
 
 			const followPath = new FollowPathBehavior();
 			followPath.active = false;
+			followPath._arrive.deceleration = 1;
+			followPath._arrive.tolerance = 2;
 			this.steering.add( followPath );
 
 		}
@@ -68456,7 +68462,6 @@
 				this._initEnemies();
 				this._initGround();
 				this._initNavMesh();
-				this._initPathHelpers();
 				this._initControls();
 				this._initUI();
 
@@ -68548,7 +68553,7 @@
 				const renderComponent = SceneUtils$1.cloneWithSkinning( this.assetManager.models.get( 'soldier' ) );
 				const mixer = new AnimationMixer( renderComponent );
 
-				const enemy = new Enemy( navMesh, mixer );
+				const enemy = new Enemy( navMesh, mixer, this );
 				enemy.setRenderComponent( renderComponent, sync );
 
 				//
@@ -68601,20 +68606,14 @@
 				this.helpers.convexRegionHelper = NavMeshUtils.createConvexRegionHelper( navMesh );
 				this.scene.add( this.helpers.convexRegionHelper );
 
-			}
-
-		}
-
-		_initPathHelpers() {
-
-			if ( this.debug ) {
+				//
 
 				this.helpers.pathHelpers = new Array();
 				NavMeshUtils.pathHelpers = this.helpers.pathHelpers;
 
 				for ( let i = 0; i < this.enemyCount; i ++ ) {
 
-					const pathHelper = NavMeshUtils.createPathHelper( this.uiParameter.showPaths );
+					const pathHelper = NavMeshUtils.createPathHelper();
 					this.scene.add( pathHelper );
 					this.helpers.pathHelpers.push( pathHelper );
 

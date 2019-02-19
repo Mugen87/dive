@@ -3,11 +3,11 @@
  */
 
 import { Goal, CompositeGoal, Vector3 } from '../lib/yuka.module.js';
-import { NavMeshUtils } from '../etc/NavMeshUtils.js';
+import { BufferGeometry } from '../lib/three.module.js';
 
 const from = new Vector3();
 const to = new Vector3();
-let path = null;
+
 
 class ExploreGoal extends CompositeGoal {
 
@@ -58,7 +58,7 @@ class FindNextDestinationGoal extends Goal {
 		from.copy( owner.position );
 		to.copy( owner.navMesh.getRandomRegion().centroid );
 
-		path = navMesh.findPath( from, to );
+		owner.path = navMesh.findPath( from, to );
 
 	}
 
@@ -83,16 +83,27 @@ class SeekToDestinationGoal extends Goal {
 
 	activate() {
 
+
+
+
 		const owner = this.owner;
 
 		//
 
-		if ( path !== null ) {
+		if ( owner.path !== null ) {
 
 			// update path helper
+			if ( owner.world.debug ) {
 
-			const index = owner.index;
-			NavMeshUtils.updatePathHelper( path, index );
+				const index = owner.index;
+				const pathHelper = owner.world.helpers.pathHelpers[ index ];
+
+				pathHelper.geometry.dispose();
+				pathHelper.geometry = new BufferGeometry().setFromPoints( owner.path );
+				pathHelper.visible = owner.world.uiParameter.showPaths;
+
+			}
+
 
 			// update path and steering
 
@@ -100,7 +111,7 @@ class SeekToDestinationGoal extends Goal {
 			followPathBehavior.active = true;
 			followPathBehavior.path.clear();
 
-			for ( const point of path ) {
+			for ( const point of owner.path ) {
 
 				followPathBehavior.path.add( point );
 

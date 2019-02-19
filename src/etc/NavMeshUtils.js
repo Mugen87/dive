@@ -69,21 +69,12 @@ class NavMeshUtils {
 
 	}
 
-	static createPathHelper( visible ) {
+	static createPathHelper( ) {
 
 		const pathHelper = new Line( new BufferGeometry(), new LineBasicMaterial( { color: 0xff0000 } ) );
 		pathHelper.renderOrder = 2;
-		pathHelper.visible = visible;
+		pathHelper.visible = false;
 		return pathHelper;
-
-	}
-
-	static updatePathHelper( path, index ) {
-
-		const pathHelper = NavMeshUtils.pathHelpers[ index ];
-
-		pathHelper.geometry.dispose();
-		pathHelper.geometry = new BufferGeometry().setFromPoints( path );
 
 	}
 

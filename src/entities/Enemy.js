@@ -7,7 +7,7 @@ import { ExploreEvaluator } from './Evaluators.js';
 
 class Enemy extends Vehicle {
 
-	constructor( navMesh, mixer ) {
+	constructor( navMesh, mixer, world ) {
 
 		super();
 
@@ -19,6 +19,8 @@ class Enemy extends Vehicle {
 		this.mixer = mixer;
 		this.animations = new Map();
 		this.index = - 1;
+		this.path = null;
+		this.world = world;
 
 		// goal-driven agent design
 
@@ -28,6 +30,8 @@ class Enemy extends Vehicle {
 
 		const followPath = new FollowPathBehavior();
 		followPath.active = false;
+		followPath._arrive.deceleration = 1;
+		followPath._arrive.tolerance = 2;
 		this.steering.add( followPath );
 
 	}
