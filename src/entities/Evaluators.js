@@ -3,10 +3,7 @@
  */
 
 import { GoalEvaluator } from '../lib/yuka.module.js';
-
 import { ExploreGoal } from './Goals.js';
-
-
 
 class ExploreEvaluator extends GoalEvaluator {
 
@@ -24,7 +21,7 @@ class ExploreEvaluator extends GoalEvaluator {
 
 			enemy.brain.clearSubgoals();
 
-			enemy.brain.addSubgoal( new ExploreGoal( enemy) );
+			enemy.brain.addSubgoal( new ExploreGoal( enemy ) );
 
 		}
 
@@ -32,6 +29,4 @@ class ExploreEvaluator extends GoalEvaluator {
 
 }
 
-export {
-	ExploreEvaluator
-};
+export { ExploreEvaluator };

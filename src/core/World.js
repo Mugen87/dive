@@ -225,7 +225,7 @@ class World {
 			this.helpers.pathHelpers = new Array();
 			NavMeshUtils.pathHelpers = this.helpers.pathHelpers;
 
-			for ( let enemy of this.enemies ) {
+			for ( let i = 0; i < this.enemyCount; i ++ ) {
 
 				const pathHelper = NavMeshUtils.createPathHelper( this.uiParameter.showPaths );
 				this.scene.add( pathHelper );
@@ -254,21 +254,14 @@ class World {
 			const gui = new DAT.GUI();
 			const params = this.uiParameter;
 
+			// nav mesh folder
+
 			const folderNavMesh = gui.addFolder( 'Navigation Mesh' );
 			folderNavMesh.open();
 
 			folderNavMesh.add( params, 'showRegions' ).name( 'show convex regions' ).onChange( ( value ) => {
 
 				this.helpers.convexRegionHelper.visible = value;
-
-			} );
-
-			const folderScene = gui.addFolder( 'Scene' );
-			folderScene.open();
-
-			folderScene.add( params, 'showAxes' ).name( 'show axes helper' ).onChange( ( value ) => {
-
-				this.helpers.axesHelper.visible = value;
 
 			} );
 
@@ -279,6 +272,17 @@ class World {
 					this.helpers.pathHelpers[ i ].visible = value;
 
 				}
+
+			} );
+
+			// scene folder
+
+			const folderScene = gui.addFolder( 'Scene' );
+			folderScene.open();
+
+			folderScene.add( params, 'showAxes' ).name( 'show axes helper' ).onChange( ( value ) => {
+
+				this.helpers.axesHelper.visible = value;
 
 			} );
 

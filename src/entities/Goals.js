@@ -5,15 +5,6 @@
 import { Goal, CompositeGoal, Vector3 } from '../lib/yuka.module.js';
 import { NavMeshUtils } from '../etc/NavMeshUtils.js';
 
-
-
-const SEEK = 'SEEK';
-
-
-const WALK = 'WALK';
-const IDLE = 'IDLE';
-
-
 const from = new Vector3();
 const to = new Vector3();
 let path = null;
@@ -54,9 +45,6 @@ class FindNextDestinationGoal extends Goal {
 
 		super( owner );
 
-		this.animationId = null;
-
-
 	}
 
 	activate() {
@@ -76,17 +64,8 @@ class FindNextDestinationGoal extends Goal {
 
 	execute() {
 
-		const owner = this.owner;
-
 		//???
 		this.status = Goal.STATUS.COMPLETED;
-
-	}
-
-	terminate() {
-
-		const owner = this.owner;
-
 
 	}
 
@@ -147,23 +126,15 @@ class SeekToDestinationGoal extends Goal {
 
 		}
 
-		// adjust animation speed based on the actual velocity of the girl
-
-
 	}
 
 	terminate() {
-
 
 		const owner = this.owner;
 
 		const followPathBehavior = owner.steering.behaviors[ 0 ];
 		followPathBehavior.active = false;
 		this.owner.velocity.set( 0, 0, 0 );
-
-		//
-
-
 
 	}
 
@@ -179,30 +150,12 @@ class CompleteGoal extends Goal {
 
 	}
 
-	activate() {
-
-		const owner = this.owner;
-
-
-	}
-
 	execute() {
 
-		const owner = this.owner;
 		this.status = Goal.STATUS.COMPLETED;
-
-	}
-
-	terminate() {
-
-		const owner = this.owner;
-
-
 
 	}
 
 }
 
-export {
-	ExploreGoal
-};
+export { ExploreGoal };
