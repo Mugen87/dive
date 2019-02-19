@@ -4,6 +4,7 @@
 
 import { Vehicle, Regulator, Think, FollowPathBehavior } from '../lib/yuka.module.js';
 import { ExploreEvaluator } from './Evaluators.js';
+import { CONFIG } from '../core/Config.js';
 
 class Enemy extends Vehicle {
 
@@ -27,14 +28,14 @@ class Enemy extends Vehicle {
 		this.brain = new Think( this );
 		this.brain.addEvaluator( new ExploreEvaluator() );
 
-		this.goalArbitrationRegulator = new Regulator( 5 ); // five updates per second
+		this.goalArbitrationRegulator = new Regulator( CONFIG.BOT.GOAL.ARBITRATION_UPDATE_FREQUENCY );
 
 		// steering
 
 		const followPath = new FollowPathBehavior();
 		followPath.active = false;
-		followPath.nextWaypointDistance = 2;
-		followPath._arrive.deceleration = 2;
+		followPath.nextWaypointDistance = CONFIG.BOT.NAVIGATION.NEXT_WAYPOINT_DISTANCE;
+		followPath._arrive.deceleration = CONFIG.BOT.NAVIGATION.ARRIVE_DECELERATION;
 		this.steering.add( followPath );
 
 	}
