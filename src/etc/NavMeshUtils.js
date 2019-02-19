@@ -2,7 +2,8 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { BufferGeometry, Float32BufferAttribute, MeshBasicMaterial, Color, Mesh, VertexColors } from '../lib/three.module.js';
+import { BufferGeometry, Float32BufferAttribute, MeshBasicMaterial, Color, Mesh, VertexColors, Line, LineBasicMaterial } from '../lib/three.module.js';
+const pathMaterial = new LineBasicMaterial( { color: 0xff0000 } );
 
 class NavMeshUtils {
 
@@ -65,6 +66,23 @@ class NavMeshUtils {
 		geometry.addAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
 
 		return mesh;
+
+	}
+
+	static createPathHelper( visible ) {
+
+		const pathHelper = new Line( new BufferGeometry(), pathMaterial );
+		pathHelper.visible = visible;
+		return pathHelper;
+
+	}
+
+	static updatePathHelper( path, index ) {
+
+		const pathHelper = NavMeshUtils.pathHelpers[ index ];
+
+		pathHelper.geometry.dispose();
+		pathHelper.geometry = new BufferGeometry().setFromPoints( path );
 
 	}
 

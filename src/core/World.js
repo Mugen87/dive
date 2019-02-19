@@ -42,13 +42,17 @@ class World {
 
 		this.helpers = {
 			convexRegionHelper: null,
-			axesHelper: null
+			axesHelper: null,
+			pathHelpers: null
 		};
 
 		this.uiParameter = {
 			showRegions: true,
-			showAxes: true
+			showAxes: true,
+			showPaths: true
 		};
+
+		this.enemies = new Array();
 
 	}
 
@@ -60,6 +64,7 @@ class World {
 			this._initEnemies();
 			this._initGround();
 			this._initNavMesh();
+			this._initPathHelpers();
 			this._initControls();
 			this._initUI();
 
@@ -171,6 +176,8 @@ class World {
 		//
 
 		this.add( enemy );
+		this.enemies.push( enemy );
+		enemy.index = this.enemies.indexOf( enemy );
 
 	}
 
@@ -193,6 +200,27 @@ class World {
 
 			this.helpers.convexRegionHelper = NavMeshUtils.createConvexRegionHelper( navMesh );
 			this.scene.add( this.helpers.convexRegionHelper );
+
+		}
+
+	}
+
+	_initPathHelpers() {
+
+		if ( this.debug ) {
+
+			this.helpers.pathHelpers = new Array();
+			NavMeshUtils.pathHelpers = this.helpers.pathHelpers;
+			for ( let enemy of this.enemies ) {
+
+				const pathHelper = NavMeshUtils.createPathHelper( this.uiParameter.showPaths );
+				this.scene.add( pathHelper );
+				this.helpers.pathHelpers.push( pathHelper );
+
+			}
+
+
+
 
 		}
 
@@ -230,6 +258,16 @@ class World {
 			folderScene.add( params, 'showAxes' ).name( 'show axes helper' ).onChange( ( value ) => {
 
 				this.helpers.axesHelper.visible = value;
+
+			} );
+
+			folderNavMesh.add( params, 'showPaths', 1, 30 ).name( 'show navigation paths' ).onChange( ( value ) => {
+
+				for ( let i = 0, l = this.helpers.pathHelpers.length; i < l; i ++ ) {
+
+					this.helpers.pathHelpers[ i ].visible = value;
+
+				}
 
 			} );
 

@@ -9557,6 +9557,596 @@
 	} );
 
 	/**
+	* Class representing a composite goal. Essentially it's a goal which consists of subgoals.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments Goal
+	*/
+	class CompositeGoal extends Goal {
+
+		/**
+		* Constructs a new composite goal.
+		*
+		* @param {GameEntity} owner - The owner of this composite goal.
+		*/
+		constructor( owner = null ) {
+
+			super( owner );
+
+			/**
+			* A list of subgoals.
+			* @type Array
+			*/
+			this.subgoals = new Array();
+
+		}
+
+		/**
+		* Adds a goal as a subgoal to this instance.
+		*
+		* @param {Goal} goal - The subgoal to add.
+		* @return {Goal} A reference to this goal.
+		*/
+		addSubgoal( goal ) {
+
+			this.subgoals.unshift( goal );
+
+			return this;
+
+		}
+
+		/**
+		* Removes a subgoal from this instance.
+		*
+		* @param {Goal} goal - The subgoal to remove.
+		* @return {Goal} A reference to this goal.
+		*/
+		removeSubgoal( goal ) {
+
+			const index = this.subgoals.indexOf( goal );
+			this.subgoals.splice( index, 1 );
+
+			return this;
+
+		}
+
+		/**
+		* Removes all subgoals and ensures {@link Goal#terminate} is called
+		* for each subgoal.
+		*
+		* @return {Goal} A reference to this goal.
+		*/
+		clearSubgoals() {
+
+			const subgoals = this.subgoals;
+
+			for ( let i = 0, l = subgoals.length; i < l; i ++ ) {
+
+				const subgoal = subgoals[ i ];
+
+				subgoal.terminate();
+
+			}
+
+			subgoals.length = 0;
+
+			return this;
+
+		}
+
+		/**
+		* Returns the current subgoal. If no subgoals are defined, *null* is returned.
+		*
+		* @return {Goal} The current subgoal.
+		*/
+		currentSubgoal() {
+
+			const length = this.subgoals.length;
+
+			if ( length > 0 ) {
+
+				return this.subgoals[ length - 1 ];
+
+			} else {
+
+				return null;
+
+			}
+
+		}
+
+		/**
+		* Executes the current subgoal of this composite goal.
+		*
+		* @return {Status} The status of this composite subgoal.
+		*/
+		executeSubgoals() {
+
+			const subgoals = this.subgoals;
+
+			// remove all completed and failed goals from the back of the subgoal list
+
+			for ( let i = subgoals.length - 1; i >= 0; i -- ) {
+
+				const subgoal = subgoals[ i ];
+
+				if ( ( subgoal.completed() === true ) || ( subgoal.failed() === true ) ) {
+
+					// if the current subgoal is a composite goal, terminate its subgoals too
+
+					if ( subgoal instanceof CompositeGoal ) {
+
+						subgoal.clearSubgoals();
+
+					}
+
+					// terminate the subgoal itself
+
+					subgoal.terminate();
+					subgoals.pop();
+
+				} else {
+
+					break;
+
+				}
+
+			}
+
+			// if any subgoals remain, process the one at the back of the list
+
+			const subgoal = this.currentSubgoal();
+
+			if ( subgoal !== null ) {
+
+				subgoal.activateIfInactive();
+
+				subgoal.execute();
+
+				// if subgoal is completed but more subgoals are in the list, return 'ACTIVE'
+				// status in order to keep processing the list of subgoals
+
+				if ( ( subgoal.completed() === true ) && ( subgoals.length > 1 ) ) {
+
+					return Goal.STATUS.ACTIVE;
+
+				} else {
+
+					return subgoal.status;
+
+				}
+
+			} else {
+
+				return Goal.STATUS.COMPLETED;
+
+			}
+
+		}
+
+		/**
+		* Returns true if this composite goal has subgoals.
+		*
+		* @return {Boolean} Whether the composite goal has subgoals or not.
+		*/
+		hasSubgoals() {
+
+			return this.subgoals.length > 0;
+
+		}
+
+		/**
+		* Returns true if the given message was processed by the current subgoal.
+		*
+		* @return {Boolean} Whether the message was processed or not.
+		*/
+		handleMessage( telegram ) {
+
+			const subgoal = this.currentSubgoal();
+
+			if ( subgoal !== null ) {
+
+				return subgoal.handleMessage( telegram );
+
+			}
+
+			return false;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.subgoals = new Array();
+
+			for ( let i = 0, l = this.subgoals.length; i < l; i ++ ) {
+
+				const subgoal = this.subgoals[ i ];
+				json.subgoals.push( subgoal.toJSON() );
+
+			}
+
+			return json;
+
+		}
+
+		/**
+		* Restores UUIDs with references to GameEntity objects.
+		*
+		* @param {Map} entities - Maps game entities to UUIDs.
+		* @return {CompositeGoal} A reference to this composite goal.
+		*/
+		resolveReferences( entities ) {
+
+			super.resolveReferences( entities );
+
+			for ( let i = 0, l = this.subgoals.length; i < l; i ++ ) {
+
+				const subgoal = this.subgoals[ i ];
+				subgoal.resolveReferences( entities );
+
+			}
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Base class for representing a goal evaluator in context of Goal-driven agent design.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class GoalEvaluator {
+
+		/**
+		* Constructs a new goal evaluator.
+		*
+		* @param {Number} characterBias - Can be used to adjust the preferences of agents.
+		*/
+		constructor( characterBias = 1 ) {
+
+			/**
+			* Can be used to adjust the preferences of agents. When the desirability score
+			* for a goal has been evaluated, it is multiplied by this value.
+			* @type Number
+			* @default 1
+			*/
+			this.characterBias = characterBias;
+
+		}
+
+		/**
+		* Calculates the desirability. It's a score between 0 and 1 representing the desirability
+		* of a goal. This goal is considered as a top level strategy of the agent like *Explore* or
+		* *AttackTarget*. Must be implemented by all concrete goal evaluators.
+		*
+		* @param {GameEntity} owner - The owner of this goal evaluator.
+		* @return {Number} The desirability.
+		*/
+		calculateDesirability( /* owner */ ) {
+
+			return 0;
+
+		}
+
+		/**
+		* Executed if this goal evaluator produces the highest desirability. Must be implemented
+		* by all concrete goal evaluators.
+		*
+		* @param {GameEntity} owner - The owner of this goal evaluator.
+		*/
+		setGoal( /* owner */ ) {}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			return {
+				type: this.constructor.name,
+				characterBias: this.characterBias
+			};
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {GoalEvaluator} A reference to this goal evaluator.
+		*/
+		fromJSON( json ) {
+
+			this.characterBias = json.characterBias;
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* Class for representing the brain of a game entity.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @augments CompositeGoal
+	*/
+	class Think extends CompositeGoal {
+
+		/**
+		* Constructs a new *Think* object.
+		*
+		* @param {GameEntity} owner - The owner of this instance.
+		*/
+		constructor( owner = null ) {
+
+			super( owner );
+
+			/**
+			* A list of goal evaluators.
+			* @type Array
+			*/
+			this.evaluators = new Array();
+
+			//
+
+			this._typesMap = new Map();
+
+		}
+
+		/**
+		* Executed when this goal is activated.
+		*/
+		activate() {
+
+			this.arbitrate();
+
+		}
+
+		/**
+		* Executed in each simulation step.
+		*/
+		execute() {
+
+			this.activateIfInactive();
+
+			const subgoalStatus = this.executeSubgoals();
+
+			if ( subgoalStatus === Goal.STATUS.COMPLETED || subgoalStatus === Goal.STATUS.FAILED ) {
+
+				this.status = Goal.STATUS.INACTIVE;
+
+			}
+
+		}
+
+		/**
+		* Executed when this goal is satisfied.
+		*/
+		terminate() {
+
+			this.clearSubgoals();
+
+		}
+
+		/**
+		* Adds the given goal evaluator to this instance.
+		*
+		* @param {GoalEvaluator} evaluator - The goal evaluator to add.
+		* @return {Think} A reference to this instance.
+		*/
+		addEvaluator( evaluator ) {
+
+			this.evaluators.push( evaluator );
+
+			return this;
+
+		}
+
+		/**
+		* Removes the given goal evaluator from this instance.
+		*
+		* @param {GoalEvaluator} evaluator - The goal evaluator to remove.
+		* @return {Think} A reference to this instance.
+		*/
+		removeEvaluator( evaluator ) {
+
+			const index = this.evaluators.indexOf( evaluator );
+			this.evaluators.splice( index, 1 );
+
+			return this;
+
+		}
+
+		/**
+		* This method represents the top level decision process of an agent.
+		* It iterates through each goal evaluator and selects the one that
+		* has the highest score as the current goal.
+		*
+		* @return {Think} A reference to this instance.
+		*/
+		arbitrate() {
+
+			const evaluators = this.evaluators;
+
+			let bestDesirability = - 1;
+			let bestEvaluator = null;
+
+			// try to find the best top-level goal/strategy for the entity
+
+			for ( let i = 0, l = evaluators.length; i < l; i ++ ) {
+
+				const evaluator = evaluators[ i ];
+
+				let desirability = evaluator.calculateDesirability( this.owner );
+				desirability *= evaluator.characterBias;
+
+				if ( desirability >= bestDesirability ) {
+
+					bestDesirability = desirability;
+					bestEvaluator = evaluator;
+
+				}
+
+			}
+
+			// use the evaluator to set the respective goal
+
+			if ( bestEvaluator !== null ) {
+
+				bestEvaluator.setGoal( this.owner );
+
+			} else {
+
+				Logger.error( 'YUKA.Think: Unable to determine goal evaluator for game entity:', this.owner );
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			const json = super.toJSON();
+
+			json.evaluators = new Array();
+
+			for ( let i = 0, l = this.evaluators.length; i < l; i ++ ) {
+
+				const evaluator = this.evaluators[ i ];
+				json.evaluators.push( evaluator.toJSON() );
+
+			}
+
+			return json;
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+	  * @return {Think} A reference to this instance.
+		*/
+		fromJSON( json ) {
+
+			super.fromJSON( json );
+
+			const typesMap = this._typesMap;
+
+			this.evaluators.length = 0;
+			this.terminate();
+
+			// evaluators
+
+			for ( let i = 0, l = json.evaluators.length; i < l; i ++ ) {
+
+				const evaluatorJSON = json.evaluators[ i ];
+				const type = evaluatorJSON.type;
+
+				const ctor = typesMap.get( type );
+
+				if ( ctor !== undefined ) {
+
+					const evaluator = new ctor().fromJSON( evaluatorJSON );
+					this.evaluators.push( evaluator );
+
+				} else {
+
+					Logger.warn( 'YUKA.Think: Unsupported goal evaluator type:', type );
+					continue;
+
+				}
+
+			}
+
+			// goals
+
+			function parseGoal( goalJSON ) {
+
+				const type = goalJSON.type;
+
+				const ctor = typesMap.get( type );
+
+				if ( ctor !== undefined ) {
+
+					const goal = new ctor().fromJSON( goalJSON );
+
+					const subgoalsJSON = goalJSON.subgoals;
+
+					if ( subgoalsJSON !== undefined ) {
+
+						// composite goal
+
+						for ( let i = 0, l = subgoalsJSON.length; i < l; i ++ ) {
+
+							const subgoal = parseGoal( subgoalsJSON[ i ] );
+
+							if ( subgoal ) goal.subgoals.push( subgoal );
+
+						}
+
+					}
+
+					return goal;
+
+				} else {
+
+					Logger.warn( 'YUKA.Think: Unsupported goal evaluator type:', type );
+					return;
+
+				}
+
+			}
+
+			for ( let i = 0, l = json.subgoals.length; i < l; i ++ ) {
+
+				const subgoal = parseGoal( json.subgoals[ i ] );
+
+				if ( subgoal ) this.subgoals.push( subgoal );
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Registers a custom type for deserialization. When calling {@link Think#fromJSON}
+		* this instance is able to pick the correct constructor in order to create custom
+		* goals or goal evaluators.
+		*
+		* @param {String} type - The name of the goal or goal evaluator.
+		* @param {Function} constructor -  The constructor function.
+		* @return {Think} A reference to this instance.
+		*/
+		registerType( type, constructor ) {
+
+			this._typesMap.set( type, constructor );
+
+			return this;
+
+		}
+
+	}
+
+	/**
 	* Base class for graph edges.
 	*
 	* @author {@link https://github.com/Mugen87|Mugen87}
@@ -63882,6 +64472,7 @@
 	/**
 	 * @author Mugen87 / https://github.com/Mugen87
 	 */
+	const pathMaterial = new LineBasicMaterial( { color: 0xff0000 } );
 
 	class NavMeshUtils {
 
@@ -63947,6 +64538,247 @@
 
 		}
 
+		static createPathHelper( visible ) {
+
+			const pathHelper = new Line( new BufferGeometry(), pathMaterial );
+			pathHelper.visible = visible;
+			return pathHelper;
+
+		}
+
+		static updatePathHelper( path, index ) {
+
+			const pathHelper = NavMeshUtils.pathHelpers[ index ];
+
+			pathHelper.geometry.dispose();
+			pathHelper.geometry = new BufferGeometry().setFromPoints( path );
+
+		}
+
+	}
+
+	/**
+	 * @author Mugen87 / https://github.com/Mugen87
+	 */
+
+
+	const from = new Vector3();
+	const to = new Vector3();
+	let path = null;
+
+	class ExploreGoal extends CompositeGoal {
+
+		constructor( owner ) {
+
+			super( owner );
+
+		}
+
+		activate() {
+
+			const owner = this.owner;
+
+			this.addSubgoal( new FindNextDestinationGoal( owner ) );
+			this.addSubgoal( new SeekToDestinationGoal( owner ) );
+			this.addSubgoal( new CompleteGoal( owner ) );
+
+		}
+
+		execute() {
+
+			this.activateIfInactive();
+
+			this.status = this.executeSubgoals();
+
+		}
+
+	}
+
+	//
+
+	class FindNextDestinationGoal extends Goal {
+
+		constructor( owner ) {
+
+			super( owner );
+
+			this.animationId = null;
+
+
+		}
+
+		activate() {
+
+			const owner = this.owner;
+
+			// select closest collectible
+
+			const navMesh = this.owner.navMesh;
+
+			from.copy( owner.position );
+			to.copy( owner.navMesh.getRandomRegion().centroid );
+
+			path = navMesh.findPath( from, to );
+
+		}
+
+		execute() {
+
+			const owner = this.owner;
+
+			//???
+			this.status = Goal.STATUS.COMPLETED;
+
+		}
+
+		terminate() {
+
+			const owner = this.owner;
+
+
+		}
+
+	}
+
+	//
+
+	class SeekToDestinationGoal extends Goal {
+
+		constructor( owner ) {
+
+			super( owner );
+
+		}
+
+		activate() {
+
+			const owner = this.owner;
+
+			//
+
+			if ( path !== null ) {
+
+				// update path helper
+
+				const index = owner.index;
+				NavMeshUtils.updatePathHelper( path, index );
+
+				// update path and steering
+
+				const followPathBehavior = owner.steering.behaviors[ 0 ];
+				followPathBehavior.active = true;
+				followPathBehavior.path.clear();
+
+				for ( const point of path ) {
+
+					followPathBehavior.path.add( point );
+
+				}
+
+			} else {
+
+				this.status = Goal.STATUS.FAILED;
+
+			}
+
+		}
+
+		execute() {
+
+			const owner = this.owner;
+
+			const squaredDistance = owner.position.squaredDistanceTo( to );
+
+			if ( squaredDistance < 0.25 ) {
+
+				this.status = Goal.STATUS.COMPLETED;
+
+			}
+
+			// adjust animation speed based on the actual velocity of the girl
+
+
+		}
+
+		terminate() {
+
+
+			const owner = this.owner;
+
+			const followPathBehavior = owner.steering.behaviors[ 0 ];
+			followPathBehavior.active = false;
+			this.owner.velocity.set( 0, 0, 0 );
+
+			//
+
+
+
+		}
+
+	}
+
+	//
+
+	class CompleteGoal extends Goal {
+
+		constructor( owner ) {
+
+			super( owner );
+
+		}
+
+		activate() {
+
+			const owner = this.owner;
+
+
+		}
+
+		execute() {
+
+			const owner = this.owner;
+			this.status = Goal.STATUS.COMPLETED;
+
+		}
+
+		terminate() {
+
+			const owner = this.owner;
+
+
+
+		}
+
+	}
+
+	/**
+	 * @author Mugen87 / https://github.com/Mugen87
+	 */
+
+
+
+	class ExploreEvaluator extends GoalEvaluator {
+
+		calculateDesirability() {
+
+			return 0.5;
+
+		}
+
+		setGoal( enemy ) {
+
+			const currentSubgoal = enemy.brain.currentSubgoal();
+
+			if ( ( currentSubgoal instanceof ExploreGoal ) === false ) {
+
+				enemy.brain.clearSubgoals();
+
+				enemy.brain.addSubgoal( new ExploreGoal( enemy) );
+
+			}
+
+		}
+
 	}
 
 	/**
@@ -63962,9 +64794,21 @@
 			this.navMesh = navMesh;
 
 			this.currentTime = 0;
+			this.maxSpeed = 3;
 
 			this.mixer = mixer;
 			this.animations = new Map();
+			this.index = - 1;
+
+			// goal-driven agent design
+
+			this.brain = new Think( this );
+
+			this.brain.addEvaluator( new ExploreEvaluator() );
+
+			const followPath = new FollowPathBehavior();
+			followPath.active = false;
+			this.steering.add( followPath );
 
 		}
 
@@ -63980,7 +64824,13 @@
 
 		update( delta ) {
 
+			super.update( delta );
+
 			this.currentTime += delta;
+
+			this.brain.execute();
+
+			this.brain.arbitrate();
 
 			this.mixer.update( delta );
 
@@ -67522,6 +68372,7 @@
 
 	}
 	var GUI$1 = GUI;
+	//# sourceMappingURL=dat.gui.module.js.map
 
 	/**
 	 * @author Mugen87 / https://github.com/Mugen87
@@ -67554,13 +68405,17 @@
 
 			this.helpers = {
 				convexRegionHelper: null,
-				axesHelper: null
+				axesHelper: null,
+				pathHelpers: null
 			};
 
 			this.uiParameter = {
 				showRegions: true,
-				showAxes: true
+				showAxes: true,
+				showPaths: true
 			};
+
+			this.enemies = new Array();
 
 		}
 
@@ -67572,6 +68427,7 @@
 				this._initEnemies();
 				this._initGround();
 				this._initNavMesh();
+				this._initPathHelpers();
 				this._initControls();
 				this._initUI();
 
@@ -67683,6 +68539,8 @@
 			//
 
 			this.add( enemy );
+			this.enemies.push( enemy );
+			enemy.index = this.enemies.indexOf( enemy );
 
 		}
 
@@ -67705,6 +68563,27 @@
 
 				this.helpers.convexRegionHelper = NavMeshUtils.createConvexRegionHelper( navMesh );
 				this.scene.add( this.helpers.convexRegionHelper );
+
+			}
+
+		}
+
+		_initPathHelpers() {
+
+			if ( this.debug ) {
+
+				this.helpers.pathHelpers = new Array();
+				NavMeshUtils.pathHelpers = this.helpers.pathHelpers;
+				for ( let enemy of this.enemies ) {
+
+					const pathHelper = NavMeshUtils.createPathHelper( this.uiParameter.showPaths );
+					this.scene.add( pathHelper );
+					this.helpers.pathHelpers.push( pathHelper );
+
+				}
+
+
+
 
 			}
 
@@ -67742,6 +68621,16 @@
 				folderScene.add( params, 'showAxes' ).name( 'show axes helper' ).onChange( ( value ) => {
 
 					this.helpers.axesHelper.visible = value;
+
+				} );
+
+				folderNavMesh.add( params, 'showPaths', 1, 30 ).name( 'show navigation paths' ).onChange( ( value ) => {
+
+					for ( let i = 0, l = this.helpers.pathHelpers.length; i < l; i ++ ) {
+
+						this.helpers.pathHelpers[ i ].visible = value;
+
+					}
 
 				} );
 
