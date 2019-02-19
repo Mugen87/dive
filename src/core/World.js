@@ -10,6 +10,7 @@ import { OrbitControls } from '../lib/OrbitControls.module.js';
 
 import { AssetManager } from './AssetManager.js';
 import { NavMeshUtils } from '../etc/NavMeshUtils.js';
+import { SceneUtils } from '../etc/SceneUtils.js';
 
 import { Enemy } from '../entities/Enemy.js';
 
@@ -30,6 +31,10 @@ class World {
 		this.camera = null;
 		this.scene = null;
 		this.orbitControls = null;
+
+		//
+
+		this.enemyCount = 3;
 
 		//
 
@@ -148,36 +153,44 @@ class World {
 
 	_initEnemies() {
 
+		const enemyCount = this.enemyCount;
 		const navMesh = this.assetManager.navMesh;
-		const renderComponent = this.assetManager.models.get( 'soldier' );
-		const mixer = new AnimationMixer( renderComponent );
 
-		const enemy = new Enemy( navMesh, mixer );
-		enemy.setRenderComponent( renderComponent, sync );
+		for ( let i = 0; i < enemyCount; i ++ ) {
 
-		//
+			const renderComponent = SceneUtils.cloneWithSkinning( this.assetManager.models.get( 'soldier' ) );
+			const mixer = new AnimationMixer( renderComponent );
 
-		const idleClip = this.assetManager.animations.get( 'soldier_Idle' );
-		const idleAction = mixer.clipAction( idleClip );
-		idleAction.play();
-		idleAction.enabled = false;
+			const enemy = new Enemy( navMesh, mixer );
+			enemy.setRenderComponent( renderComponent, sync );
 
-		enemy.animations.set( 'idle', idleAction );
+			//
 
-		//
+			const idleClip = this.assetManager.animations.get( 'soldier_Idle' );
+			const idleAction = mixer.clipAction( idleClip );
+			idleAction.play();
+			idleAction.enabled = false;
 
-		const runClip = this.assetManager.animations.get( 'soldier_Run' );
-		const runAction = mixer.clipAction( runClip );
-		runAction.play();
-		runAction.enabled = false;
+			enemy.animations.set( 'idle', idleAction );
 
-		enemy.animations.set( 'run', runAction );
+			//
 
-		//
+			const runClip = this.assetManager.animations.get( 'soldier_Run' );
+			const runAction = mixer.clipAction( runClip );
+			runAction.play();
+			runAction.enabled = false;
 
-		this.add( enemy );
-		this.enemies.push( enemy );
-		enemy.index = this.enemies.indexOf( enemy );
+			enemy.animations.set( 'run', runAction );
+
+			//
+
+			enemy.position.x = i;
+
+			this.add( enemy );
+			this.enemies.push( enemy );
+			enemy.index = this.enemies.indexOf( enemy );
+
+		}
 
 	}
 
@@ -211,6 +224,7 @@ class World {
 
 			this.helpers.pathHelpers = new Array();
 			NavMeshUtils.pathHelpers = this.helpers.pathHelpers;
+
 			for ( let enemy of this.enemies ) {
 
 				const pathHelper = NavMeshUtils.createPathHelper( this.uiParameter.showPaths );
@@ -218,9 +232,6 @@ class World {
 				this.helpers.pathHelpers.push( pathHelper );
 
 			}
-
-
-
 
 		}
 

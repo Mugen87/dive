@@ -64561,6 +64561,69 @@
 	 * @author Mugen87 / https://github.com/Mugen87
 	 */
 
+	class SceneUtils$1 {
+
+		static cloneWithSkinning( source ) {
+
+			// see https://github.com/mrdoob/three.js/pull/14494
+
+			const cloneLookup = new Map();
+
+			const clone = source.clone();
+
+			parallelTraverse( source, clone, ( sourceNode, clonedNode ) => {
+
+				cloneLookup.set( sourceNode, clonedNode );
+
+			} );
+
+			source.traverse( function ( sourceMesh ) {
+
+				if ( ! sourceMesh.isSkinnedMesh ) return;
+
+				const sourceBones = sourceMesh.skeleton.bones;
+				const clonedMesh = cloneLookup.get( sourceMesh );
+
+				clonedMesh.skeleton = sourceMesh.skeleton.clone();
+
+				clonedMesh.skeleton.bones = sourceBones.map( ( sourceBone ) => {
+
+					if ( ! cloneLookup.has( sourceBone ) ) {
+
+						throw new Error( 'SceneUtils: Required bones are not descendants of the given object.' );
+
+					}
+
+					return cloneLookup.get( sourceBone );
+
+				} );
+
+				clonedMesh.bind( clonedMesh.skeleton, sourceMesh.bindMatrix );
+
+			} );
+
+			return clone;
+
+		}
+
+	}
+
+	function parallelTraverse( a, b, callback ) {
+
+		callback( a, b );
+
+		for ( let i = 0; i < a.children.length; i ++ ) {
+
+			parallelTraverse( a.children[ i ], b.children[ i ], callback );
+
+		}
+
+	}
+
+	/**
+	 * @author Mugen87 / https://github.com/Mugen87
+	 */
+
 
 	const from = new Vector3();
 	const to = new Vector3();
@@ -68396,6 +68459,10 @@
 
 			//
 
+			this.enemyCount = 3;
+
+			//
+
 			this._animate = animate.bind( this );
 			this._onWindowResize = onWindowResize.bind( this );
 
@@ -68511,36 +68578,44 @@
 
 		_initEnemies() {
 
+			const enemyCount = this.enemyCount;
 			const navMesh = this.assetManager.navMesh;
-			const renderComponent = this.assetManager.models.get( 'soldier' );
-			const mixer = new AnimationMixer( renderComponent );
 
-			const enemy = new Enemy( navMesh, mixer );
-			enemy.setRenderComponent( renderComponent, sync );
+			for ( let i = 0; i < enemyCount; i ++ ) {
 
-			//
+				const renderComponent = SceneUtils$1.cloneWithSkinning( this.assetManager.models.get( 'soldier' ) );
+				const mixer = new AnimationMixer( renderComponent );
 
-			const idleClip = this.assetManager.animations.get( 'soldier_Idle' );
-			const idleAction = mixer.clipAction( idleClip );
-			idleAction.play();
-			idleAction.enabled = false;
+				const enemy = new Enemy( navMesh, mixer );
+				enemy.setRenderComponent( renderComponent, sync );
 
-			enemy.animations.set( 'idle', idleAction );
+				//
 
-			//
+				const idleClip = this.assetManager.animations.get( 'soldier_Idle' );
+				const idleAction = mixer.clipAction( idleClip );
+				idleAction.play();
+				idleAction.enabled = false;
 
-			const runClip = this.assetManager.animations.get( 'soldier_Run' );
-			const runAction = mixer.clipAction( runClip );
-			runAction.play();
-			runAction.enabled = false;
+				enemy.animations.set( 'idle', idleAction );
 
-			enemy.animations.set( 'run', runAction );
+				//
 
-			//
+				const runClip = this.assetManager.animations.get( 'soldier_Run' );
+				const runAction = mixer.clipAction( runClip );
+				runAction.play();
+				runAction.enabled = false;
 
-			this.add( enemy );
-			this.enemies.push( enemy );
-			enemy.index = this.enemies.indexOf( enemy );
+				enemy.animations.set( 'run', runAction );
+
+				//
+
+				enemy.position.x = i;
+
+				this.add( enemy );
+				this.enemies.push( enemy );
+				enemy.index = this.enemies.indexOf( enemy );
+
+			}
 
 		}
 
@@ -68574,6 +68649,7 @@
 
 				this.helpers.pathHelpers = new Array();
 				NavMeshUtils.pathHelpers = this.helpers.pathHelpers;
+
 				for ( let enemy of this.enemies ) {
 
 					const pathHelper = NavMeshUtils.createPathHelper( this.uiParameter.showPaths );
@@ -68581,9 +68657,6 @@
 					this.helpers.pathHelpers.push( pathHelper );
 
 				}
-
-
-
 
 			}
 
