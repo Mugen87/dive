@@ -11,10 +11,9 @@ import { OrbitControls } from '../lib/OrbitControls.module.js';
 import { AssetManager } from './AssetManager.js';
 import { NavMeshUtils } from '../etc/NavMeshUtils.js';
 import { SceneUtils } from '../etc/SceneUtils.js';
-import { createGraphHelper } from '../etc/GraphHelper.js';
-import { PathPlanner } from '../etc/PathPlanner.js';
 
 import { Enemy } from '../entities/Enemy.js';
+import { PathPlanner } from '../etc/PathPlanner.js';
 
 import * as DAT from '../lib/dat.gui.module.js';
 
@@ -38,6 +37,7 @@ class World {
 		//
 
 		this.enemyCount = 3;
+		this.enemies = new Array();
 
 		//
 
@@ -51,7 +51,7 @@ class World {
 		this.helpers = {
 			convexRegionHelper: null,
 			axesHelper: null,
-			pathHelpers: null,
+			pathHelpers: new Array(),
 			graphHelper: null
 		};
 
@@ -61,8 +61,6 @@ class World {
 			showPaths: true,
 			showGraph: true
 		};
-
-		this.enemies = new Array();
 
 	}
 
@@ -160,27 +158,37 @@ class World {
 		const enemyCount = this.enemyCount;
 		const navMesh = this.assetManager.navMesh;
 
+		this.pathPlanner = new PathPlanner( navMesh );
+
 		for ( let i = 0; i < enemyCount; i ++ ) {
 
 			const renderComponent = SceneUtils.cloneWithSkinning( this.assetManager.models.get( 'soldier' ) );
-			const mixer = new AnimationMixer( renderComponent );
 
-			const enemy = new Enemy( navMesh, mixer, this );
+			const enemy = new Enemy();
 			enemy.setRenderComponent( renderComponent, sync );
 
-			//
+			// set references
+
+			enemy.navMesh = navMesh;
+			enemy.world = this;
+
+			// setup animations
+
+			// idle
+
+			enemy.mixer = new AnimationMixer( renderComponent );
 
 			const idleClip = this.assetManager.animations.get( 'soldier_idle' );
-			const idleAction = mixer.clipAction( idleClip );
+			const idleAction = enemy.mixer.clipAction( idleClip );
 			idleAction.play();
 			idleAction.enabled = false;
 
 			enemy.animations.set( 'idle', idleAction );
 
-			//
+			// run
 
 			const runClip = this.assetManager.animations.get( 'soldier_run' );
-			const runAction = mixer.clipAction( runClip );
+			const runAction = enemy.mixer.clipAction( runClip );
 			runAction.play();
 			runAction.enabled = false;
 
@@ -188,11 +196,22 @@ class World {
 
 			//
 
-			enemy.position.x = i;
-
 			this.add( enemy );
 			this.enemies.push( enemy );
-			enemy.index = this.enemies.indexOf( enemy );
+
+			//
+
+			if ( this.debug ) {
+
+				enemy.debug = true;
+
+				const pathHelper = NavMeshUtils.createPathHelper();
+				enemy.pathHelper = pathHelper;
+
+				this.scene.add( pathHelper );
+				this.helpers.pathHelpers.push( pathHelper );
+
+			}
 
 		}
 
@@ -212,7 +231,6 @@ class World {
 	_initNavMesh() {
 
 		const navMesh = this.assetManager.navMesh;
-		this.pathPlanner = new PathPlanner( navMesh );
 
 		if ( this.debug ) {
 
@@ -221,23 +239,8 @@ class World {
 
 			//
 
-			this.helpers.graphHelper = createGraphHelper( navMesh.graph, 0.2 );
-			this.helpers.graphHelper.renderOrder = 2;
-			this.helpers.graphHelper.children.forEach( child=>child.renderOrder = 2 );
+			this.helpers.graphHelper = NavMeshUtils.createGraphHelper( navMesh.graph, 0.2 );
 			this.scene.add( this.helpers.graphHelper );
-
-			//
-
-			this.helpers.pathHelpers = new Array();
-			NavMeshUtils.pathHelpers = this.helpers.pathHelpers;
-
-			for ( let i = 0; i < this.enemyCount; i ++ ) {
-
-				const pathHelper = NavMeshUtils.createPathHelper();
-				this.scene.add( pathHelper );
-				this.helpers.pathHelpers.push( pathHelper );
-
-			}
 
 		}
 

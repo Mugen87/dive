@@ -8,22 +8,26 @@ import { CONFIG } from '../core/Config.js';
 
 class Enemy extends Vehicle {
 
-	constructor( navMesh, mixer, world ) {
+	constructor() {
 
 		super();
-
-		this.navMesh = navMesh;
 
 		this.currentTime = 0;
 		this.maxSpeed = 3;
 
-		this.mixer = mixer;
+		this.world = null;
+
+		// animation
+
+		this.mixer = null;
 		this.animations = new Map();
-		this.index = - 1;
+
+		// navigation
+
+		this.navMesh = null;
 		this.path = null;
 		this.from = new Vector3();
 		this.to = new Vector3();
-		this.world = world;
 
 		// goal-driven agent design
 
@@ -32,12 +36,13 @@ class Enemy extends Vehicle {
 
 		this.goalArbitrationRegulator = new Regulator( CONFIG.BOT.GOAL.ARBITRATION_UPDATE_FREQUENCY );
 
+		// steering
 
-
-		this.steering.add( new FollowPathBehavior() );
-		this.steering.behaviors[ 0 ].active = false;
-		this.steering.behaviors[ 0 ]._arrive.deceleration = 1;
-		this.steering.behaviors[ 0 ]._arrive.tolerance = 2;
+		const followPathBehavior = new FollowPathBehavior();
+		followPathBehavior.active = false;
+		followPathBehavior.nextWaypointDistance = CONFIG.BOT.NAVIGATION.NEXT_WAYPOINT_DISTANCE;
+		followPathBehavior._arrive.deceleration = CONFIG.BOT.NAVIGATION.ARRIVE_DECELERATION;
+		this.steering.add( followPathBehavior );
 
 	}
 

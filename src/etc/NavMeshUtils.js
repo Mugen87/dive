@@ -2,7 +2,8 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { BufferGeometry, Float32BufferAttribute, MeshBasicMaterial, Color, Mesh, VertexColors, Line, LineBasicMaterial } from '../lib/three.module.js';
+import { BufferGeometry, Float32BufferAttribute, MeshBasicMaterial, Color, VertexColors, LineBasicMaterial, Group, IcosahedronBufferGeometry } from '../lib/three.module.js';
+import { LineSegments, Line, Mesh } from '../lib/three.module.js';
 
 class NavMeshUtils {
 
@@ -75,6 +76,71 @@ class NavMeshUtils {
 		pathHelper.renderOrder = 2;
 		pathHelper.visible = false;
 		return pathHelper;
+
+	}
+
+	static createGraphHelper( graph, nodeSize = 1, nodeColor = 0x4e84c4, edgeColor = 0xffffff ) {
+
+		const group = new Group();
+		group.renderOrder = 3;
+
+		// nodes
+
+		const nodeMaterial = new MeshBasicMaterial( { color: nodeColor } );
+		const nodeGeometry = new IcosahedronBufferGeometry( nodeSize, 2 );
+
+		const nodes = [];
+
+		graph.getNodes( nodes );
+
+		for ( let node of nodes ) {
+
+			const nodeMesh = new Mesh( nodeGeometry, nodeMaterial );
+			nodeMesh.renderOrder = 3;
+			nodeMesh.position.copy( node.position );
+			nodeMesh.userData.nodeIndex = node.index;
+
+			nodeMesh.matrixAutoUpdate = false;
+			nodeMesh.updateMatrix();
+
+			group.add( nodeMesh );
+
+		}
+
+		// edges
+
+		const edgesGeometry = new BufferGeometry();
+		const position = [];
+
+		const edgesMaterial = new LineBasicMaterial( { color: edgeColor } );
+
+		const edges = [];
+
+		for ( let node of nodes ) {
+
+			graph.getEdgesOfNode( node.index, edges );
+
+			for ( let edge of edges ) {
+
+				const fromNode = graph.getNode( edge.from );
+				const toNode = graph.getNode( edge.to );
+
+				position.push( fromNode.position.x, fromNode.position.y, fromNode.position.z );
+				position.push( toNode.position.x, toNode.position.y, toNode.position.z );
+
+			}
+
+		}
+
+		edgesGeometry.addAttribute( 'position', new Float32BufferAttribute( position, 3 ) );
+
+		const lines = new LineSegments( edgesGeometry, edgesMaterial );
+		lines.renderOrder = 3;
+		lines.matrixAutoUpdate = false;
+
+		group.add( lines );
+
+		return group;
 
 	}
 

@@ -2,8 +2,9 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { Goal, CompositeGoal, Vector3 } from '../lib/yuka.module.js';
+import { Goal, CompositeGoal } from '../lib/yuka.module.js';
 import { BufferGeometry } from '../lib/three.module.js';
+import { CONFIG } from '../core/Config.js';
 
 class ExploreGoal extends CompositeGoal {
 
@@ -45,14 +46,16 @@ class FindNextDestinationGoal extends Goal {
 	activate() {
 
 		const owner = this.owner;
+		const pathPlanner = owner.world.pathPlanner;
+
+		// select closest collectible
 
 		owner.from.copy( owner.position );
 		owner.to.copy( owner.navMesh.getRandomRegion().centroid );
 
 		owner.path = null;
 
-		owner.world.pathPlanner.findPath( owner, owner.from, owner.to, onPathFound );
-
+		pathPlanner.findPath( owner, owner.from, owner.to, onPathFound );
 
 	}
 
@@ -60,12 +63,7 @@ class FindNextDestinationGoal extends Goal {
 
 		const owner = this.owner;
 
-		if ( owner.path ) {
-
-			this.status = Goal.STATUS.COMPLETED;
-
-		}
-
+		if ( owner.path ) this.status = Goal.STATUS.COMPLETED;
 
 	}
 
@@ -83,9 +81,6 @@ class SeekToDestinationGoal extends Goal {
 
 	activate() {
 
-
-
-
 		const owner = this.owner;
 
 		//
@@ -95,8 +90,7 @@ class SeekToDestinationGoal extends Goal {
 			// update path helper
 			if ( owner.world.debug ) {
 
-				const index = owner.index;
-				const pathHelper = owner.world.helpers.pathHelpers[ index ];
+				const pathHelper = owner.pathHelper;
 
 				pathHelper.geometry.dispose();
 				pathHelper.geometry = new BufferGeometry().setFromPoints( owner.path );
@@ -131,7 +125,9 @@ class SeekToDestinationGoal extends Goal {
 
 		const squaredDistance = owner.position.squaredDistanceTo( owner.to );
 
-		if ( squaredDistance < owner.steering.behaviors[ 0 ]._arrive.tolerance ) {
+		const tolerance = CONFIG.BOT.NAVIGATION.ARRIVE_TOLERANCE * CONFIG.BOT.NAVIGATION.ARRIVE_TOLERANCE;
+
+		if ( squaredDistance <= tolerance ) {
 
 			this.status = Goal.STATUS.COMPLETED;
 
