@@ -170,7 +170,7 @@ class World {
 
 			//
 
-			const idleClip = this.assetManager.animations.get( 'soldier_Idle' );
+			const idleClip = this.assetManager.animations.get( 'soldier_idle' );
 			const idleAction = mixer.clipAction( idleClip );
 			idleAction.play();
 			idleAction.enabled = false;
@@ -179,7 +179,7 @@ class World {
 
 			//
 
-			const runClip = this.assetManager.animations.get( 'soldier_Run' );
+			const runClip = this.assetManager.animations.get( 'soldier_run' );
 			const runAction = mixer.clipAction( runClip );
 			runAction.play();
 			runAction.enabled = false;
