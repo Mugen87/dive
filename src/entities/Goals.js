@@ -46,20 +46,26 @@ class FindNextDestinationGoal extends Goal {
 
 		const owner = this.owner;
 
-		// select closest collectible
-
-		const navMesh = this.owner.navMesh;
-
 		owner.from.copy( owner.position );
 		owner.to.copy( owner.navMesh.getRandomRegion().centroid );
 
-		owner.path = navMesh.findPath( owner.from, owner.to );
+		owner.path = null;
+
+		owner.world.pathPlanner.findPath( owner, owner.from, owner.to, onPathFound );
+
 
 	}
 
 	execute() {
 
-		this.status = Goal.STATUS.COMPLETED;
+		const owner = this.owner;
+
+		if ( owner.path ) {
+
+			this.status = Goal.STATUS.COMPLETED;
+
+		}
+
 
 	}
 
@@ -142,6 +148,12 @@ class SeekToDestinationGoal extends Goal {
 		this.owner.velocity.set( 0, 0, 0 );
 
 	}
+
+}
+
+function onPathFound( owner, path ) {
+
+	owner.path = path;
 
 }
 

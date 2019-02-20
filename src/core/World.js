@@ -12,6 +12,7 @@ import { AssetManager } from './AssetManager.js';
 import { NavMeshUtils } from '../etc/NavMeshUtils.js';
 import { SceneUtils } from '../etc/SceneUtils.js';
 import { createGraphHelper } from '../etc/GraphHelper.js';
+import { PathPlanner } from '../etc/PathPlanner.js';
 
 import { Enemy } from '../entities/Enemy.js';
 
@@ -25,6 +26,7 @@ class World {
 		this.time = new Time();
 
 		this.assetManager = new AssetManager();
+		this.pathPlanner = null;
 
 		//
 
@@ -210,6 +212,7 @@ class World {
 	_initNavMesh() {
 
 		const navMesh = this.assetManager.navMesh;
+		this.pathPlanner = new PathPlanner( navMesh );
 
 		if ( this.debug ) {
 
@@ -329,6 +332,8 @@ function animate() {
 	const delta = this.time.getDelta();
 
 	this.entityManager.update( delta );
+
+	this.pathPlanner.update();
 
 	this.renderer.render( this.scene, this.camera );
 
