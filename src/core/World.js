@@ -11,6 +11,7 @@ import { OrbitControls } from '../lib/OrbitControls.module.js';
 import { AssetManager } from './AssetManager.js';
 import { NavMeshUtils } from '../etc/NavMeshUtils.js';
 import { SceneUtils } from '../etc/SceneUtils.js';
+import { createGraphHelper } from '../etc/GraphHelper.js';
 
 import { Enemy } from '../entities/Enemy.js';
 
@@ -48,13 +49,15 @@ class World {
 		this.helpers = {
 			convexRegionHelper: null,
 			axesHelper: null,
-			pathHelpers: null
+			pathHelpers: null,
+			graphHelper: null
 		};
 
 		this.uiParameter = {
 			showRegions: true,
 			showAxes: true,
-			showPaths: true
+			showPaths: true,
+			showGraph: true
 		};
 
 		this.enemies = new Array();
@@ -215,6 +218,13 @@ class World {
 
 			//
 
+			this.helpers.graphHelper = createGraphHelper( navMesh.graph, 0.2 );
+			this.helpers.graphHelper.renderOrder = 2;
+			this.helpers.graphHelper.children.forEach( child=>child.renderOrder = 2 );
+			this.scene.add( this.helpers.graphHelper );
+
+			//
+
 			this.helpers.pathHelpers = new Array();
 			NavMeshUtils.pathHelpers = this.helpers.pathHelpers;
 
@@ -265,6 +275,12 @@ class World {
 					this.helpers.pathHelpers[ i ].visible = value;
 
 				}
+
+			} );
+
+			folderNavMesh.add( params, 'showGraph' ).name( 'show graph' ).onChange( ( value ) => {
+
+				this.helpers.graphHelper.visible = value;
 
 			} );
 
