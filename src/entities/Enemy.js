@@ -44,6 +44,10 @@ class Enemy extends Vehicle {
 		followPathBehavior._arrive.deceleration = CONFIG.BOT.NAVIGATION.ARRIVE_DECELERATION;
 		this.steering.add( followPathBehavior );
 
+		// debug
+
+		this.pathHelper = null;
+
 	}
 
 	start() {
