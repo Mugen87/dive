@@ -2,7 +2,7 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { Vehicle, Think, FollowPathBehavior } from '../lib/yuka.module.js';
+import { Vehicle, Think, FollowPathBehavior, Vector3 } from '../lib/yuka.module.js';
 import { ExploreEvaluator } from './Evaluators.js';
 
 class Enemy extends Vehicle {
@@ -20,6 +20,8 @@ class Enemy extends Vehicle {
 		this.animations = new Map();
 		this.index = - 1;
 		this.path = null;
+		this.from = new Vector3();
+		this.to = new Vector3();
 		this.world = world;
 
 		// goal-driven agent design
@@ -28,11 +30,12 @@ class Enemy extends Vehicle {
 
 		this.brain.addEvaluator( new ExploreEvaluator() );
 
-		const followPath = new FollowPathBehavior();
-		followPath.active = false;
-		followPath._arrive.deceleration = 1;
-		followPath._arrive.tolerance = 2;
-		this.steering.add( followPath );
+
+
+		this.steering.add( new FollowPathBehavior() );
+		this.steering.behaviors[ 0 ].active = false;
+		this.steering.behaviors[ 0 ]._arrive.deceleration = 1;
+		this.steering.behaviors[ 0 ]._arrive.tolerance = 2;
 
 	}
 

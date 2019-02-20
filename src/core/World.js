@@ -34,7 +34,7 @@ class World {
 
 		//
 
-		this.enemyCount = 1;
+		this.enemyCount = 3;
 
 		//
 

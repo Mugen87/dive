@@ -64616,10 +64616,6 @@
 	 * @author Mugen87 / https://github.com/Mugen87
 	 */
 
-	const from = new Vector3();
-	const to = new Vector3();
-
-
 	class ExploreGoal extends CompositeGoal {
 
 		constructor( owner ) {
@@ -64666,10 +64662,10 @@
 
 			const navMesh = this.owner.navMesh;
 
-			from.copy( owner.position );
-			to.copy( owner.navMesh.getRandomRegion().centroid );
+			owner.from.copy( owner.position );
+			owner.to.copy( owner.navMesh.getRandomRegion().centroid );
 
-			owner.path = navMesh.findPath( from, to );
+			owner.path = navMesh.findPath( owner.from, owner.to );
 
 		}
 
@@ -64740,9 +64736,9 @@
 
 			const owner = this.owner;
 
-			const squaredDistance = owner.position.squaredDistanceTo( to );
+			const squaredDistance = owner.position.squaredDistanceTo( owner.to );
 
-			if ( squaredDistance < 0.25 ) {
+			if ( squaredDistance < owner.steering.behaviors[ 0 ]._arrive.tolerance ) {
 
 				this.status = Goal.STATUS.COMPLETED;
 
@@ -64827,6 +64823,8 @@
 			this.animations = new Map();
 			this.index = - 1;
 			this.path = null;
+			this.from = new Vector3();
+			this.to = new Vector3();
 			this.world = world;
 
 			// goal-driven agent design
@@ -64835,11 +64833,12 @@
 
 			this.brain.addEvaluator( new ExploreEvaluator() );
 
-			const followPath = new FollowPathBehavior();
-			followPath.active = false;
-			followPath._arrive.deceleration = 1;
-			followPath._arrive.tolerance = 2;
-			this.steering.add( followPath );
+
+
+			this.steering.add( new FollowPathBehavior() );
+			this.steering.behaviors[ 0 ].active = false;
+			this.steering.behaviors[ 0 ]._arrive.deceleration = 1;
+			this.steering.behaviors[ 0 ]._arrive.tolerance = 2;
 
 		}
 
@@ -68427,7 +68426,7 @@
 
 			//
 
-			this.enemyCount = 1;
+			this.enemyCount = 3;
 
 			//
 

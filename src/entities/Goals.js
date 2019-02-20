@@ -5,10 +5,6 @@
 import { Goal, CompositeGoal, Vector3 } from '../lib/yuka.module.js';
 import { BufferGeometry } from '../lib/three.module.js';
 
-const from = new Vector3();
-const to = new Vector3();
-
-
 class ExploreGoal extends CompositeGoal {
 
 	constructor( owner ) {
@@ -55,10 +51,10 @@ class FindNextDestinationGoal extends Goal {
 
 		const navMesh = this.owner.navMesh;
 
-		from.copy( owner.position );
-		to.copy( owner.navMesh.getRandomRegion().centroid );
+		owner.from.copy( owner.position );
+		owner.to.copy( owner.navMesh.getRandomRegion().centroid );
 
-		owner.path = navMesh.findPath( from, to );
+		owner.path = navMesh.findPath( owner.from, owner.to );
 
 	}
 
@@ -129,9 +125,9 @@ class SeekToDestinationGoal extends Goal {
 
 		const owner = this.owner;
 
-		const squaredDistance = owner.position.squaredDistanceTo( to );
+		const squaredDistance = owner.position.squaredDistanceTo( owner.to );
 
-		if ( squaredDistance < 0.25 ) {
+		if ( squaredDistance < owner.steering.behaviors[ 0 ]._arrive.tolerance ) {
 
 			this.status = Goal.STATUS.COMPLETED;
 
