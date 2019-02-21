@@ -2,7 +2,7 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3 } from '../lib/yuka.module.js';
+import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision } from '../lib/yuka.module.js';
 import { ExploreEvaluator } from './Evaluators.js';
 import { CONFIG } from '../core/Config.js';
 
@@ -34,6 +34,8 @@ class Enemy extends Vehicle {
 		this.brain = new Think( this );
 		this.brain.addEvaluator( new ExploreEvaluator() );
 
+		this.vision = new Vision( this );
+
 		this.goalArbitrationRegulator = new Regulator( CONFIG.BOT.GOAL.ARBITRATION_UPDATE_FREQUENCY );
 
 		// steering
@@ -58,6 +60,9 @@ class Enemy extends Vehicle {
 		const run = this.animations.get( 'run' );
 		run.enabled = true;
 
+		const level = this.manager.getEntityByName( 'Level' );
+		this.vision.addObstacle( level );
+
 	}
 
 	update( delta ) {
@@ -73,6 +78,7 @@ class Enemy extends Vehicle {
 		if ( this.goalArbitrationRegulator.ready() ) {
 
 			this.brain.arbitrate();
+			this.updateVision();
 
 		}
 
@@ -82,6 +88,51 @@ class Enemy extends Vehicle {
 		run.timeScale = Math.min( 0.75, this.getSpeed() / this.maxSpeed );
 
 		this.mixer.update( delta );
+
+	}
+
+	updateVision() {
+
+		//const memorySystem = this.memorySystem;
+		const vision = this.vision;
+		const target = this.target;
+
+		/*if ( memorySystem.hasRecord( target ) === false ) {
+
+			memorySystem.createRecord( target );
+
+		}
+
+		const record = memorySystem.getRecord( target );*/
+
+		const enemies = this.world.enemies;
+		const index = enemies.indexOf( this );
+
+		for ( let i = 0, l = enemies.length; i < l; i ++ ) {
+
+			if ( i === index ) {
+
+				continue;
+
+			}
+			const enemy = enemies[ i ];
+			if ( vision.visible( enemy.position ) === true ) {
+
+				console.log( "Enemy " + index + " sees Enemy " + i );
+				/*
+				record.timeLastSensed = this.currentTime;
+				record.lastSensedPosition.copy( target.position );
+				record.visible = true;
+	*/
+
+			} else {
+
+				//record.visible = false;
+
+			}
+
+		}
+
 
 	}
 

@@ -25,62 +25,62 @@
  */
 
 /**
-* Class for representing a telegram, an envelope which contains a message
-* and certain metadata like sender and receiver. Part of the messaging system
-* for game entities.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing a telegram, an envelope which contains a message
+ * and certain metadata like sender and receiver. Part of the messaging system
+ * for game entities.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Telegram {
 
 	/**
-	* Constructs a new telegram object.
-	*
-	* @param {GameEntity} sender - The sender.
-	* @param {GameEntity} receiver - The receiver.
-	* @param {String} message - The actual message.
-	* @param {Number} delay - A time value in millisecond used to delay the message dispatching.
-	* @param {Object} data - An object for custom data.
-	*/
+	 * Constructs a new telegram object.
+	 *
+	 * @param {GameEntity} sender - The sender.
+	 * @param {GameEntity} receiver - The receiver.
+	 * @param {String} message - The actual message.
+	 * @param {Number} delay - A time value in millisecond used to delay the message dispatching.
+	 * @param {Object} data - An object for custom data.
+	 */
 	constructor( sender, receiver, message, delay, data ) {
 
 		/**
-		* The sender.
-		* @type GameEntity
-		*/
+		 * The sender.
+		 * @type GameEntity
+		 */
 		this.sender = sender;
 
 		/**
-		* The receiver.
-		* @type GameEntity
-		*/
+		 * The receiver.
+		 * @type GameEntity
+		 */
 		this.receiver = receiver;
 
 		/**
-		* The actual message.
-		* @type String
-		*/
+		 * The actual message.
+		 * @type String
+		 */
 		this.message = message;
 
 		/**
-		* A time value in millisecond used to delay the message dispatching.
-		* @type Number
-		*/
+		 * A time value in millisecond used to delay the message dispatching.
+		 * @type Number
+		 */
 		this.delay = delay;
 
 		/**
-		* An object for custom data.
-		* @type Object
-		*/
+		 * An object for custom data.
+		 * @type Object
+		 */
 		this.data = data;
 
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		return {
@@ -95,11 +95,11 @@ class Telegram {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {Telegram} A reference to this telegram.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {Telegram} A reference to this telegram.
+	 */
 	fromJSON( json ) {
 
 		this.sender = json.sender;
@@ -113,11 +113,11 @@ class Telegram {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {Telegram} A reference to this telegram.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {Telegram} A reference to this telegram.
+	 */
 	resolveReferences( entities ) {
 
 		this.sender = entities.get( this.sender );
@@ -132,20 +132,20 @@ class Telegram {
 /* istanbul ignore next */
 
 /**
-* Class with a logger interface. Messages are only logged to console if
-* their log level is smaller or equal than the current log level.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class with a logger interface. Messages are only logged to console if
+ * their log level is smaller or equal than the current log level.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Logger {
 
 	/**
-	* Sets the log level for the logger. Allow values are: *LOG*,
-	* *WARN*, *ERROR*, *SILENT*. The default level is *WARN*. The constants
-	* are accessible over the *Logger.LEVEL* namespace.
-	*
-	* @param {Number} level - The log level.
-	*/
+	 * Sets the log level for the logger. Allow values are: *LOG*,
+	 * *WARN*, *ERROR*, *SILENT*. The default level is *WARN*. The constants
+	 * are accessible over the *Logger.LEVEL* namespace.
+	 *
+	 * @param {Number} level - The log level.
+	 */
 	static setLevel( level ) {
 
 		currentLevel = level;
@@ -153,10 +153,10 @@ class Logger {
 	}
 
 	/**
-	* Logs a message with the level *LOG*.
-	*
-	* @param {...Any} args - The arguments to log.
-	*/
+	 * Logs a message with the level *LOG*.
+	 *
+	 * @param {...Any} args - The arguments to log.
+	 */
 	static log( ...args ) {
 
 		if ( currentLevel <= Logger.LEVEL.LOG ) console.log( ...args );
@@ -164,10 +164,10 @@ class Logger {
 	}
 
 	/**
-	* Logs a message with the level *WARN*.
-	*
-	* @param {...Any} args - The arguments to log.
-	*/
+	 * Logs a message with the level *WARN*.
+	 *
+	 * @param {...Any} args - The arguments to log.
+	 */
 	static warn( ...args ) {
 
 		if ( currentLevel <= Logger.LEVEL.WARN ) console.warn( ...args );
@@ -175,10 +175,10 @@ class Logger {
 	}
 
 	/**
-	* Logs a message with the level *ERROR*.
-	*
-	* @param {...Any} args - The arguments to log.
-	*/
+	 * Logs a message with the level *ERROR*.
+	 *
+	 * @param {...Any} args - The arguments to log.
+	 */
 	static error( ...args ) {
 
 		if ( currentLevel <= Logger.LEVEL.ERROR ) console.error( ...args );
@@ -197,34 +197,34 @@ Logger.LEVEL = Object.freeze( {
 let currentLevel = Logger.LEVEL.WARN;
 
 /**
-* This class is the core of the messaging system for game entities and used by the
-* {@link EntityManager}. The implementation can directly dispatch messages or use a
-* delayed delivery for deferred communication. This can be useful if a game entity
-* wants to inform itself about a particular event in the future.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * This class is the core of the messaging system for game entities and used by the
+ * {@link EntityManager}. The implementation can directly dispatch messages or use a
+ * delayed delivery for deferred communication. This can be useful if a game entity
+ * wants to inform itself about a particular event in the future.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class MessageDispatcher {
 
 	/**
-	* Constructs a new message dispatcher.
-	*/
+	 * Constructs a new message dispatcher.
+	 */
 	constructor() {
 
 		/**
-		* A list of delayed telegrams.
-		* @type Array
-		*/
+		 * A list of delayed telegrams.
+		 * @type Array
+		 */
 		this.delayedTelegrams = new Array();
 
 	}
 
 	/**
-	* Delivers the message to the receiver.
-	*
-	* @param {Telegram} telegram - The telegram to deliver.
-	* @return {MessageDispatcher} A reference to this message dispatcher.
-	*/
+	 * Delivers the message to the receiver.
+	 *
+	 * @param {Telegram} telegram - The telegram to deliver.
+	 * @return {MessageDispatcher} A reference to this message dispatcher.
+	 */
 	deliver( telegram ) {
 
 		const receiver = telegram.receiver;
@@ -240,15 +240,15 @@ class MessageDispatcher {
 	}
 
 	/**
-	* Receives the raw telegram data and decides how to dispatch the telegram (with or without delay).
-	*
-	* @param {GameEntity} sender - The sender.
-	* @param {GameEntity} receiver - The receiver.
-	* @param {String} message - The actual message.
-	* @param {Number} delay - A time value in millisecond used to delay the message dispatching.
-	* @param {Object} data - An object for custom data.
-	* @return {MessageDispatcher} A reference to this message dispatcher.
-	*/
+	 * Receives the raw telegram data and decides how to dispatch the telegram (with or without delay).
+	 *
+	 * @param {GameEntity} sender - The sender.
+	 * @param {GameEntity} receiver - The receiver.
+	 * @param {String} message - The actual message.
+	 * @param {Number} delay - A time value in millisecond used to delay the message dispatching.
+	 * @param {Object} data - An object for custom data.
+	 * @return {MessageDispatcher} A reference to this message dispatcher.
+	 */
 	dispatch( sender, receiver, message, delay, data ) {
 
 		const telegram = new Telegram( sender, receiver, message, delay, data );
@@ -268,11 +268,11 @@ class MessageDispatcher {
 	}
 
 	/**
-	* Used to process delayed messages.
-	*
-	* @param  {Number} delta - The time delta.
-	* @return {MessageDispatcher} A reference to this message dispatcher.
-	*/
+	 * Used to process delayed messages.
+	 *
+	 * @param  {Number} delta - The time delta.
+	 * @return {MessageDispatcher} A reference to this message dispatcher.
+	 */
 	dispatchDelayedMessages( delta ) {
 
 		let i = this.delayedTelegrams.length;
@@ -298,10 +298,10 @@ class MessageDispatcher {
 	}
 
 	/**
-	* Clears the internal state of this message dispatcher.
-	*
-	* @return {MessageDispatcher} A reference to this message dispatcher.
-	*/
+	 * Clears the internal state of this message dispatcher.
+	 *
+	 * @return {MessageDispatcher} A reference to this message dispatcher.
+	 */
 	clear() {
 
 		this.delayedTelegrams.length = 0;
@@ -311,10 +311,10 @@ class MessageDispatcher {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const data = {
@@ -336,11 +336,11 @@ class MessageDispatcher {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {MessageDispatcher} A reference to this message dispatcher.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {MessageDispatcher} A reference to this message dispatcher.
+	 */
 	fromJSON( json ) {
 
 		this.clear();
@@ -362,11 +362,11 @@ class MessageDispatcher {
 
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {MessageDispatcher} A reference to this message dispatcher.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {MessageDispatcher} A reference to this message dispatcher.
+	 */
 	resolveReferences( entities ) {
 
 		const delayedTelegrams = this.delayedTelegrams;
@@ -393,20 +393,20 @@ for ( let i = 0; i < 256; i ++ ) {
 }
 
 /**
-* Class with various math helpers.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class with various math helpers.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class MathUtils {
 
 	/**
-	* Ensures the given scalar value is within a given min/max range.
-	*
-	* @param {Number} value - The value to clamp.
-	* @param {min} value - The min value.
-	* @param {max} value - The max value.
-	* @return {Number} The clamped value.
-	*/
+	 * Ensures the given scalar value is within a given min/max range.
+	 *
+	 * @param {Number} value - The value to clamp.
+	 * @param {min} value - The min value.
+	 * @param {max} value - The max value.
+	 * @return {Number} The clamped value.
+	 */
 	static clamp( value, min, max ) {
 
 		return Math.max( min, Math.min( max, value ) );
@@ -414,12 +414,12 @@ class MathUtils {
 	}
 
 	/**
-	* Computes a random integer value within a given min/max range.
-	*
-	* @param {min} value - The min value.
-	* @param {max} value - The max value.
-	* @return {Number} The random integer value.
-	*/
+	 * Computes a random integer value within a given min/max range.
+	 *
+	 * @param {min} value - The min value.
+	 * @param {max} value - The max value.
+	 * @return {Number} The random integer value.
+	 */
 	static randInt( min, max ) {
 
 		return min + Math.floor( Math.random() * ( max - min + 1 ) );
@@ -427,12 +427,12 @@ class MathUtils {
 	}
 
 	/**
-	* Computes a random float value within a given min/max range.
-	*
-	* @param {min} value - The min value.
-	* @param {max} value - The max value.
-	* @return {Number} The random float value.
-	*/
+	 * Computes a random float value within a given min/max range.
+	 *
+	 * @param {min} value - The min value.
+	 * @param {max} value - The max value.
+	 * @return {Number} The random float value.
+	 */
 	static randFloat( min, max ) {
 
 		return min + Math.random() * ( max - min );
@@ -440,14 +440,14 @@ class MathUtils {
 	}
 
 	/**
-	* Computes the signed area of a rectangle defined by three points.
-	* This method can also be used to calculate the area of a triangle.
-	*
-	* @param {Vector3} a - The first point in 3D space.
-	* @param {Vector3} b - The second point in 3D space.
-	* @param {Vector3} c - The third point in 3D space.
-	* @return {Number} The signed area.
-	*/
+	 * Computes the signed area of a rectangle defined by three points.
+	 * This method can also be used to calculate the area of a triangle.
+	 *
+	 * @param {Vector3} a - The first point in 3D space.
+	 * @param {Vector3} b - The second point in 3D space.
+	 * @param {Vector3} c - The third point in 3D space.
+	 * @return {Number} The signed area.
+	 */
 	static area( a, b, c ) {
 
 		return ( ( c.x - a.x ) * ( b.z - a.z ) ) - ( ( b.x - a.x ) * ( c.z - a.z ) );
@@ -455,10 +455,10 @@ class MathUtils {
 	}
 
 	/**
-	* Computes a RFC4122 Version 4 complied Universally Unique Identifier (UUID).
-	*
-	* @return {String} The UUID.
-	*/
+	 * Computes a RFC4122 Version 4 complied Universally Unique Identifier (UUID).
+	 *
+	 * @return {String} The UUID.
+	 */
 	static generateUUID() {
 
 		// https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript/21963136#21963136
@@ -479,49 +479,49 @@ class MathUtils {
 }
 
 /**
-* Class representing a 3D vector.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class representing a 3D vector.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Vector3 {
 
 	/**
-	* Constructs a new 3D vector with the given values.
-	*
-	* @param {Number} x - The x component.
-	* @param {Number} y - The y component.
-	* @param {Number} z - The z component.
-	*/
+	 * Constructs a new 3D vector with the given values.
+	 *
+	 * @param {Number} x - The x component.
+	 * @param {Number} y - The y component.
+	 * @param {Number} z - The z component.
+	 */
 	constructor( x = 0, y = 0, z = 0 ) {
 
 		/**
-		* The x component.
-		* @type Number
-		*/
+		 * The x component.
+		 * @type Number
+		 */
 		this.x = x;
 
 		/**
-		* The y component.
-		* @type Number
-		*/
+		 * The y component.
+		 * @type Number
+		 */
 		this.y = y;
 
 		/**
-		* The z component.
-		* @type Number
-		*/
+		 * The z component.
+		 * @type Number
+		 */
 		this.z = z;
 
 	}
 
 	/**
-	* Sets the given values to this 3D vector.
-	*
-	* @param {Number} x - The x component.
-	* @param {Number} y - The y component.
-	* @param {Number} z - The z component.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Sets the given values to this 3D vector.
+	 *
+	 * @param {Number} x - The x component.
+	 * @param {Number} y - The y component.
+	 * @param {Number} z - The z component.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	set( x, y, z ) {
 
 		this.x = x;
@@ -533,11 +533,11 @@ class Vector3 {
 	}
 
 	/**
-	* Copies all values from the given 3D vector to this 3D vector.
-	*
-	* @param {Vector3} v - The vector to copy.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Copies all values from the given 3D vector to this 3D vector.
+	 *
+	 * @param {Vector3} v - The vector to copy.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	copy( v ) {
 
 		this.x = v.x;
@@ -549,10 +549,10 @@ class Vector3 {
 	}
 
 	/**
-	* Creates a new 3D vector and copies all values from this 3D vector.
-	*
-	* @return {Vector3} A new 3D vector.
-	*/
+	 * Creates a new 3D vector and copies all values from this 3D vector.
+	 *
+	 * @return {Vector3} A new 3D vector.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -560,11 +560,11 @@ class Vector3 {
 	}
 
 	/**
-	* Adds the given 3D vector to this 3D vector.
-	*
-	* @param {Vector3} v - The vector to add.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Adds the given 3D vector to this 3D vector.
+	 *
+	 * @param {Vector3} v - The vector to add.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	add( v ) {
 
 		this.x += v.x;
@@ -576,11 +576,11 @@ class Vector3 {
 	}
 
 	/**
-	* Adds the given scalar to this 3D vector.
-	*
-	* @param {Number} s - The scalar to add.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Adds the given scalar to this 3D vector.
+	 *
+	 * @param {Number} s - The scalar to add.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	addScalar( s ) {
 
 		this.x += s;
@@ -592,12 +592,12 @@ class Vector3 {
 	}
 
 	/**
-	* Adds two given 3D vectors and stores the result in this 3D vector.
-	*
-	* @param {Vector3} a - The first vector of the operation.
-	* @param {Vector3} b - The second vector of the operation.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Adds two given 3D vectors and stores the result in this 3D vector.
+	 *
+	 * @param {Vector3} a - The first vector of the operation.
+	 * @param {Vector3} b - The second vector of the operation.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	addVectors( a, b ) {
 
 		this.x = a.x + b.x;
@@ -609,11 +609,11 @@ class Vector3 {
 	}
 
 	/**
-	* Subtracts the given 3D vector from this 3D vector.
-	*
-	* @param {Vector3} v - The vector to substract.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Subtracts the given 3D vector from this 3D vector.
+	 *
+	 * @param {Vector3} v - The vector to substract.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	sub( v ) {
 
 		this.x -= v.x;
@@ -625,11 +625,11 @@ class Vector3 {
 	}
 
 	/**
-	* Subtracts the given scalar from this 3D vector.
-	*
-	* @param {Number} s - The scalar to substract.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Subtracts the given scalar from this 3D vector.
+	 *
+	 * @param {Number} s - The scalar to substract.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	subScalar( s ) {
 
 		this.x -= s;
@@ -641,12 +641,12 @@ class Vector3 {
 	}
 
 	/**
-	* Subtracts two given 3D vectors and stores the result in this 3D vector.
-	*
-	* @param {Vector3} a - The first vector of the operation.
-	* @param {Vector3} b - The second vector of the operation.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Subtracts two given 3D vectors and stores the result in this 3D vector.
+	 *
+	 * @param {Vector3} a - The first vector of the operation.
+	 * @param {Vector3} b - The second vector of the operation.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	subVectors( a, b ) {
 
 		this.x = a.x - b.x;
@@ -658,11 +658,11 @@ class Vector3 {
 	}
 
 	/**
-	* Multiplies the given 3D vector with this 3D vector.
-	*
-	* @param {Vector3} v - The vector to multiply.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Multiplies the given 3D vector with this 3D vector.
+	 *
+	 * @param {Vector3} v - The vector to multiply.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	multiply( v ) {
 
 		this.x *= v.x;
@@ -674,11 +674,11 @@ class Vector3 {
 	}
 
 	/**
-	* Multiplies the given scalar with this 3D vector.
-	*
-	* @param {Number} s - The scalar to multiply.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Multiplies the given scalar with this 3D vector.
+	 *
+	 * @param {Number} s - The scalar to multiply.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	multiplyScalar( s ) {
 
 		this.x *= s;
@@ -690,12 +690,12 @@ class Vector3 {
 	}
 
 	/**
-	* Multiplies two given 3D vectors and stores the result in this 3D vector.
-	*
-	* @param {Vector3} a - The first vector of the operation.
-	* @param {Vector3} b - The second vector of the operation.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Multiplies two given 3D vectors and stores the result in this 3D vector.
+	 *
+	 * @param {Vector3} a - The first vector of the operation.
+	 * @param {Vector3} b - The second vector of the operation.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	multiplyVectors( a, b ) {
 
 		this.x = a.x * b.x;
@@ -707,11 +707,11 @@ class Vector3 {
 	}
 
 	/**
-	* Divides the given 3D vector through this 3D vector.
-	*
-	* @param {Vector3} v - The vector to divide.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Divides the given 3D vector through this 3D vector.
+	 *
+	 * @param {Vector3} v - The vector to divide.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	divide( v ) {
 
 		this.x /= v.x;
@@ -723,11 +723,11 @@ class Vector3 {
 	}
 
 	/**
-	* Divides the given scalar through this 3D vector.
-	*
-	* @param {Number} s - The scalar to multiply.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Divides the given scalar through this 3D vector.
+	 *
+	 * @param {Number} s - The scalar to multiply.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	divideScalar( s ) {
 
 		this.x /= s;
@@ -739,12 +739,12 @@ class Vector3 {
 	}
 
 	/**
-	* Divides two given 3D vectors and stores the result in this 3D vector.
-	*
-	* @param {Vector3} a - The first vector of the operation.
-	* @param {Vector3} b - The second vector of the operation.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Divides two given 3D vectors and stores the result in this 3D vector.
+	 *
+	 * @param {Vector3} a - The first vector of the operation.
+	 * @param {Vector3} b - The second vector of the operation.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	divideVectors( a, b ) {
 
 		this.x = a.x / b.x;
@@ -756,11 +756,11 @@ class Vector3 {
 	}
 
 	/**
-	* Reflects this vector along the given normal.
-	*
-	* @param {Vector3} normal - The normal vector.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Reflects this vector along the given normal.
+	 *
+	 * @param {Vector3} normal - The normal vector.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	reflect( normal ) {
 
 		// solve r = v - 2( v * n ) * n
@@ -770,12 +770,12 @@ class Vector3 {
 	}
 
 	/**
-	* Ensures this 3D vector lies in the given min/max range.
-	*
-	* @param {Vector3} min - The min range.
-	* @param {Vector3} max - The max range.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Ensures this 3D vector lies in the given min/max range.
+	 *
+	 * @param {Vector3} min - The min range.
+	 * @param {Vector3} max - The max range.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	clamp( min, max ) {
 
 		this.x = Math.max( min.x, Math.min( max.x, this.x ) );
@@ -787,12 +787,12 @@ class Vector3 {
 	}
 
 	/**
-	* Compares each vector component of this 3D vector and the
-	* given one and stores the minimum value in this instance.
-	*
-	* @param {Vector3} v - The 3D vector to check.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Compares each vector component of this 3D vector and the
+	 * given one and stores the minimum value in this instance.
+	 *
+	 * @param {Vector3} v - The 3D vector to check.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	min( v ) {
 
 		this.x = Math.min( this.x, v.x );
@@ -804,12 +804,12 @@ class Vector3 {
 	}
 
 	/**
-	* Compares each vector component of this 3D vector and the
-	* given one and stores the maximum value in this instance.
-	*
-	* @param {Vector3} v - The 3D vector to check.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Compares each vector component of this 3D vector and the
+	 * given one and stores the maximum value in this instance.
+	 *
+	 * @param {Vector3} v - The 3D vector to check.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	max( v ) {
 
 		this.x = Math.max( this.x, v.x );
@@ -821,11 +821,11 @@ class Vector3 {
 	}
 
 	/**
-	* Computes the dot product of this and the given 3D vector.
-	*
-	* @param {Vector3} v - The given 3D vector.
-	* @return {Number} The results of the dor product.
-	*/
+	 * Computes the dot product of this and the given 3D vector.
+	 *
+	 * @param {Vector3} v - The given 3D vector.
+	 * @return {Number} The results of the dor product.
+	 */
 	dot( v ) {
 
 		return ( this.x * v.x ) + ( this.y * v.y ) + ( this.z * v.z );
@@ -833,12 +833,12 @@ class Vector3 {
 	}
 
 	/**
-	* Computes the cross product of this and the given 3D vector and
-	* stores the result in this 3D vector.
-	*
-	* @param {Vector3} v - A 3D vector.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Computes the cross product of this and the given 3D vector and
+	 * stores the result in this 3D vector.
+	 *
+	 * @param {Vector3} v - A 3D vector.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	cross( v ) {
 
 		const x = this.x, y = this.y, z = this.z;
@@ -852,13 +852,13 @@ class Vector3 {
 	}
 
 	/**
-	* Computes the cross product of the two given 3D vectors and
-	* stores the result in this 3D vector.
-	*
-	* @param {Vector3} a - The first 3D vector.
-	* @param {Vector3} b - The second 3D vector.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Computes the cross product of the two given 3D vectors and
+	 * stores the result in this 3D vector.
+	 *
+	 * @param {Vector3} a - The first 3D vector.
+	 * @param {Vector3} b - The second 3D vector.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	crossVectors( a, b ) {
 
 		const ax = a.x, ay = a.y, az = a.z;
@@ -873,11 +873,11 @@ class Vector3 {
 	}
 
 	/**
-	* Computes the angle between this and the given vector.
-	*
-	* @param {Vector3} v - A 3D vector.
-	* @return {Number} The angle in radians.
-	*/
+	 * Computes the angle between this and the given vector.
+	 *
+	 * @param {Vector3} v - A 3D vector.
+	 * @return {Number} The angle in radians.
+	 */
 	angleTo( v ) {
 
 		const theta = this.dot( v ) / ( Math.sqrt( this.squaredLength() * v.squaredLength() ) );
@@ -889,10 +889,10 @@ class Vector3 {
 	}
 
 	/**
-	* Computes the length of this 3D vector.
-	*
-	* @return {Number} The length of this 3D vector.
-	*/
+	 * Computes the length of this 3D vector.
+	 *
+	 * @return {Number} The length of this 3D vector.
+	 */
 	length() {
 
 		return Math.sqrt( this.squaredLength() );
@@ -900,12 +900,12 @@ class Vector3 {
 	}
 
 	/**
-	* Computes the squared length of this 3D vector.
-	* Calling this method is faster than calling {@link Vector3#length},
-	* since it avoids computing a square root.
-	*
-	* @return {Number} The squared length of this 3D vector.
-	*/
+	 * Computes the squared length of this 3D vector.
+	 * Calling this method is faster than calling {@link Vector3#length},
+	 * since it avoids computing a square root.
+	 *
+	 * @return {Number} The squared length of this 3D vector.
+	 */
 	squaredLength() {
 
 		return this.dot( this );
@@ -913,10 +913,10 @@ class Vector3 {
 	}
 
 	/**
-	* Computes the manhattan length of this 3D vector.
-	*
-	* @return {Number} The manhattan length of this 3D vector.
-	*/
+	 * Computes the manhattan length of this 3D vector.
+	 *
+	 * @return {Number} The manhattan length of this 3D vector.
+	 */
 	manhattanLength() {
 
 		return Math.abs( this.x ) + Math.abs( this.y ) + Math.abs( this.z );
@@ -924,11 +924,11 @@ class Vector3 {
 	}
 
 	/**
-	* Computes the euclidean distance between this 3D vector and the given one.
-	*
-	* @param {Vector3} v - A 3D vector.
-	* @return {Number} The euclidean distance between two 3D vectors.
-	*/
+	 * Computes the euclidean distance between this 3D vector and the given one.
+	 *
+	 * @param {Vector3} v - A 3D vector.
+	 * @return {Number} The euclidean distance between two 3D vectors.
+	 */
 	distanceTo( v ) {
 
 		return Math.sqrt( this.squaredDistanceTo( v ) );
@@ -936,13 +936,13 @@ class Vector3 {
 	}
 
 	/**
-	* Computes the squared euclidean distance between this 3D vector and the given one.
-	* Calling this method is faster than calling {@link Vector3#distanceTo},
-	* since it avoids computing a square root.
-	*
-	* @param {Vector3} v - A 3D vector.
-	* @return {Number} The squared euclidean distance between two 3D vectors.
-	*/
+	 * Computes the squared euclidean distance between this 3D vector and the given one.
+	 * Calling this method is faster than calling {@link Vector3#distanceTo},
+	 * since it avoids computing a square root.
+	 *
+	 * @param {Vector3} v - A 3D vector.
+	 * @return {Number} The squared euclidean distance between two 3D vectors.
+	 */
 	squaredDistanceTo( v ) {
 
 		const dx = this.x - v.x, dy = this.y - v.y, dz = this.z - v.z;
@@ -952,11 +952,11 @@ class Vector3 {
 	}
 
 	/**
-	* Computes the manhattan distance between this 3D vector and the given one.
-	*
-	* @param {Vector3} v - A 3D vector.
-	* @return {Number} The manhattan distance between two 3D vectors.
-	*/
+	 * Computes the manhattan distance between this 3D vector and the given one.
+	 *
+	 * @param {Vector3} v - A 3D vector.
+	 * @return {Number} The manhattan distance between two 3D vectors.
+	 */
 	manhattanDistanceTo( v ) {
 
 		const dx = this.x - v.x, dy = this.y - v.y, dz = this.z - v.z;
@@ -966,10 +966,10 @@ class Vector3 {
 	}
 
 	/**
-	* Normalizes this 3D vector.
-	*
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Normalizes this 3D vector.
+	 *
+	 * @return {Vector3} A reference to this vector.
+	 */
 	normalize() {
 
 		return this.divideScalar( this.length() || 1 );
@@ -977,11 +977,11 @@ class Vector3 {
 	}
 
 	/**
-	* Multiplies the given 4x4 matrix with this 3D vector
-	*
-	* @param {Matrix4} m - A 4x4 matrix.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Multiplies the given 4x4 matrix with this 3D vector
+	 *
+	 * @param {Matrix4} m - A 4x4 matrix.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	applyMatrix4( m ) {
 
 		const x = this.x, y = this.y, z = this.z;
@@ -998,11 +998,11 @@ class Vector3 {
 	}
 
 	/**
-	* Multiplies the given quaternion with this 3D vector.
-	*
-	* @param {Quaternion} q - A quaternion.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Multiplies the given quaternion with this 3D vector.
+	 *
+	 * @param {Quaternion} q - A quaternion.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	applyRotation( q ) {
 
 		const x = this.x, y = this.y, z = this.z;
@@ -1026,11 +1026,11 @@ class Vector3 {
 	}
 
 	/**
-	* Extracts the position portion of the given 4x4 matrix and stores it in this 3D vector.
-	*
-	* @param {Matrix4} m - A 4x4 matrix.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Extracts the position portion of the given 4x4 matrix and stores it in this 3D vector.
+	 *
+	 * @param {Matrix4} m - A 4x4 matrix.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	extractPositionFromMatrix( m ) {
 
 		const e = m.elements;
@@ -1044,11 +1044,11 @@ class Vector3 {
 	}
 
 	/**
-	* Transform this direction vector by the given 4x4 matrix.
-	*
-	* @param {Matrix4} m - A 4x4 matrix.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Transform this direction vector by the given 4x4 matrix.
+	 *
+	 * @param {Matrix4} m - A 4x4 matrix.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	transformDirection( m ) {
 
 		const x = this.x, y = this.y, z = this.z;
@@ -1063,12 +1063,12 @@ class Vector3 {
 	}
 
 	/**
-	* Sets the components of this 3D vector from a column of a 3x3 matrix.
-	*
-	* @param {Matrix3} m - A 3x3 matrix.
-	* @param {Number} i - The index of the column.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Sets the components of this 3D vector from a column of a 3x3 matrix.
+	 *
+	 * @param {Matrix3} m - A 3x3 matrix.
+	 * @param {Number} i - The index of the column.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	fromMatrix3Column( m, i ) {
 
 		return this.fromArray( m.elements, i * 3 );
@@ -1076,12 +1076,12 @@ class Vector3 {
 	}
 
 	/**
-	* Sets the components of this 3D vector from a column of a 4x4 matrix.
-	*
-	* @param {Matrix3} m - A 4x4 matrix.
-	* @param {Number} i - The index of the column.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Sets the components of this 3D vector from a column of a 4x4 matrix.
+	 *
+	 * @param {Matrix3} m - A 4x4 matrix.
+	 * @param {Number} i - The index of the column.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	fromMatrix4Column( m, i ) {
 
 		return this.fromArray( m.elements, i * 4 );
@@ -1089,13 +1089,13 @@ class Vector3 {
 	}
 
 	/**
-	* Sets the components of this 3D vector from a spherical coordinate.
-	*
-	* @param {Number} radius - The radius.
-	* @param {Number} phi - The polar or inclination angle in radians. Should be in the range of (−π/2, +π/2].
-	* @param {Number} theta - The azimuthal angle in radians. Should be in the range of (−π, +π].
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Sets the components of this 3D vector from a spherical coordinate.
+	 *
+	 * @param {Number} radius - The radius.
+	 * @param {Number} phi - The polar or inclination angle in radians. Should be in the range of (−π/2, +π/2].
+	 * @param {Number} theta - The azimuthal angle in radians. Should be in the range of (−π, +π].
+	 * @return {Vector3} A reference to this vector.
+	 */
 	fromSpherical( radius, phi, theta ) {
 
 		const sinPhiRadius = Math.sin( phi ) * radius;
@@ -1109,12 +1109,12 @@ class Vector3 {
 	}
 
 	/**
-	* Sets the components of this 3D vector from an array.
-	*
-	* @param {Array} array - An array.
-	* @param {Number} offset - An optional offset.
-	* @return {Vector3} A reference to this vector.
-	*/
+	 * Sets the components of this 3D vector from an array.
+	 *
+	 * @param {Array} array - An array.
+	 * @param {Number} offset - An optional offset.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	fromArray( array, offset = 0 ) {
 
 		this.x = array[ offset + 0 ];
@@ -1126,12 +1126,12 @@ class Vector3 {
 	}
 
 	/**
-	* Copies all values of this 3D vector to the given array.
-	*
-	* @param {Array} array - An array.
-	* @param {Number} offset - An optional offset.
-	* @return {Array} The array with the 3D vector components.
-	*/
+	 * Copies all values of this 3D vector to the given array.
+	 *
+	 * @param {Array} array - An array.
+	 * @param {Number} offset - An optional offset.
+	 * @return {Array} The array with the 3D vector components.
+	 */
 	toArray( array, offset = 0 ) {
 
 		array[ offset + 0 ] = this.x;
@@ -1143,11 +1143,11 @@ class Vector3 {
 	}
 
 	/**
-	* Returns true if the given 3D vector is deep equal with this 3D vector.
-	*
-	* @param {Vector3} v - The 3D vector to test.
-	* @return {Boolean} The result of the equality test.
-	*/
+	 * Returns true if the given 3D vector is deep equal with this 3D vector.
+	 *
+	 * @param {Vector3} v - The 3D vector to test.
+	 * @return {Boolean} The result of the equality test.
+	 */
 	equals( v ) {
 
 		return ( ( v.x === this.x ) && ( v.y === this.y ) && ( v.z === this.z ) );
@@ -1166,22 +1166,22 @@ const perpWorldUp = new Vector3();
 const temp = new Vector3();
 
 /**
-* Class representing a 3x3 matrix. The elements of the matrix
-* are stored in column-major order.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class representing a 3x3 matrix. The elements of the matrix
+ * are stored in column-major order.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Matrix3 {
 
 	/**
-	* Constructs a new 3x3 identity matrix.
-	*/
+	 * Constructs a new 3x3 identity matrix.
+	 */
 	constructor() {
 
 		/**
-		* The elements of the matrix in column-major order.
-		* @type Array
-		*/
+		 * The elements of the matrix in column-major order.
+		 * @type Array
+		 */
 		this.elements = [
 
 			1, 0, 0,
@@ -1193,19 +1193,19 @@ class Matrix3 {
 	}
 
 	/**
-	* Sets the given values to this matrix. The arguments are in row-major order.
-	*
-	* @param {Number} n11 - An element of the matrix.
-	* @param {Number} n12 - An element of the matrix.
-	* @param {Number} n13 - An element of the matrix.
-	* @param {Number} n21 - An element of the matrix.
-	* @param {Number} n22 - An element of the matrix.
-	* @param {Number} n23 - An element of the matrix.
-	* @param {Number} n31 - An element of the matrix.
-	* @param {Number} n32 - An element of the matrix.
-	* @param {Number} n33 - An element of the matrix.
-	* @return {Matrix3} A reference to this matrix.
-	*/
+	 * Sets the given values to this matrix. The arguments are in row-major order.
+	 *
+	 * @param {Number} n11 - An element of the matrix.
+	 * @param {Number} n12 - An element of the matrix.
+	 * @param {Number} n13 - An element of the matrix.
+	 * @param {Number} n21 - An element of the matrix.
+	 * @param {Number} n22 - An element of the matrix.
+	 * @param {Number} n23 - An element of the matrix.
+	 * @param {Number} n31 - An element of the matrix.
+	 * @param {Number} n32 - An element of the matrix.
+	 * @param {Number} n33 - An element of the matrix.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	set( n11, n12, n13, n21, n22, n23, n31, n32, n33 ) {
 
 		const e = this.elements;
@@ -1219,11 +1219,11 @@ class Matrix3 {
 	}
 
 	/**
-	* Copies all values from the given matrix to this matrix.
-	*
-	* @param {Matrix3} m - The matrix to copy.
-	* @return {Matrix3} A reference to this matrix.
-	*/
+	 * Copies all values from the given matrix to this matrix.
+	 *
+	 * @param {Matrix3} m - The matrix to copy.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	copy( m ) {
 
 		const e = this.elements;
@@ -1238,10 +1238,10 @@ class Matrix3 {
 	}
 
 	/**
-	* Creates a new matrix and copies all values from this matrix.
-	*
-	* @return {Matrix3} A new matrix.
-	*/
+	 * Creates a new matrix and copies all values from this matrix.
+	 *
+	 * @return {Matrix3} A new matrix.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -1249,10 +1249,10 @@ class Matrix3 {
 	}
 
 	/**
-	* Transforms this matrix to an identity matrix.
-	*
-	* @return {Matrix3} A reference to this matrix.
-	*/
+	 * Transforms this matrix to an identity matrix.
+	 *
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	identity() {
 
 		this.set(
@@ -1268,11 +1268,11 @@ class Matrix3 {
 	}
 
 	/**
-	* Multiplies this matrix with the given matrix.
-	*
-	* @param {Matrix3} m - The matrix to multiply.
-	* @return {Matrix3} A reference to this matrix.
-	*/
+	 * Multiplies this matrix with the given matrix.
+	 *
+	 * @param {Matrix3} m - The matrix to multiply.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	multiply( m ) {
 
 		return this.multiplyMatrices( this, m );
@@ -1280,12 +1280,12 @@ class Matrix3 {
 	}
 
 	/**
-	* Multiplies this matrix with the given matrix.
-	* So the order of the multiplication is switched compared to {@link Matrix3#multiply}.
-	*
-	* @param {Matrix3} m - The matrix to multiply.
-	* @return {Matrix3} A reference to this matrix.
-	*/
+	 * Multiplies this matrix with the given matrix.
+	 * So the order of the multiplication is switched compared to {@link Matrix3#multiply}.
+	 *
+	 * @param {Matrix3} m - The matrix to multiply.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	premultiply( m ) {
 
 		return this.multiplyMatrices( m, this );
@@ -1293,12 +1293,12 @@ class Matrix3 {
 	}
 
 	/**
-	* Multiplies two given matrices and stores the result in this matrix.
-	*
-	* @param {Matrix3} a - The first matrix of the operation.
-	* @param {Matrix3} b - The second matrix of the operation.
-	* @return {Matrix3} A reference to this matrix.
-	*/
+	 * Multiplies two given matrices and stores the result in this matrix.
+	 *
+	 * @param {Matrix3} a - The first matrix of the operation.
+	 * @param {Matrix3} b - The second matrix of the operation.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	multiplyMatrices( a, b ) {
 
 		const ae = a.elements;
@@ -1330,11 +1330,11 @@ class Matrix3 {
 	}
 
 	/**
-	* Multiplies the given scalar with this matrix.
-	*
-	* @param {Number} s - The scalar to multiply.
-	* @return {Matrix3} A reference to this matrix.
-	*/
+	 * Multiplies the given scalar with this matrix.
+	 *
+	 * @param {Number} s - The scalar to multiply.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	multiplyScalar( s ) {
 
 		const e = this.elements;
@@ -1348,13 +1348,13 @@ class Matrix3 {
 	}
 
 	/**
-	* Extracts the basis vectors and stores them to the given vectors.
-	*
-	* @param {Vector3} xAxis - The first result vector for the x-axis.
-	* @param {Vector3} yAxis - The second result vector for the y-axis.
-	* @param {Vector3} zAxis - The third result vector for the z-axis.
-	* @return {Matrix3} A reference to this matrix.
-	*/
+	 * Extracts the basis vectors and stores them to the given vectors.
+	 *
+	 * @param {Vector3} xAxis - The first result vector for the x-axis.
+	 * @param {Vector3} yAxis - The second result vector for the y-axis.
+	 * @param {Vector3} zAxis - The third result vector for the z-axis.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	extractBasis( xAxis, yAxis, zAxis ) {
 
 		xAxis.fromMatrix3Column( this, 0 );
@@ -1366,13 +1366,13 @@ class Matrix3 {
 	}
 
 	/**
-	* Makes a basis from the given vectors.
-	*
-	* @param {Vector3} xAxis - The first basis vector for the x-axis.
-	* @param {Vector3} yAxis - The second basis vector for the y-axis.
-	* @param {Vector3} zAxis - The third basis vector for the z-axis.
-	* @return {Matrix3} A reference to this matrix.
-	*/
+	 * Makes a basis from the given vectors.
+	 *
+	 * @param {Vector3} xAxis - The first basis vector for the x-axis.
+	 * @param {Vector3} yAxis - The second basis vector for the y-axis.
+	 * @param {Vector3} zAxis - The third basis vector for the z-axis.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	makeBasis( xAxis, yAxis, zAxis ) {
 
 		this.set(
@@ -1386,13 +1386,13 @@ class Matrix3 {
 	}
 
 	/**
-	* Creates a rotation matrix that orients an object to face towards a specified target direction.
-	*
-	* @param {Vector3} localForward - Specifies the forward direction in the local space of the object.
-	* @param {Vector3} targetDirection - Specifies the desired world space direction the object should look at.
-	* @param {Vector3} localUp - Specifies the up direction in the local space of the object.
-	* @return {Matrix3} A reference to this matrix.
-	*/
+	 * Creates a rotation matrix that orients an object to face towards a specified target direction.
+	 *
+	 * @param {Vector3} localForward - Specifies the forward direction in the local space of the object.
+	 * @param {Vector3} targetDirection - Specifies the desired world space direction the object should look at.
+	 * @param {Vector3} localUp - Specifies the up direction in the local space of the object.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	lookAt( localForward, targetDirection, localUp ) {
 
 		localRight.crossVectors( localUp, localForward ).normalize();
@@ -1427,10 +1427,10 @@ class Matrix3 {
 	}
 
 	/**
-	* Transposes this matrix.
-	*
-	* @return {Matrix3} A reference to this matrix.
-	*/
+	 * Transposes this matrix.
+	 *
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	transpose() {
 
 		const e = this.elements;
@@ -1445,11 +1445,11 @@ class Matrix3 {
 	}
 
 	/**
-	* Creates a rotation matrix from the given quaternion.
-	*
-	* @param {Quaternion} q - A quaternion representing a rotation.
-	* @return {Matrix3} A reference to this matrix.
-	*/
+	 * Creates a rotation matrix from the given quaternion.
+	 *
+	 * @param {Quaternion} q - A quaternion representing a rotation.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	fromQuaternion( q ) {
 
 		const e = this.elements;
@@ -1477,12 +1477,12 @@ class Matrix3 {
 	}
 
 	/**
-	* Sets the elements of this matrix from an array.
-	*
-	* @param {Array} array - An array.
-	* @param {Number} offset - An optional offset.
-	* @return {Matrix3} A reference to this matrix.
-	*/
+	 * Sets the elements of this matrix from an array.
+	 *
+	 * @param {Array} array - An array.
+	 * @param {Number} offset - An optional offset.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	fromArray( array, offset = 0 ) {
 
 		const e = this.elements;
@@ -1498,12 +1498,12 @@ class Matrix3 {
 	}
 
 	/**
-	* Copies all elements of this matrix to the given array.
-	*
-	* @param {Array} array - An array.
-	* @param {Number} offset - An optional offset.
-	* @return {Array} The array with the elements of the matrix.
-	*/
+	 * Copies all elements of this matrix to the given array.
+	 *
+	 * @param {Array} array - An array.
+	 * @param {Number} offset - An optional offset.
+	 * @return {Array} The array with the elements of the matrix.
+	 */
 	toArray( array, offset = 0 ) {
 
 		const e = this.elements;
@@ -1525,11 +1525,11 @@ class Matrix3 {
 	}
 
 	/**
-	* Returns true if the given matrix is deep equal with this matrix.
-	*
-	* @param {Matrix3} m - The matrix to test.
-	* @return {Boolean} The result of the equality test.
-	*/
+	 * Returns true if the given matrix is deep equal with this matrix.
+	 *
+	 * @param {Matrix3} m - The matrix to test.
+	 * @return {Boolean} The result of the equality test.
+	 */
 	equals( m ) {
 
 		const e = this.elements;
@@ -1553,57 +1553,57 @@ const m2 = new Matrix3();
 const matrix = new Matrix3();
 
 /**
-* Class representing a quaternion.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class representing a quaternion.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Quaternion {
 
 	/**
-	* Constructs a new quaternion with the given values.
-	*
-	* @param {Number} x - The x component.
-	* @param {Number} y - The y component.
-	* @param {Number} z - The z component.
-	* @param {Number} w - The w component.
-	*/
+	 * Constructs a new quaternion with the given values.
+	 *
+	 * @param {Number} x - The x component.
+	 * @param {Number} y - The y component.
+	 * @param {Number} z - The z component.
+	 * @param {Number} w - The w component.
+	 */
 	constructor( x = 0, y = 0, z = 0, w = 1 ) {
 
 		/**
-		* The x component.
-		* @type Number
-		*/
+		 * The x component.
+		 * @type Number
+		 */
 		this.x = x;
 
 		/**
-		* The y component.
-		* @type Number
-		*/
+		 * The y component.
+		 * @type Number
+		 */
 		this.y = y;
 
 		/**
-		* The z component.
-		* @type Number
-		*/
+		 * The z component.
+		 * @type Number
+		 */
 		this.z = z;
 
 		/**
-		* The w component.
-		* @type Number
-		*/
+		 * The w component.
+		 * @type Number
+		 */
 		this.w = w;
 
 	}
 
 	/**
-	* Sets the given values to this quaternion.
-	*
-	* @param {Number} x - The x component.
-	* @param {Number} y - The y component.
-	* @param {Number} z - The z component.
-	* @param {Number} w - The w component.
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Sets the given values to this quaternion.
+	 *
+	 * @param {Number} x - The x component.
+	 * @param {Number} y - The y component.
+	 * @param {Number} z - The z component.
+	 * @param {Number} w - The w component.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	set( x, y, z, w ) {
 
 		this.x = x;
@@ -1616,11 +1616,11 @@ class Quaternion {
 	}
 
 	/**
-	* Copies all values from the given quaternion to this quaternion.
-	*
-	* @param {Quaternion} q - The quaternion to copy.
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Copies all values from the given quaternion to this quaternion.
+	 *
+	 * @param {Quaternion} q - The quaternion to copy.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	copy( q ) {
 
 		this.x = q.x;
@@ -1633,10 +1633,10 @@ class Quaternion {
 	}
 
 	/**
-	* Creates a new quaternion and copies all values from this quaternion.
-	*
-	* @return {Quaternion} A new quaternion.
-	*/
+	 * Creates a new quaternion and copies all values from this quaternion.
+	 *
+	 * @return {Quaternion} A new quaternion.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -1644,10 +1644,10 @@ class Quaternion {
 	}
 
 	/**
-	* Computes the inverse of this quaternion.
-	*
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Computes the inverse of this quaternion.
+	 *
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	inverse() {
 
 		return this.conjugate().normalize();
@@ -1655,10 +1655,10 @@ class Quaternion {
 	}
 
 	/**
-	* Computes the conjugate of this quaternion.
-	*
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Computes the conjugate of this quaternion.
+	 *
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	conjugate() {
 
 		this.x *= - 1;
@@ -1670,11 +1670,11 @@ class Quaternion {
 	}
 
 	/**
-	* Computes the dot product of this and the given quaternion.
-	*
-	* @param {Quaternion} q - The given quaternion.
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Computes the dot product of this and the given quaternion.
+	 *
+	 * @param {Quaternion} q - The given quaternion.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	dot( q ) {
 
 		return ( this.x * q.x ) + ( this.y * q.y ) + ( this.z * q.z ) + ( this.w * q.w );
@@ -1682,10 +1682,10 @@ class Quaternion {
 	}
 
 	/**
-	* Computes the length of this quaternion.
-	*
-	* @return {Number} The length of this quaternion.
-	*/
+	 * Computes the length of this quaternion.
+	 *
+	 * @return {Number} The length of this quaternion.
+	 */
 	length() {
 
 		return Math.sqrt( this.squaredLength() );
@@ -1693,10 +1693,10 @@ class Quaternion {
 	}
 
 	/**
-	* Computes the squared length of this quaternion.
-	*
-	* @return {Number} The squared length of this quaternion.
-	*/
+	 * Computes the squared length of this quaternion.
+	 *
+	 * @return {Number} The squared length of this quaternion.
+	 */
 	squaredLength() {
 
 		return this.dot( this );
@@ -1704,10 +1704,10 @@ class Quaternion {
 	}
 
 	/**
-	* Normalizes this quaternion.
-	*
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Normalizes this quaternion.
+	 *
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	normalize() {
 
 		let l = this.length();
@@ -1735,11 +1735,11 @@ class Quaternion {
 	}
 
 	/**
-	* Multiplies this quaternion with the given quaternion.
-	*
-	* @param {Quaternion} q - The quaternion to multiply.
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Multiplies this quaternion with the given quaternion.
+	 *
+	 * @param {Quaternion} q - The quaternion to multiply.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	multiply( q ) {
 
 		return this.multiplyQuaternions( this, q );
@@ -1747,12 +1747,12 @@ class Quaternion {
 	}
 
 	/**
-	* Multiplies the given quaternion with this quaternion.
-	* So the order of the multiplication is switched compared to {@link Quaternion#multiply}.
-	*
-	* @param {Quaternion} q - The quaternion to multiply.
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Multiplies the given quaternion with this quaternion.
+	 * So the order of the multiplication is switched compared to {@link Quaternion#multiply}.
+	 *
+	 * @param {Quaternion} q - The quaternion to multiply.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	premultiply( q ) {
 
 		return this.multiplyQuaternions( q, this );
@@ -1760,12 +1760,12 @@ class Quaternion {
 	}
 
 	/**
-	* Multiplies two given quaternions and stores the result in this quaternion.
-	*
-	* @param {Quaternion} a - The first quaternion of the operation.
-	* @param {Quaternion} b - The second quaternion of the operation.
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Multiplies two given quaternions and stores the result in this quaternion.
+	 *
+	 * @param {Quaternion} a - The first quaternion of the operation.
+	 * @param {Quaternion} b - The second quaternion of the operation.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	multiplyQuaternions( a, b ) {
 
 		const qax = a.x, qay = a.y, qaz = a.z, qaw = a.w;
@@ -1781,11 +1781,11 @@ class Quaternion {
 	}
 
 	/**
-	* Computes the shortest angle between two rotation defined by this quaternion and the given one.
-	*
-	* @param {Quaternion} q - The given quaternion.
-	* @return {Number} The angle in radians.
-	*/
+	 * Computes the shortest angle between two rotation defined by this quaternion and the given one.
+	 *
+	 * @param {Quaternion} q - The given quaternion.
+	 * @return {Number} The angle in radians.
+	 */
 	angleTo( q ) {
 
 		return 2 * Math.acos( Math.abs( MathUtils.clamp( this.dot( q ), - 1, 1 ) ) );
@@ -1793,13 +1793,13 @@ class Quaternion {
 	}
 
 	/**
-	* Transforms this rotation defined by this quaternion towards the target rotation
-	* defined by the given quaternion by the given angular step. The rotation will not overshoot.
-	*
-	* @param {Quaternion} q - The target rotation.
-	* @param {Number} step - The maximum step in radians.
-	* @return {Boolean} Whether the given quaternion already represents the target rotation.
-	*/
+	 * Transforms this rotation defined by this quaternion towards the target rotation
+	 * defined by the given quaternion by the given angular step. The rotation will not overshoot.
+	 *
+	 * @param {Quaternion} q - The target rotation.
+	 * @param {Number} step - The maximum step in radians.
+	 * @return {Boolean} Whether the given quaternion already represents the target rotation.
+	 */
 	rotateTo( q, step ) {
 
 		const angle = this.angleTo( q );
@@ -1815,13 +1815,13 @@ class Quaternion {
 	}
 
 	/**
-	* Creates a quaternion that orients an object to face towards a specified target direction.
-	*
-	* @param {Vector3} localForward - Specifies the forward direction in the local space of the object.
-	* @param {Vector3} targetDirection - Specifies the desired world space direction the object should look at.
-	* @param {Vector3} localUp - Specifies the up direction in the local space of the object.
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Creates a quaternion that orients an object to face towards a specified target direction.
+	 *
+	 * @param {Vector3} localForward - Specifies the forward direction in the local space of the object.
+	 * @param {Vector3} targetDirection - Specifies the desired world space direction the object should look at.
+	 * @param {Vector3} localUp - Specifies the up direction in the local space of the object.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	lookAt( localForward, targetDirection, localUp ) {
 
 		matrix.lookAt( localForward, targetDirection, localUp );
@@ -1830,13 +1830,13 @@ class Quaternion {
 	}
 
 	/**
-	* Spherically interpolates between this quaternion and the given quaternion by t.
-	* The parameter t is clamped to the range [0, 1].
-	*
-	* @param {Quaternion} q - The target rotation.
-	* @param {Number} t - The interpolation parameter.
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Spherically interpolates between this quaternion and the given quaternion by t.
+	 * The parameter t is clamped to the range [0, 1].
+	 *
+	 * @param {Quaternion} q - The target rotation.
+	 * @param {Number} t - The interpolation parameter.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	slerp( q, t ) {
 
 		if ( t === 0 ) return this;
@@ -1899,13 +1899,13 @@ class Quaternion {
 	}
 
 	/**
-	* Sets the components of this quaternion from the an euler angle.
-	*
-	* @param {Number} x - Rotation around x axis in radians.
-	* @param {Number} y - Rotation around y axis in radians.
-	* @param {Number} z - Rotation around z axis in radians.
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Sets the components of this quaternion from the an euler angle.
+	 *
+	 * @param {Number} x - Rotation around x axis in radians.
+	 * @param {Number} y - Rotation around y axis in radians.
+	 * @param {Number} z - Rotation around z axis in radians.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	fromEuler( x, y, z ) {
 
 		const c1 = Math.cos( x / 2 );
@@ -1926,11 +1926,11 @@ class Quaternion {
 	}
 
 	/**
-	* Sets the components of this quaternion from the given 3x3 rotation matrix.
-	*
-	* @param {Matrix3} m - The rotation matrix.
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Sets the components of this quaternion from the given 3x3 rotation matrix.
+	 *
+	 * @param {Matrix3} m - The rotation matrix.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	fromMatrix3( m ) {
 
 		const e = m.elements;
@@ -1984,12 +1984,12 @@ class Quaternion {
 	}
 
 	/**
-	* Sets the components of this quaternion from an array.
-	*
-	* @param {Array} array - An array.
-	* @param {Number} offset - An optional offset.
-	* @return {Quaternion} A reference to this quaternion.
-	*/
+	 * Sets the components of this quaternion from an array.
+	 *
+	 * @param {Array} array - An array.
+	 * @param {Number} offset - An optional offset.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	fromArray( array, offset = 0 ) {
 
 		this.x = array[ offset + 0 ];
@@ -2002,12 +2002,12 @@ class Quaternion {
 	}
 
 	/**
-	* Copies all values of this quaternion to the given array.
-	*
-	* @param {Array} array - An array.
-	* @param {Number} offset - An optional offset.
-	* @return {Array} The array with the quaternion components.
-	*/
+	 * Copies all values of this quaternion to the given array.
+	 *
+	 * @param {Array} array - An array.
+	 * @param {Number} offset - An optional offset.
+	 * @return {Array} The array with the quaternion components.
+	 */
 	toArray( array, offset = 0 ) {
 
 		array[ offset + 0 ] = this.x;
@@ -2020,11 +2020,11 @@ class Quaternion {
 	}
 
 	/**
-	* Returns true if the given quaternion is deep equal with this quaternion.
-	*
-	* @param {Quaternion} q - The quaternion to test.
-	* @return {Boolean} The result of the equality test.
-	*/
+	 * Returns true if the given quaternion is deep equal with this quaternion.
+	 *
+	 * @param {Quaternion} q - The quaternion to test.
+	 * @return {Boolean} The result of the equality test.
+	 */
 	equals( q ) {
 
 		return ( ( q.x === this.x ) && ( q.y === this.y ) && ( q.z === this.z ) && ( q.w === this.w ) );
@@ -2034,22 +2034,22 @@ class Quaternion {
 }
 
 /**
-* Class representing a 4x4 matrix. The elements of the matrix
-* are stored in column-major order.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class representing a 4x4 matrix. The elements of the matrix
+ * are stored in column-major order.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Matrix4 {
 
 	/**
-	* Constructs a new 4x4 identity matrix.
-	*/
+	 * Constructs a new 4x4 identity matrix.
+	 */
 	constructor() {
 
 		/**
-		* The elements of the matrix in column-major order.
-		* @type Array
-		*/
+		 * The elements of the matrix in column-major order.
+		 * @type Array
+		 */
 		this.elements = [
 
 			1, 0, 0, 0,
@@ -2062,26 +2062,26 @@ class Matrix4 {
 	}
 
 	/**
-	* Sets the given values to this matrix. The arguments are in row-major order.
-	*
-	* @param {Number} n11 - An element of the matrix.
-	* @param {Number} n12 - An element of the matrix.
-	* @param {Number} n13 - An element of the matrix.
-	* @param {Number} n14 - An element of the matrix.
-	* @param {Number} n21 - An element of the matrix.
-	* @param {Number} n22 - An element of the matrix.
-	* @param {Number} n23 - An element of the matrix.
-	* @param {Number} n24 - An element of the matrix.
-	* @param {Number} n31 - An element of the matrix.
-	* @param {Number} n32 - An element of the matrix.
-	* @param {Number} n33 - An element of the matrix.
-	* @param {Number} n34 - An element of the matrix.
-	* @param {Number} n41 - An element of the matrix.
-	* @param {Number} n42 - An element of the matrix.
-	* @param {Number} n43 - An element of the matrix.
-	* @param {Number} n44 - An element of the matrix.
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Sets the given values to this matrix. The arguments are in row-major order.
+	 *
+	 * @param {Number} n11 - An element of the matrix.
+	 * @param {Number} n12 - An element of the matrix.
+	 * @param {Number} n13 - An element of the matrix.
+	 * @param {Number} n14 - An element of the matrix.
+	 * @param {Number} n21 - An element of the matrix.
+	 * @param {Number} n22 - An element of the matrix.
+	 * @param {Number} n23 - An element of the matrix.
+	 * @param {Number} n24 - An element of the matrix.
+	 * @param {Number} n31 - An element of the matrix.
+	 * @param {Number} n32 - An element of the matrix.
+	 * @param {Number} n33 - An element of the matrix.
+	 * @param {Number} n34 - An element of the matrix.
+	 * @param {Number} n41 - An element of the matrix.
+	 * @param {Number} n42 - An element of the matrix.
+	 * @param {Number} n43 - An element of the matrix.
+	 * @param {Number} n44 - An element of the matrix.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	set( n11, n12, n13, n14, n21, n22, n23, n24, n31, n32, n33, n34, n41, n42, n43, n44 ) {
 
 		const e = this.elements;
@@ -2096,11 +2096,11 @@ class Matrix4 {
 	}
 
 	/**
-	* Copies all values from the given matrix to this matrix.
-	*
-	* @param {Matrix4} m - The matrix to copy.
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Copies all values from the given matrix to this matrix.
+	 *
+	 * @param {Matrix4} m - The matrix to copy.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	copy( m ) {
 
 		const e = this.elements;
@@ -2116,10 +2116,10 @@ class Matrix4 {
 	}
 
 	/**
-	* Creates a new matrix and copies all values from this matrix.
-	*
-	* @return {Matrix4} A new matrix.
-	*/
+	 * Creates a new matrix and copies all values from this matrix.
+	 *
+	 * @return {Matrix4} A new matrix.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -2127,10 +2127,10 @@ class Matrix4 {
 	}
 
 	/**
-	* Transforms this matrix to an identity matrix.
-	*
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Transforms this matrix to an identity matrix.
+	 *
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	identity() {
 
 		this.set(
@@ -2147,11 +2147,11 @@ class Matrix4 {
 	}
 
 	/**
-	* Multiplies this matrix with the given matrix.
-	*
-	* @param {Matrix4} m - The matrix to multiply.
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Multiplies this matrix with the given matrix.
+	 *
+	 * @param {Matrix4} m - The matrix to multiply.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	multiply( m ) {
 
 		return this.multiplyMatrices( this, m );
@@ -2159,12 +2159,12 @@ class Matrix4 {
 	}
 
 	/**
-	* Multiplies this matrix with the given matrix.
-	* So the order of the multiplication is switched compared to {@link Matrix4#multiply}.
-	*
-	* @param {Matrix4} m - The matrix to multiply.
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Multiplies this matrix with the given matrix.
+	 * So the order of the multiplication is switched compared to {@link Matrix4#multiply}.
+	 *
+	 * @param {Matrix4} m - The matrix to multiply.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	premultiply( m ) {
 
 		return this.multiplyMatrices( m, this );
@@ -2172,12 +2172,12 @@ class Matrix4 {
 	}
 
 	/**
-	* Multiplies two given matrices and stores the result in this matrix.
-	*
-	* @param {Matrix4} a - The first matrix of the operation.
-	* @param {Matrix4} b - The second matrix of the operation.
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Multiplies two given matrices and stores the result in this matrix.
+	 *
+	 * @param {Matrix4} a - The first matrix of the operation.
+	 * @param {Matrix4} b - The second matrix of the operation.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	multiplyMatrices( a, b ) {
 
 		const ae = a.elements;
@@ -2219,11 +2219,11 @@ class Matrix4 {
 	}
 
 	/**
-	* Multiplies the given scalar with this matrix.
-	*
-	* @param {Number} s - The scalar to multiply.
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Multiplies the given scalar with this matrix.
+	 *
+	 * @param {Number} s - The scalar to multiply.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	multiplyScalar( s ) {
 
 		const e = this.elements;
@@ -2238,13 +2238,13 @@ class Matrix4 {
 	}
 
 	/**
-	* Extracts the basis vectors and stores them to the given vectors.
-	*
-	* @param {Vector3} xAxis - The first result vector for the x-axis.
-	* @param {Vector3} yAxis - The second result vector for the y-axis.
-	* @param {Vector3} zAxis - The third result vector for the z-axis.
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Extracts the basis vectors and stores them to the given vectors.
+	 *
+	 * @param {Vector3} xAxis - The first result vector for the x-axis.
+	 * @param {Vector3} yAxis - The second result vector for the y-axis.
+	 * @param {Vector3} zAxis - The third result vector for the z-axis.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	extractBasis( xAxis, yAxis, zAxis ) {
 
 		xAxis.fromMatrix4Column( this, 0 );
@@ -2256,13 +2256,13 @@ class Matrix4 {
 	}
 
 	/**
-	* Makes a basis from the given vectors.
-	*
-	* @param {Vector3} xAxis - The first basis vector for the x-axis.
-	* @param {Vector3} yAxis - The second basis vector for the y-axis.
-	* @param {Vector3} zAxis - The third basis vector for the z-axis.
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Makes a basis from the given vectors.
+	 *
+	 * @param {Vector3} xAxis - The first basis vector for the x-axis.
+	 * @param {Vector3} yAxis - The second basis vector for the y-axis.
+	 * @param {Vector3} zAxis - The third basis vector for the z-axis.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	makeBasis( xAxis, yAxis, zAxis ) {
 
 		this.set(
@@ -2277,13 +2277,13 @@ class Matrix4 {
 	}
 
 	/**
-	* Composes a matrix from the given position, quaternion and scale.
-	*
-	* @param {Vector3} position - A vector representing a position in 3D space.
-	* @param {Quaternion} rotation - A quaternion representing a rotation.
-	* @param {Vector3} scale - A vector representing a 3D scaling.
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Composes a matrix from the given position, quaternion and scale.
+	 *
+	 * @param {Vector3} position - A vector representing a position in 3D space.
+	 * @param {Quaternion} rotation - A quaternion representing a rotation.
+	 * @param {Vector3} scale - A vector representing a 3D scaling.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	compose( position, rotation, scale ) {
 
 		this.fromQuaternion( rotation );
@@ -2295,11 +2295,11 @@ class Matrix4 {
 	}
 
 	/**
-	* Scales this matrix by the given 3D vector.
-	*
-	* @param {Vector3} v - A 3D vector representing a scaling.
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Scales this matrix by the given 3D vector.
+	 *
+	 * @param {Vector3} v - A 3D vector representing a scaling.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	scale( v ) {
 
 		const e = this.elements;
@@ -2316,11 +2316,11 @@ class Matrix4 {
 	}
 
 	/**
-	* Sets the translation part of the 4x4 matrix to the given position vector.
-	*
-	* @param {Vector3} v - A 3D vector representing a position.
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Sets the translation part of the 4x4 matrix to the given position vector.
+	 *
+	 * @param {Vector3} v - A 3D vector representing a position.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	setPosition( v ) {
 
 		const e = this.elements;
@@ -2334,10 +2334,10 @@ class Matrix4 {
 	}
 
 	/**
-	* Transposes this matrix.
-	*
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Transposes this matrix.
+	 *
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	transpose() {
 
 		const e = this.elements;
@@ -2357,11 +2357,11 @@ class Matrix4 {
 	}
 
 	/**
-	* Computes the inverse of this matrix and stored the result in the given matrix.
-	*
-	* @param {Matrix4} m - The result matrix.
-	* @return {Matrix4} The result matrix.
-	*/
+	 * Computes the inverse of this matrix and stored the result in the given matrix.
+	 *
+	 * @param {Matrix4} m - The result matrix.
+	 * @return {Matrix4} The result matrix.
+	 */
 	getInverse( m ) {
 
 		const e = this.elements;
@@ -2413,10 +2413,10 @@ class Matrix4 {
 	}
 
 	/**
-	* Computes the maximum scale value for all three axis.
-	*
-	* @return {Number} The maximum scale value.
-	*/
+	 * Computes the maximum scale value for all three axis.
+	 *
+	 * @return {Number} The maximum scale value.
+	 */
 	getMaxScale() {
 
 		const e = this.elements;
@@ -2430,11 +2430,11 @@ class Matrix4 {
 	}
 
 	/**
-	* Uses the given quaternion to transform the upper left 3x3 part to a rotation matrix.
-	*
-	* @param {Quaternion} q - A quaternion representing a rotation.
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Uses the given quaternion to transform the upper left 3x3 part to a rotation matrix.
+	 *
+	 * @param {Quaternion} q - A quaternion representing a rotation.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	fromQuaternion( q ) {
 
 		const e = this.elements;
@@ -2471,12 +2471,12 @@ class Matrix4 {
 	}
 
 	/**
-	* Sets the elements of this matrix from an array.
-	*
-	* @param {Array} array - An array.
-	* @param {Number} offset - An optional offset.
-	* @return {Matrix4} A reference to this matrix.
-	*/
+	 * Sets the elements of this matrix from an array.
+	 *
+	 * @param {Array} array - An array.
+	 * @param {Number} offset - An optional offset.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	fromArray( array, offset = 0 ) {
 
 		const e = this.elements;
@@ -2492,12 +2492,12 @@ class Matrix4 {
 	}
 
 	/**
-	* Copies all elements of this matrix to the given array.
-	*
-	* @param {Array} array - An array.
-	* @param {Number} offset - An optional offset.
-	* @return {Array} The array with the elements of the matrix.
-	*/
+	 * Copies all elements of this matrix to the given array.
+	 *
+	 * @param {Array} array - An array.
+	 * @param {Number} offset - An optional offset.
+	 * @return {Array} The array with the elements of the matrix.
+	 */
 	toArray( array, offset = 0 ) {
 
 		const e = this.elements;
@@ -2527,11 +2527,11 @@ class Matrix4 {
 	}
 
 	/**
-	* Returns true if the given matrix is deep equal with this matrix.
-	*
-	* @param {Matrix4} m - The matrix to test.
-	* @return {Boolean} The result of the equality test.
-	*/
+	 * Returns true if the given matrix is deep equal with this matrix.
+	 *
+	 * @param {Matrix4} m - The matrix to test.
+	 * @return {Boolean} The result of the equality test.
+	 */
 	equals( m ) {
 
 		const e = this.elements;
@@ -2553,128 +2553,128 @@ const targetRotation = new Quaternion();
 const targetDirection = new Vector3();
 
 /**
-* Base class for all game entities.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Base class for all game entities.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class GameEntity {
 
 	/**
-	* Constructs a new game entity.
-	*/
+	 * Constructs a new game entity.
+	 */
 	constructor() {
 
 		/**
-		* The name of this game entity.
-		* @type String
-		*/
+		 * The name of this game entity.
+		 * @type String
+		 */
 		this.name = '';
 
 		/**
-		* Whether this game entity is active or not.
-		* @type Boolean
-		* @default true
-		*/
+		 * Whether this game entity is active or not.
+		 * @type Boolean
+		 * @default true
+		 */
 		this.active = true;
 
 		/**
-		* The child entities of this game entity.
-		* @type Array
-		*/
+		 * The child entities of this game entity.
+		 * @type Array
+		 */
 		this.children = new Array();
 
 		/**
-		* A reference to the parent entity of this game entity.
-		* Automatically set when added to a {@link GameEntity}.
-		* @type GameEntity
-		* @default null
-		*/
+		 * A reference to the parent entity of this game entity.
+		 * Automatically set when added to a {@link GameEntity}.
+		 * @type GameEntity
+		 * @default null
+		 */
 		this.parent = null;
 
 		/**
-		* A list of neighbors of this game entity.
-		* @type Array
-		*/
+		 * A list of neighbors of this game entity.
+		 * @type Array
+		 */
 		this.neighbors = new Array();
 
 		/**
-		* Game entities within this radius are considered as neighbors of this entity.
-		* @type Number
-		* @default 1
-		*/
+		 * Game entities within this radius are considered as neighbors of this entity.
+		 * @type Number
+		 * @default 1
+		 */
 		this.neighborhoodRadius = 1;
 
 		/**
-		* Whether the neighborhood of this game entity is updated or not.
-		* @type Boolean
-		* @default false
-		*/
+		 * Whether the neighborhood of this game entity is updated or not.
+		 * @type Boolean
+		 * @default false
+		 */
 		this.updateNeighborhood = false;
 
 		/**
-		* The position of this game entity.
-		* @type Vector3
-		*/
+		 * The position of this game entity.
+		 * @type Vector3
+		 */
 		this.position = new Vector3();
 
 		/**
-		* The rotation of this game entity.
-		* @type Quaternion
-		*/
+		 * The rotation of this game entity.
+		 * @type Quaternion
+		 */
 		this.rotation = new Quaternion();
 
 		/**
-		* The scaling of this game entity.
-		* @type Vector3
-		*/
+		 * The scaling of this game entity.
+		 * @type Vector3
+		 */
 		this.scale = new Vector3( 1, 1, 1 );
 
 		/**
-		* The default forward vector of this game entity.
-		* @type Vector3
-		* @default (0,0,1)
-		*/
+		 * The default forward vector of this game entity.
+		 * @type Vector3
+		 * @default (0,0,1)
+		 */
 		this.forward = new Vector3( 0, 0, 1 );
 
 		/**
-		* The default up vector of this game entity.
-		* @type Vector3
-		* @default (0,1,0)
-		*/
+		 * The default up vector of this game entity.
+		 * @type Vector3
+		 * @default (0,1,0)
+		 */
 		this.up = new Vector3( 0, 1, 0 );
 
 		/**
-		* The bounding radius of this game entity in world units.
-		* @type Number
-		* @default 0
-		*/
+		 * The bounding radius of this game entity in world units.
+		 * @type Number
+		 * @default 0
+		 */
 		this.boundingRadius = 0;
 
 		/**
-		* The maximum turn rate of this game entity in radians per seconds.
-		* @type Number
-		* @default π
-		*/
+		 * The maximum turn rate of this game entity in radians per seconds.
+		 * @type Number
+		 * @default π
+		 */
 		this.maxTurnRate = Math.PI;
 
 		/**
-		* A transformation matrix representing the local space of this game entity.
-		* @type Matrix4
-		*/
+		 * A transformation matrix representing the local space of this game entity.
+		 * @type Matrix4
+		 */
 		this.matrix = new Matrix4();
 
 		/**
-		* A transformation matrix representing the world space of this game entity.
-		* @type Matrix4
-		*/
+		 * A transformation matrix representing the world space of this game entity.
+		 * @type Matrix4
+		 */
 		this.worldMatrix = new Matrix4();
 
 		/**
-		* A reference to the entity manager of this game entity.
-		* Automatically set when added to an {@link EntityManager}.
-		* @type EntityManager
-		* @default null
-		*/
+		 * A reference to the entity manager of this game entity.
+		 * Automatically set when added to an {@link EntityManager}.
+		 * @type EntityManager
+		 * @default null
+		 */
 		this.manager = null;
 
 		//
@@ -2711,28 +2711,28 @@ class GameEntity {
 	}
 
 	/**
-	* Executed when this game entity is updated for the first time by its {@link EntityManager}.
-	*
-	* @return {GameEntity} A reference to this game entity.
-	*/
+	 * Executed when this game entity is updated for the first time by its {@link EntityManager}.
+	 *
+	 * @return {GameEntity} A reference to this game entity.
+	 */
 	start() {}
 
 	/**
-	* Updates the internal state of this game entity. Normally called by {@link EntityManager#update}
-	* in each simulation step.
-	*
-	* @param {Number} delta - The time delta.
-	* @return {GameEntity} A reference to this game entity.
-	*/
+	 * Updates the internal state of this game entity. Normally called by {@link EntityManager#update}
+	 * in each simulation step.
+	 *
+	 * @param {Number} delta - The time delta.
+	 * @return {GameEntity} A reference to this game entity.
+	 */
 	update( /* delta */ ) {}
 
 
 	/**
-	* Adds a game entity as a child to this game entity.
-	*
-	* @param {GameEntity} entity - The game entity to add.
-	* @return {GameEntity} A reference to this game entity.
-	*/
+	 * Adds a game entity as a child to this game entity.
+	 *
+	 * @param {GameEntity} entity - The game entity to add.
+	 * @return {GameEntity} A reference to this game entity.
+	 */
 	add( entity ) {
 
 		if ( entity.parent !== null ) {
@@ -2749,11 +2749,11 @@ class GameEntity {
 	}
 
 	/**
-	* Removes a game entity as a child from this game entity.
-	*
-	* @param {GameEntity} entity - The game entity to remove.
-	* @return {GameEntity} A reference to this game entity.
-	*/
+	 * Removes a game entity as a child from this game entity.
+	 *
+	 * @param {GameEntity} entity - The game entity to remove.
+	 * @return {GameEntity} A reference to this game entity.
+	 */
 	remove( entity ) {
 
 		const index = this.children.indexOf( entity );
@@ -2766,12 +2766,12 @@ class GameEntity {
 	}
 
 	/**
-	* Computes the current direction (forward) vector of this game entity
-	* and stores the result in the given vector.
-	*
-	* @param {Vector3} result - The direction vector of this game entity.
-	* @return {Vector3} The direction vector of this game entity.
-	*/
+	 * Computes the current direction (forward) vector of this game entity
+	 * and stores the result in the given vector.
+	 *
+	 * @param {Vector3} result - The direction vector of this game entity.
+	 * @return {Vector3} The direction vector of this game entity.
+	 */
 	getDirection( result ) {
 
 		return result.copy( this.forward ).applyRotation( this.rotation ).normalize();
@@ -2779,11 +2779,11 @@ class GameEntity {
 	}
 
 	/**
-	* Directly rotates the entity so it faces the given target position.
-	*
-	* @param {Vector3} target - The target position.
-	* @return {GameEntity} A reference to this game entity.
-	*/
+	 * Directly rotates the entity so it faces the given target position.
+	 *
+	 * @param {Vector3} target - The target position.
+	 * @return {GameEntity} A reference to this game entity.
+	 */
 	lookAt( target ) {
 
 		targetDirection.subVectors( target, this.position ).normalize();
@@ -2795,13 +2795,13 @@ class GameEntity {
 	}
 
 	/**
-	* Given a target position, this method rotates the entity by an amount not
-	* greater than {@link GameEntity#maxTurnRate} until it directly faces the target.
-	*
-	* @param {Vector3} target - The target position.
-	* @param {Number} delta - The time delta.
-	* @return {Boolean} Whether the entity is faced to the target or not.
-	*/
+	 * Given a target position, this method rotates the entity by an amount not
+	 * greater than {@link GameEntity#maxTurnRate} until it directly faces the target.
+	 *
+	 * @param {Vector3} target - The target position.
+	 * @param {Number} delta - The time delta.
+	 * @return {Boolean} Whether the entity is faced to the target or not.
+	 */
 	rotateTo( target, delta ) {
 
 		targetDirection.subVectors( target, this.position ).normalize();
@@ -2812,17 +2812,17 @@ class GameEntity {
 	}
 
 	/**
-	* Updates the transformation matrix representing the local space.
-	*
-	* @return {GameEntity} A reference to this game entity.
-	*/
+	 * Updates the transformation matrix representing the local space.
+	 *
+	 * @return {GameEntity} A reference to this game entity.
+	 */
 	updateMatrix() {
 
 		const cache = this._cache;
 
 		if ( cache.position.equals( this.position ) &&
-				cache.rotation.equals( this.rotation ) &&
-				cache.scale.equals( this.scale ) ) {
+			cache.rotation.equals( this.rotation ) &&
+			cache.scale.equals( this.scale ) ) {
 
 			return this;
 
@@ -2839,12 +2839,12 @@ class GameEntity {
 	}
 
 	/**
-	* Updates the world matrix representing the world space.
-	*
-	* @param {Boolean} up - Whether to update the world matrices of the parents or not.
-	* @param {Boolean} down - Whether to update the world matrices of the children or not.
-	* @return {GameEntity} A reference to this game entity.
-	*/
+	 * Updates the world matrix representing the world space.
+	 *
+	 * @param {Boolean} up - Whether to update the world matrices of the parents or not.
+	 * @param {Boolean} down - Whether to update the world matrices of the children or not.
+	 * @return {GameEntity} A reference to this game entity.
+	 */
 	updateWorldMatrix( up = false, down = false ) {
 
 		const parent = this.parent;
@@ -2891,12 +2891,12 @@ class GameEntity {
 	}
 
 	/**
-	* Sets a renderable component of a 3D engine with a sync callback for this game entity.
-	*
-	* @param {Object} renderComponent - A renderable component of a 3D engine.
-	* @param {Function} callback - A callback that can be used to sync this game entity with the renderable component.
-	* @return {GameEntity} A reference to this game entity.
-	*/
+	 * Sets a renderable component of a 3D engine with a sync callback for this game entity.
+	 *
+	 * @param {Object} renderComponent - A renderable component of a 3D engine.
+	 * @param {Function} callback - A callback that can be used to sync this game entity with the renderable component.
+	 * @return {GameEntity} A reference to this game entity.
+	 */
 	setRenderComponent( renderComponent, callback ) {
 
 		this._renderComponent = renderComponent;
@@ -2907,11 +2907,11 @@ class GameEntity {
 	}
 
 	/**
-	* Holds the implementation for the message handling of this game entity.
-	*
-	* @param {Telegram} telegram - The telegram with the message data.
-	* @return {Boolean} Whether the message was processed or not.
-	*/
+	 * Holds the implementation for the message handling of this game entity.
+	 *
+	 * @param {Telegram} telegram - The telegram with the message data.
+	 * @return {Boolean} Whether the message was processed or not.
+	 */
 	handleMessage() {
 
 		return false;
@@ -2919,15 +2919,15 @@ class GameEntity {
 	}
 
 	/**
-	* Holds the implementation for the line of sight test of this game entity.
-	* This method is used by {@link Vision#visible} in order to determine whether
-	* this game entity blocks the given line of sight or not. Implement this method
-	* when your game entity acts as an obstacle.
-	*
-	* @param {Ray} ray - The ray that represents the line of sight.
-	* @param {Vector3} intersectionPoint - The intersection point.
-	* @return {Vector3} The intersection point.
-	*/
+	 * Holds the implementation for the line of sight test of this game entity.
+	 * This method is used by {@link Vision#visible} in order to determine whether
+	 * this game entity blocks the given line of sight or not. Implement this method
+	 * when your game entity acts as an obstacle.
+	 *
+	 * @param {Ray} ray - The ray that represents the line of sight.
+	 * @param {Vector3} intersectionPoint - The intersection point.
+	 * @return {Vector3} The intersection point.
+	 */
 	lineOfSightTest() {
 
 		return null;
@@ -2935,14 +2935,14 @@ class GameEntity {
 	}
 
 	/**
-	* Sends a message with the given data to the specified receiver.
-	*
-	* @param {GameEntity} receiver - The receiver.
-	* @param {String} message - The actual message.
-	* @param {Number} delay - A time value in millisecond used to delay the message dispatching.
-	* @param {Object} data - An object for custom data.
-	* @return {GameEntity} A reference to this game entity.
-	*/
+	 * Sends a message with the given data to the specified receiver.
+	 *
+	 * @param {GameEntity} receiver - The receiver.
+	 * @param {String} message - The actual message.
+	 * @param {Number} delay - A time value in millisecond used to delay the message dispatching.
+	 * @param {Object} data - An object for custom data.
+	 * @return {GameEntity} A reference to this game entity.
+	 */
 	sendMessage( receiver, message, delay = 0, data = null ) {
 
 		if ( this.manager !== null ) {
@@ -2960,10 +2960,10 @@ class GameEntity {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		return {
@@ -2996,11 +2996,11 @@ class GameEntity {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {GameEntity} A reference to this game entity.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {GameEntity} A reference to this game entity.
+	 */
 	fromJSON( json ) {
 
 		this.uuid = json.uuid;
@@ -3033,11 +3033,11 @@ class GameEntity {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {GameEntity} A reference to this game entity.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {GameEntity} A reference to this game entity.
+	 */
 	resolveReferences( entities ) {
 
 		//
@@ -3088,47 +3088,47 @@ const displacement = new Vector3();
 const target = new Vector3();
 
 /**
-* Class representing moving game entities.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments GameEntity
-*/
+ * Class representing moving game entities.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments GameEntity
+ */
 class MovingEntity extends GameEntity {
 
 	/**
-	* Constructs a new moving entity.
-	*/
+	 * Constructs a new moving entity.
+	 */
 	constructor() {
 
 		super();
 
 		/**
-		* The velocity of this game entity.
-		* @type Vector3
-		*/
+		 * The velocity of this game entity.
+		 * @type Vector3
+		 */
 		this.velocity = new Vector3();
 
 		/**
-		* The maximum speed at which this game entity may travel.
-		* @type Number
-		*/
+		 * The maximum speed at which this game entity may travel.
+		 * @type Number
+		 */
 		this.maxSpeed = 1;
 
 		/**
-		* Whether the orientation of this game entity will be updated based on the velocity or not.
-		* @type Boolean
-		* @default true
-		*/
+		 * Whether the orientation of this game entity will be updated based on the velocity or not.
+		 * @type Boolean
+		 * @default true
+		 */
 		this.updateOrientation = true;
 
 	}
 
 	/**
-	* Updates the internal state of this game entity.
-	*
-	* @param {Number} delta - The time delta.
-	* @return {MovingEntity} A reference to this moving entity.
-	*/
+	 * Updates the internal state of this game entity.
+	 *
+	 * @param {Number} delta - The time delta.
+	 * @return {MovingEntity} A reference to this moving entity.
+	 */
 	update( delta ) {
 
 		// make sure vehicle does not exceed maximum speed
@@ -3165,10 +3165,10 @@ class MovingEntity extends GameEntity {
 	}
 
 	/**
-	* Returns the current speed of this game entity.
-	*
-	* @return {Number} The current speed.
-	*/
+	 * Returns the current speed of this game entity.
+	 *
+	 * @return {Number} The current speed.
+	 */
 	getSpeed() {
 
 		return this.velocity.length();
@@ -3176,10 +3176,10 @@ class MovingEntity extends GameEntity {
 	}
 
 	/**
-	* Returns the current speed in squared space of this game entity.
-	*
-	* @return {Number} The current speed in squared space.
-	*/
+	 * Returns the current speed in squared space of this game entity.
+	 *
+	 * @return {Number} The current speed in squared space.
+	 */
 	getSpeedSquared() {
 
 		return this.velocity.squaredLength();
@@ -3187,10 +3187,10 @@ class MovingEntity extends GameEntity {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -3204,11 +3204,11 @@ class MovingEntity extends GameEntity {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {MovingEntity} A reference to this moving entity.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {MovingEntity} A reference to this moving entity.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -3224,51 +3224,51 @@ class MovingEntity extends GameEntity {
 }
 
 /**
-* Base class for all concrete steering behaviors. They produce a force that describes
-* where an agent should move and how fast it should travel to get there.
-*
-* Note: All built-in steering behaviors assume a {@link Vehicle#mass} of one. Different values can lead to an unexpected results.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Base class for all concrete steering behaviors. They produce a force that describes
+ * where an agent should move and how fast it should travel to get there.
+ *
+ * Note: All built-in steering behaviors assume a {@link Vehicle#mass} of one. Different values can lead to an unexpected results.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class SteeringBehavior {
 
 	/**
-	* Constructs a new steering behavior.
-	*/
+	 * Constructs a new steering behavior.
+	 */
 	constructor() {
 
 		/**
-		* Whether this steering behavior is active or not.
-		* @type Boolean
-		* @default true
-		*/
+		 * Whether this steering behavior is active or not.
+		 * @type Boolean
+		 * @default true
+		 */
 		this.active = true;
 
 		/**
-		* Can be used to tweak the amount that a steering force contributes to the total steering force.
-		* @type Number
-		* @default 1
-		*/
+		 * Can be used to tweak the amount that a steering force contributes to the total steering force.
+		 * @type Number
+		 * @default 1
+		 */
 		this.weight = 1;
 
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( /* vehicle, force, delta */ ) {}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		return {
@@ -3280,11 +3280,11 @@ class SteeringBehavior {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {SteeringBehavior} A reference to this steering behavior.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {SteeringBehavior} A reference to this steering behavior.
+	 */
 	fromJSON( json ) {
 
 		this.active = json.active;
@@ -3295,11 +3295,11 @@ class SteeringBehavior {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {SteeringBehavior} A reference to this steering behavior.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {SteeringBehavior} A reference to this steering behavior.
+	 */
 	resolveReferences( /* entities */ ) {}
 
 }
@@ -3308,16 +3308,16 @@ const averageDirection = new Vector3();
 const direction = new Vector3();
 
 /**
-* This steering behavior produces a force that keeps a vehicle’s heading aligned with its neighbors.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments SteeringBehavior
-*/
+ * This steering behavior produces a force that keeps a vehicle’s heading aligned with its neighbors.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments SteeringBehavior
+ */
 class AlignmentBehavior extends SteeringBehavior {
 
 	/**
-	* Constructs a new alignment behavior.
-	*/
+	 * Constructs a new alignment behavior.
+	 */
 	constructor() {
 
 		super();
@@ -3325,13 +3325,13 @@ class AlignmentBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( vehicle, force /*, delta */ ) {
 
 		averageDirection.set( 0, 0, 0 );
@@ -3371,36 +3371,36 @@ const desiredVelocity = new Vector3();
 const displacement$1 = new Vector3();
 
 /**
-* This steering behavior produces a force that directs an agent toward a target position.
-* Unlike {@link SeekBehavior}, it decelerates so the agent comes to a gentle halt at the target position.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments SteeringBehavior
-*/
+ * This steering behavior produces a force that directs an agent toward a target position.
+ * Unlike {@link SeekBehavior}, it decelerates so the agent comes to a gentle halt at the target position.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments SteeringBehavior
+ */
 class ArriveBehavior extends SteeringBehavior {
 
 	/**
-	* Constructs a new arrive behavior.
-	*
-	* @param {Vector3} target - The target vector.
-	* @param {Number} deceleration - The amount of deceleration.
-	* @param {Number} tolerance - A tolerance value in world units to prevent the vehicle from overshooting its target.
-	*/
+	 * Constructs a new arrive behavior.
+	 *
+	 * @param {Vector3} target - The target vector.
+	 * @param {Number} deceleration - The amount of deceleration.
+	 * @param {Number} tolerance - A tolerance value in world units to prevent the vehicle from overshooting its target.
+	 */
 	constructor( target = new Vector3(), deceleration = 3, tolerance = 0 ) {
 
 		super();
 
 		/**
-		* The target vector.
-		* @type Vector3
-		*/
+		 * The target vector.
+		 * @type Vector3
+		 */
 		this.target = target;
 
 		/**
-		* The amount of deceleration.
-		* @type Number
-		* @default 3
-		*/
+		 * The amount of deceleration.
+		 * @type Number
+		 * @default 3
+		 */
 		this.deceleration = deceleration;
 
 		/**
@@ -3413,13 +3413,13 @@ class ArriveBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( vehicle, force /*, delta */ ) {
 
 		const target = this.target;
@@ -3456,10 +3456,10 @@ class ArriveBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -3472,11 +3472,11 @@ class ArriveBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {ArriveBehavior} A reference to this behavior.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {ArriveBehavior} A reference to this behavior.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -3493,38 +3493,38 @@ class ArriveBehavior extends SteeringBehavior {
 const desiredVelocity$1 = new Vector3();
 
 /**
-* This steering behavior produces a force that directs an agent toward a target position.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments SteeringBehavior
-*/
+ * This steering behavior produces a force that directs an agent toward a target position.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments SteeringBehavior
+ */
 class SeekBehavior extends SteeringBehavior {
 
 	/**
-	* Constructs a new seek behavior.
-	*
-	* @param {Vector3} target - The target vector.
-	*/
+	 * Constructs a new seek behavior.
+	 *
+	 * @param {Vector3} target - The target vector.
+	 */
 	constructor( target = new Vector3() ) {
 
 		super();
 
 		/**
-		* The target vector.
-		* @type Vector3
-		*/
+		 * The target vector.
+		 * @type Vector3
+		 */
 		this.target = target;
 
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( vehicle, force /*, delta */ ) {
 
 		const target = this.target;
@@ -3546,10 +3546,10 @@ class SeekBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -3561,11 +3561,11 @@ class SeekBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {SeekBehavior} A reference to this behavior.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {SeekBehavior} A reference to this behavior.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -3581,16 +3581,16 @@ class SeekBehavior extends SteeringBehavior {
 const centerOfMass = new Vector3();
 
 /**
-* This steering produces a steering force that moves a vehicle toward the center of mass of its neighbors.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments SteeringBehavior
-*/
+ * This steering produces a steering force that moves a vehicle toward the center of mass of its neighbors.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments SteeringBehavior
+ */
 class CohesionBehavior extends SteeringBehavior {
 
 	/**
-	* Constructs a new cohesion behavior.
-	*/
+	 * Constructs a new cohesion behavior.
+	 */
 	constructor() {
 
 		super();
@@ -3602,13 +3602,13 @@ class CohesionBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( vehicle, force /*, delta */ ) {
 
 		centerOfMass.set( 0, 0, 0 );
@@ -3650,47 +3650,47 @@ class CohesionBehavior extends SteeringBehavior {
 const desiredVelocity$2 = new Vector3();
 
 /**
-* This steering behavior produces a force that steers an agent away from a target position.
-* It's the opposite of {@link SeekBehavior}.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments SteeringBehavior
-*/
+ * This steering behavior produces a force that steers an agent away from a target position.
+ * It's the opposite of {@link SeekBehavior}.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments SteeringBehavior
+ */
 class FleeBehavior extends SteeringBehavior {
 
 	/**
-	* Constructs a new flee behavior.
-	*
-	* @param {Vector3} target - The target vector.
-	* @param {Number} panicDistance - The agent only flees from the target if it is inside this radius.
-	*/
+	 * Constructs a new flee behavior.
+	 *
+	 * @param {Vector3} target - The target vector.
+	 * @param {Number} panicDistance - The agent only flees from the target if it is inside this radius.
+	 */
 	constructor( target = new Vector3(), panicDistance = 10 ) {
 
 		super();
 
 		/**
-		* The target vector.
-		* @type Vector3
-		*/
+		 * The target vector.
+		 * @type Vector3
+		 */
 		this.target = target;
 
 		/**
-		* The agent only flees from the target if it is inside this radius.
-		* @type Number
-		* @default 10
-		*/
+		 * The agent only flees from the target if it is inside this radius.
+		 * @type Number
+		 * @default 10
+		 */
 		this.panicDistance = panicDistance;
 
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( vehicle, force /*, delta */ ) {
 
 		const target = this.target;
@@ -3725,10 +3725,10 @@ class FleeBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -3741,11 +3741,11 @@ class FleeBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {FleeBehavior} A reference to this behavior.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {FleeBehavior} A reference to this behavior.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -3764,44 +3764,44 @@ const newPursuerVelocity = new Vector3();
 const predictedPosition = new Vector3();
 
 /**
-* This steering behavior is is almost the same as {@link PursuitBehavior} except that
-* the agent flees from the estimated future position of the pursuer.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments SteeringBehavior
-*/
+ * This steering behavior is is almost the same as {@link PursuitBehavior} except that
+ * the agent flees from the estimated future position of the pursuer.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments SteeringBehavior
+ */
 class EvadeBehavior extends SteeringBehavior {
 
 	/**
-	* Constructs a new evade behavior.
-	*
-	* @param {MovingEntity} pursuer - The agent to evade from.
-	* @param {Number} panicDistance -  The agent only flees from the pursuer if it is inside this radius.
-	* @param {Number} predictionFactor -  This factor determines how far the vehicle predicts the movement of the pursuer.
-	*/
+	 * Constructs a new evade behavior.
+	 *
+	 * @param {MovingEntity} pursuer - The agent to evade from.
+	 * @param {Number} panicDistance -  The agent only flees from the pursuer if it is inside this radius.
+	 * @param {Number} predictionFactor -  This factor determines how far the vehicle predicts the movement of the pursuer.
+	 */
 	constructor( pursuer = null, panicDistance = 10, predictionFactor = 1 ) {
 
 		super();
 
 		/**
-		* The agent to evade from.
-		* @type MovingEntity
-		* @default null
-		*/
+		 * The agent to evade from.
+		 * @type MovingEntity
+		 * @default null
+		 */
 		this.pursuer = pursuer;
 
 		/**
-		* The agent only flees from the pursuer if it is inside this radius.
-		* @type Number
-		* @default 10
-		*/
+		 * The agent only flees from the pursuer if it is inside this radius.
+		 * @type Number
+		 * @default 10
+		 */
 		this.panicDistance = panicDistance;
 
 		/**
-		* This factor determines how far the vehicle predicts the movement of the pursuer.
-		* @type Number
-		* @default 1
-		*/
+		 * This factor determines how far the vehicle predicts the movement of the pursuer.
+		 * @type Number
+		 * @default 1
+		 */
 		this.predictionFactor = predictionFactor;
 
 		// internal behaviors
@@ -3811,13 +3811,13 @@ class EvadeBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( vehicle, force /*, delta */ ) {
 
 		const pursuer = this.pursuer;
@@ -3843,10 +3843,10 @@ class EvadeBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -3860,11 +3860,11 @@ class EvadeBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {EvadeBehavior} A reference to this behavior.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {EvadeBehavior} A reference to this behavior.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -3878,11 +3878,11 @@ class EvadeBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {EvadeBehavior} A reference to this behavior.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {EvadeBehavior} A reference to this behavior.
+	 */
 	resolveReferences( entities ) {
 
 		this.pursuer = entities.get( this.pursuer ) || null;
@@ -3892,21 +3892,21 @@ class EvadeBehavior extends SteeringBehavior {
 }
 
 /**
-* Class for representing a walkable path.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing a walkable path.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Path {
 
 	/**
-	* Constructs a new path.
-	*/
+	 * Constructs a new path.
+	 */
 	constructor() {
 
 		/**
-		* Whether this path is looped or not.
-		* @type Boolean
-		*/
+		 * Whether this path is looped or not.
+		 * @type Boolean
+		 */
 		this.loop = false;
 
 		this._waypoints = new Array();
@@ -3915,11 +3915,11 @@ class Path {
 	}
 
 	/**
-	* Adds the given waypoint to this path.
-	*
-	* @param {Vector3} waypoint - The waypoint to add.
-	* @return {Path} A reference to this path.
-	*/
+	 * Adds the given waypoint to this path.
+	 *
+	 * @param {Vector3} waypoint - The waypoint to add.
+	 * @return {Path} A reference to this path.
+	 */
 	add( waypoint ) {
 
 		this._waypoints.push( waypoint );
@@ -3929,10 +3929,10 @@ class Path {
 	}
 
 	/**
-	* Clears the internal state of this path.
-	*
-	* @return {Path} A reference to this path.
-	*/
+	 * Clears the internal state of this path.
+	 *
+	 * @return {Path} A reference to this path.
+	 */
 	clear() {
 
 		this._waypoints.length = 0;
@@ -3943,10 +3943,10 @@ class Path {
 	}
 
 	/**
-	* Returns the current active waypoint of this path.
-	*
-	* @return {Vector3} The current active waypoint.
-	*/
+	 * Returns the current active waypoint of this path.
+	 *
+	 * @return {Vector3} The current active waypoint.
+	 */
 	current() {
 
 		return this._waypoints[ this._index ];
@@ -3954,10 +3954,10 @@ class Path {
 	}
 
 	/**
-	* Returns true if this path is not looped and the last waypoint is active.
-	*
-	* @return {Boolean} Whether this path is finished or not.
-	*/
+	 * Returns true if this path is not looped and the last waypoint is active.
+	 *
+	 * @return {Boolean} Whether this path is finished or not.
+	 */
 	finished() {
 
 		const lastIndex = this._waypoints.length - 1;
@@ -3967,11 +3967,11 @@ class Path {
 	}
 
 	/**
-	* Makes the next waypoint of this path active. If the path is looped and
-	* {@link Path#finished} returns true, the path starts from the beginning.
-	*
-	* @return {Path} A reference to this path.
-	*/
+	 * Makes the next waypoint of this path active. If the path is looped and
+	 * {@link Path#finished} returns true, the path starts from the beginning.
+	 *
+	 * @return {Path} A reference to this path.
+	 */
 	advance() {
 
 		this._index ++;
@@ -3995,10 +3995,10 @@ class Path {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const data = {
@@ -4024,11 +4024,11 @@ class Path {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {Path} A reference to this path.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {Path} A reference to this path.
+	 */
 	fromJSON( json ) {
 
 		this.loop = json.loop;
@@ -4052,34 +4052,34 @@ class Path {
 }
 
 /**
-* This steering behavior produces a force that moves a vehicle along a series of waypoints forming a path.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments SteeringBehavior
-*/
+ * This steering behavior produces a force that moves a vehicle along a series of waypoints forming a path.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments SteeringBehavior
+ */
 class FollowPathBehavior extends SteeringBehavior {
 
 	/**
-	* Constructs a new follow path behavior.
-	*
-	* @param {Path} path - The path to follow.
-	* @param {Number} nextWaypointDistance - The distance the agent seeks for the next waypoint.
-	*/
+	 * Constructs a new follow path behavior.
+	 *
+	 * @param {Path} path - The path to follow.
+	 * @param {Number} nextWaypointDistance - The distance the agent seeks for the next waypoint.
+	 */
 	constructor( path = new Path(), nextWaypointDistance = 1 ) {
 
 		super();
 
 		/**
-		* The path to follow.
-		* @type Path
-		*/
+		 * The path to follow.
+		 * @type Path
+		 */
 		this.path = path;
 
 		/**
-		* The distance the agent seeks for the next waypoint.
-		* @type Number
-		* @default 1
-		*/
+		 * The distance the agent seeks for the next waypoint.
+		 * @type Number
+		 * @default 1
+		 */
 		this.nextWaypointDistance = nextWaypointDistance;
 
 		// internal behaviors
@@ -4090,13 +4090,13 @@ class FollowPathBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( vehicle, force /*, delta */ ) {
 
 		const path = this.path;
@@ -4132,10 +4132,10 @@ class FollowPathBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -4148,11 +4148,11 @@ class FollowPathBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {FollowPathBehavior} A reference to this behavior.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {FollowPathBehavior} A reference to this behavior.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -4172,44 +4172,44 @@ const predictedPosition1 = new Vector3();
 const predictedPosition2 = new Vector3();
 
 /**
-* This steering behavior produces a force that moves a vehicle to the midpoint
-* of the imaginary line connecting two other agents.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments SteeringBehavior
-*/
+ * This steering behavior produces a force that moves a vehicle to the midpoint
+ * of the imaginary line connecting two other agents.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments SteeringBehavior
+ */
 class InterposeBehavior extends SteeringBehavior {
 
 	/**
-	* Constructs a new interpose behavior.
-	*
-	* @param {MovingEntity} entity1 - The first agent.
-	* @param {MovingEntity} entity2 - The second agent.
-	* @param {Number} deceleration - The amount of deceleration.
-	*/
+	 * Constructs a new interpose behavior.
+	 *
+	 * @param {MovingEntity} entity1 - The first agent.
+	 * @param {MovingEntity} entity2 - The second agent.
+	 * @param {Number} deceleration - The amount of deceleration.
+	 */
 	constructor( entity1 = null, entity2 = null, deceleration = 3 ) {
 
 		super();
 
 		/**
-		* The first agent.
-		* @type MovingEntity
-		* @default null
-		*/
+		 * The first agent.
+		 * @type MovingEntity
+		 * @default null
+		 */
 		this.entity1 = entity1;
 
 		/**
-		* The second agent.
-		* @type MovingEntity
-		* @default null
-		*/
+		 * The second agent.
+		 * @type MovingEntity
+		 * @default null
+		 */
 		this.entity2 = entity2;
 
 		/**
-		* The amount of deceleration.
-		* @type Number
-		* @default 3
-		*/
+		 * The amount of deceleration.
+		 * @type Number
+		 * @default 3
+		 */
 		this.deceleration = deceleration;
 
 		// internal behaviors
@@ -4219,13 +4219,13 @@ class InterposeBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( vehicle, force /*, delta */ ) {
 
 		const entity1 = this.entity1;
@@ -4262,10 +4262,10 @@ class InterposeBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -4279,11 +4279,11 @@ class InterposeBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {InterposeBehavior} A reference to this behavior.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {InterposeBehavior} A reference to this behavior.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -4297,11 +4297,11 @@ class InterposeBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {InterposeBehavior} A reference to this behavior.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {InterposeBehavior} A reference to this behavior.
+	 */
 	resolveReferences( entities ) {
 
 		this.entity1 = entities.get( this.entity1 ) || null;
@@ -4312,41 +4312,41 @@ class InterposeBehavior extends SteeringBehavior {
 }
 
 /**
-* Class representing a bounding sphere.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class representing a bounding sphere.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class BoundingSphere {
 
 	/**
-	* Constructs a new bounding sphere with the given values.
-	*
-	* @param {Vector3} center - The center position of the bounding sphere.
-	* @param {Number} radius - The radius of the bounding sphere.
-	*/
+	 * Constructs a new bounding sphere with the given values.
+	 *
+	 * @param {Vector3} center - The center position of the bounding sphere.
+	 * @param {Number} radius - The radius of the bounding sphere.
+	 */
 	constructor( center = new Vector3(), radius = 0 ) {
 
 		/**
-		* The center position of the bounding sphere.
-		* @type Vector3
-		*/
+		 * The center position of the bounding sphere.
+		 * @type Vector3
+		 */
 		this.center = center;
 
 		/**
-		*  The radius of the bounding sphere.
-		* @type Number
-		*/
+		 *  The radius of the bounding sphere.
+		 * @type Number
+		 */
 		this.radius = radius;
 
 	}
 
 	/**
-	* Sets the given values to this bounding sphere.
-	*
-	* @param {Vector3} center - The center position of the bounding sphere.
-	* @param {Number} radius - The radius of the bounding sphere.
-	* @return {BoundingSphere} A reference to this bounding sphere.
-	*/
+	 * Sets the given values to this bounding sphere.
+	 *
+	 * @param {Vector3} center - The center position of the bounding sphere.
+	 * @param {Number} radius - The radius of the bounding sphere.
+	 * @return {BoundingSphere} A reference to this bounding sphere.
+	 */
 	set( center, radius ) {
 
 		this.center = center;
@@ -4357,11 +4357,11 @@ class BoundingSphere {
 	}
 
 	/**
-	* Copies all values from the given bounding sphere to this bounding sphere.
-	*
-	* @param {BoundingSphere} sphere - The bounding sphere to copy.
-	* @return {BoundingSphere} A reference to this bounding sphere.
-	*/
+	 * Copies all values from the given bounding sphere to this bounding sphere.
+	 *
+	 * @param {BoundingSphere} sphere - The bounding sphere to copy.
+	 * @return {BoundingSphere} A reference to this bounding sphere.
+	 */
 	copy( sphere ) {
 
 		this.center.copy( sphere.center );
@@ -4372,10 +4372,10 @@ class BoundingSphere {
 	}
 
 	/**
-	* Creates a new bounding sphere and copies all values from this bounding sphere.
-	*
-	* @return {BoundingSphere} A new bounding sphere.
-	*/
+	 * Creates a new bounding sphere and copies all values from this bounding sphere.
+	 *
+	 * @return {BoundingSphere} A new bounding sphere.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -4383,13 +4383,13 @@ class BoundingSphere {
 	}
 
 	/**
-	* Ensures the given point is inside this bounding sphere and stores
-	* the result in the given vector.
-	*
-	* @param {Vector3} point - A point in 3D space.
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The result vector.
-	*/
+	 * Ensures the given point is inside this bounding sphere and stores
+	 * the result in the given vector.
+	 *
+	 * @param {Vector3} point - A point in 3D space.
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The result vector.
+	 */
 	clampPoint( point, result ) {
 
 		result.copy( point );
@@ -4408,11 +4408,11 @@ class BoundingSphere {
 	}
 
 	/**
-	* Returns true if the given point is inside this bounding sphere.
-	*
-	* @param {Vector3} point - A point in 3D space.
-	* @return {Boolean} The result of the containments test.
-	*/
+	 * Returns true if the given point is inside this bounding sphere.
+	 *
+	 * @param {Vector3} point - A point in 3D space.
+	 * @return {Boolean} The result of the containments test.
+	 */
 	containsPoint( point ) {
 
 		return ( point.squaredDistanceTo( this.center ) <= ( this.radius * this.radius ) );
@@ -4420,11 +4420,11 @@ class BoundingSphere {
 	}
 
 	/**
-	* Returns true if the given bounding sphere intersects this bounding sphere.
-	*
-	* @param {BoundingSphere} sphere - The bounding sphere to test.
-	* @return {Boolean} The result of the intersection test.
-	*/
+	 * Returns true if the given bounding sphere intersects this bounding sphere.
+	 *
+	 * @param {BoundingSphere} sphere - The bounding sphere to test.
+	 * @return {Boolean} The result of the intersection test.
+	 */
 	intersectsBoundingSphere( sphere ) {
 
 		const radius = this.radius + sphere.radius;
@@ -4434,12 +4434,12 @@ class BoundingSphere {
 	}
 
 	/**
-	* Returns the normal for a given point on this bounding sphere's surface.
-	*
-	* @param {Vector3} point - The point on the surface
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The result vector.
-	*/
+	 * Returns the normal for a given point on this bounding sphere's surface.
+	 *
+	 * @param {Vector3} point - The point on the surface
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The result vector.
+	 */
 	getNormalFromSurfacePoint( point, result ) {
 
 		return result.subVectors( point, this.center ).normalize();
@@ -4447,11 +4447,11 @@ class BoundingSphere {
 	}
 
 	/**
-	* Transforms this bounding sphere with the given 4x4 transformation matrix.
-	*
-	* @param {Matrix4} matrix - The 4x4 transformation matrix.
-	* @return {BoundingSphere} A reference to this bounding sphere.
-	*/
+	 * Transforms this bounding sphere with the given 4x4 transformation matrix.
+	 *
+	 * @param {Matrix4} matrix - The 4x4 transformation matrix.
+	 * @return {BoundingSphere} A reference to this bounding sphere.
+	 */
 	applyMatrix4( matrix ) {
 
 		this.center.applyMatrix4( matrix );
@@ -4462,11 +4462,11 @@ class BoundingSphere {
 	}
 
 	/**
-	* Returns true if the given bounding sphere is deep equal with this bounding sphere.
-	*
-	* @param {BoundingSphere} sphere - The bounding sphere to test.
-	* @return {Boolean} The result of the equality test.
-	*/
+	 * Returns true if the given bounding sphere is deep equal with this bounding sphere.
+	 *
+	 * @param {BoundingSphere} sphere - The bounding sphere to test.
+	 * @return {Boolean} The result of the equality test.
+	 */
 	equals( sphere ) {
 
 		return ( sphere.center.equals( this.center ) ) && ( sphere.radius === this.radius );
@@ -4474,10 +4474,10 @@ class BoundingSphere {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		return {
@@ -4489,11 +4489,11 @@ class BoundingSphere {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {BoundingSphere} A reference to this bounding sphere.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {BoundingSphere} A reference to this bounding sphere.
+	 */
 	fromJSON( json ) {
 
 		this.center.fromArray( json.center );
@@ -4511,41 +4511,41 @@ const edge2 = new Vector3();
 const normal = new Vector3();
 
 /**
-* Class representing a ray in 3D space.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class representing a ray in 3D space.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Ray {
 
 	/**
-	* Constructs a new ray with the given values.
-	*
-	* @param {Vector3} origin - The origin of the ray.
-	* @param {Vector3} direction - The direction of the ray.
-	*/
+	 * Constructs a new ray with the given values.
+	 *
+	 * @param {Vector3} origin - The origin of the ray.
+	 * @param {Vector3} direction - The direction of the ray.
+	 */
 	constructor( origin = new Vector3(), direction = new Vector3() ) {
 
 		/**
-		* The origin of the ray.
-		* @type Vector3
-		*/
+		 * The origin of the ray.
+		 * @type Vector3
+		 */
 		this.origin = origin;
 
 		/**
-		* The direction of the ray.
-		* @type Vector3
-		*/
+		 * The direction of the ray.
+		 * @type Vector3
+		 */
 		this.direction = direction;
 
 	}
 
 	/**
-	* Sets the given values to this ray.
-	*
-	* @param {Vector3} origin - The origin of the ray.
-	* @param {Vector3} direction - The direction of the ray.
-	* @return {Ray} A reference to this ray.
-	*/
+	 * Sets the given values to this ray.
+	 *
+	 * @param {Vector3} origin - The origin of the ray.
+	 * @param {Vector3} direction - The direction of the ray.
+	 * @return {Ray} A reference to this ray.
+	 */
 	set( origin, direction ) {
 
 		this.origin = origin;
@@ -4556,11 +4556,11 @@ class Ray {
 	}
 
 	/**
-	* Copies all values from the given ray to this ray.
-	*
-	* @param {Ray} ray - The ray to copy.
-	* @return {Ray} A reference to this ray.
-	*/
+	 * Copies all values from the given ray to this ray.
+	 *
+	 * @param {Ray} ray - The ray to copy.
+	 * @return {Ray} A reference to this ray.
+	 */
 	copy( ray ) {
 
 		this.origin.copy( ray.origin );
@@ -4571,10 +4571,10 @@ class Ray {
 	}
 
 	/**
-	* Creates a new ray and copies all values from this ray.
-	*
-	* @return {Ray} A new ray.
-	*/
+	 * Creates a new ray and copies all values from this ray.
+	 *
+	 * @return {Ray} A new ray.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -4582,14 +4582,14 @@ class Ray {
 	}
 
 	/**
-	* Computes a position on the ray according to the given t value
-	* and stores the result in the given 3D vector. The t value has a range of
-	* [0, Infinity] where 0 means the position is equal with the origin of the ray.
-	*
-	* @param {Number} t - A scalar value representing a position on the ray.
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The result vector.
-	*/
+	 * Computes a position on the ray according to the given t value
+	 * and stores the result in the given 3D vector. The t value has a range of
+	 * [0, Infinity] where 0 means the position is equal with the origin of the ray.
+	 *
+	 * @param {Number} t - A scalar value representing a position on the ray.
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The result vector.
+	 */
 	at( t, result ) {
 
 		// t has to be zero or positive
@@ -4598,13 +4598,13 @@ class Ray {
 	}
 
 	/**
-	* Performs a ray/sphere intersection test and stores the intersection point
-	* to the given 3D vector. If no intersection is detected, *null* is returned.
-	*
-	* @param {BoundingSphere} sphere - A bounding sphere.
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The result vector.
-	*/
+	 * Performs a ray/sphere intersection test and stores the intersection point
+	 * to the given 3D vector. If no intersection is detected, *null* is returned.
+	 *
+	 * @param {BoundingSphere} sphere - A bounding sphere.
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The result vector.
+	 */
 	intersectBoundingSphere( sphere, result ) {
 
 		v1$1.subVectors( sphere.center, this.origin );
@@ -4674,13 +4674,13 @@ class Ray {
 	}
 
 	/**
-	* Performs a ray/AABB intersection test and stores the intersection point
-	* to the given 3D vector. If no intersection is detected, *null* is returned.
-	*
-	* @param {AABB} aabb - An AABB.
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The result vector.
-	*/
+	 * Performs a ray/AABB intersection test and stores the intersection point
+	 * to the given 3D vector. If no intersection is detected, *null* is returned.
+	 *
+	 * @param {AABB} aabb - An AABB.
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The result vector.
+	 */
 	intersectAABB( aabb, result ) {
 
 		let tmin, tmax, tymin, tymax, tzmin, tzmax;
@@ -4764,13 +4764,13 @@ class Ray {
 	}
 
 	/**
-	* Performs a ray/plane intersection test and stores the intersection point
-	* to the given 3D vector. If no intersection is detected, *null* is returned.
-	*
-	* @param {Plane} plane - A plane.
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The result vector.
-	*/
+	 * Performs a ray/plane intersection test and stores the intersection point
+	 * to the given 3D vector. If no intersection is detected, *null* is returned.
+	 *
+	 * @param {Plane} plane - A plane.
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The result vector.
+	 */
 	intersectPlane( plane, result ) {
 
 		let t;
@@ -4839,14 +4839,14 @@ class Ray {
 	}
 
 	/**
-	* Performs a ray/triangle intersection test and stores the intersection point
-	* to the given 3D vector. If no intersection is detected, *null* is returned.
-	*
-	* @param {Triangle} triangle - A triangle.
-	* @param {Boolean} backfaceCulling - Whether back face culling is active or not.
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The result vector.
-	*/
+	 * Performs a ray/triangle intersection test and stores the intersection point
+	 * to the given 3D vector. If no intersection is detected, *null* is returned.
+	 *
+	 * @param {Triangle} triangle - A triangle.
+	 * @param {Boolean} backfaceCulling - Whether back face culling is active or not.
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The result vector.
+	 */
 	intersectTriangle( triangle, backfaceCulling, result ) {
 
 		// reference: https://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
@@ -4926,11 +4926,11 @@ class Ray {
 	}
 
 	/**
-	* Transforms this ray by the given 4x4 matrix.
-	*
-	* @param {Matrix4} m - The 4x4 matrix.
-	* @return {Ray} A reference to this ray.
-	*/
+	 * Transforms this ray by the given 4x4 matrix.
+	 *
+	 * @param {Matrix4} m - The 4x4 matrix.
+	 * @return {Ray} A reference to this ray.
+	 */
 	applyMatrix4( m ) {
 
 		this.origin.applyMatrix4( m );
@@ -4941,11 +4941,11 @@ class Ray {
 	}
 
 	/**
-	* Returns true if the given ray is deep equal with this ray.
-	*
-	* @param {Ray} ray - The ray to test.
-	* @return {Boolean} The result of the equality test.
-	*/
+	 * Returns true if the given ray is deep equal with this ray.
+	 *
+	 * @param {Ray} ray - The ray to test.
+	 * @return {Boolean} The result of the equality test.
+	 */
 	equals( ray ) {
 
 		return ray.origin.equals( this.origin ) && ray.direction.equals( this.direction );
@@ -4963,53 +4963,53 @@ const boundingSphere = new BoundingSphere();
 const ray = new Ray( new Vector3( 0, 0, 0 ), new Vector3( 0, 0, 1 ) );
 
 /**
-* This steering behavior produces a force so a vehicle avoids obstacles lying in its path.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @author {@link https://github.com/robp94|robp94}
-* @augments SteeringBehavior
-*/
+ * This steering behavior produces a force so a vehicle avoids obstacles lying in its path.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @author {@link https://github.com/robp94|robp94}
+ * @augments SteeringBehavior
+ */
 class ObstacleAvoidanceBehavior extends SteeringBehavior {
 
 	/**
-	* Constructs a new obstacle avoidance behavior.
-	*
-	* @param {Array} obstacles - An Array with obstacle of type {@link GameEntity}.
-	*/
+	 * Constructs a new obstacle avoidance behavior.
+	 *
+	 * @param {Array} obstacles - An Array with obstacle of type {@link GameEntity}.
+	 */
 	constructor( obstacles = new Array() ) {
 
 		super();
 
 		/**
-		* An Array with obstacle of type {@link GameEntity}.
-		* @type Array
-		*/
+		 * An Array with obstacle of type {@link GameEntity}.
+		 * @type Array
+		 */
 		this.obstacles = obstacles;
 
 		/**
-		* This factor determines how much the vehicle decelerates if an intersection occurs.
-		* @type Number
-		* @default 0.2
-		*/
+		 * This factor determines how much the vehicle decelerates if an intersection occurs.
+		 * @type Number
+		 * @default 0.2
+		 */
 		this.brakingWeight = 0.2;
 
 		/**
-		* Minimum length of the detection box used for intersection tests.
-		* @type Number
-		* @default 4
-		*/
+		 * Minimum length of the detection box used for intersection tests.
+		 * @type Number
+		 * @default 4
+		 */
 		this.dBoxMinLength = 4; //
 
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( vehicle, force /*, delta */ ) {
 
 		const obstacles = this.obstacles;
@@ -5108,10 +5108,10 @@ class ObstacleAvoidanceBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -5133,11 +5133,11 @@ class ObstacleAvoidanceBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {ObstacleAvoidanceBehavior} A reference to this behavior.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {ObstacleAvoidanceBehavior} A reference to this behavior.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -5151,11 +5151,11 @@ class ObstacleAvoidanceBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {ObstacleAvoidanceBehavior} A reference to this behavior.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {ObstacleAvoidanceBehavior} A reference to this behavior.
+	 */
 	resolveReferences( entities ) {
 
 		const obstacles = this.obstacles;
@@ -5177,34 +5177,34 @@ const newLeaderVelocity = new Vector3();
 const predictedPosition$1 = new Vector3();
 
 /**
-* This steering behavior produces a force that keeps a vehicle at a specified offset from a leader vehicle.
-* Useful for creating formations.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments SteeringBehavior
-*/
+ * This steering behavior produces a force that keeps a vehicle at a specified offset from a leader vehicle.
+ * Useful for creating formations.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments SteeringBehavior
+ */
 class OffsetPursuitBehavior extends SteeringBehavior {
 
 	/**
-	* Constructs a new offset pursuit behavior.
-	*
-	* @param {Vehicle} leader - The leader vehicle.
-	* @param {Vector3} offset - The offset from the leader.
-	*/
+	 * Constructs a new offset pursuit behavior.
+	 *
+	 * @param {Vehicle} leader - The leader vehicle.
+	 * @param {Vector3} offset - The offset from the leader.
+	 */
 	constructor( leader = null, offset = new Vector3() ) {
 
 		super();
 
 		/**
-		* The leader vehicle.
-		* @type Vehicle
-		*/
+		 * The leader vehicle.
+		 * @type Vehicle
+		 */
 		this.leader = leader;
 
 		/**
-		* The offset from the leader.
-		* @type Vector3
-		*/
+		 * The offset from the leader.
+		 * @type Vector3
+		 */
 		this.offset = offset;
 
 		// internal behaviors
@@ -5215,13 +5215,13 @@ class OffsetPursuitBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( vehicle, force /*, delta */ ) {
 
 		const leader = this.leader;
@@ -5257,10 +5257,10 @@ class OffsetPursuitBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -5273,11 +5273,11 @@ class OffsetPursuitBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {OffsetPursuitBehavior} A reference to this behavior.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {OffsetPursuitBehavior} A reference to this behavior.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -5291,11 +5291,11 @@ class OffsetPursuitBehavior extends SteeringBehavior {
 
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {OffsetPursuitBehavior} A reference to this behavior.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {OffsetPursuitBehavior} A reference to this behavior.
+	 */
 	resolveReferences( entities ) {
 
 		this.leader = entities.get( this.leader ) || null;
@@ -5311,35 +5311,35 @@ const newEvaderVelocity = new Vector3();
 const predictedPosition$2 = new Vector3();
 
 /**
-* This steering behavior is useful when an agent is required to intercept a moving agent.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments SteeringBehavior
-*/
+ * This steering behavior is useful when an agent is required to intercept a moving agent.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments SteeringBehavior
+ */
 class PursuitBehavior extends SteeringBehavior {
 
 	/**
-	* Constructs a new pursuit behavior.
-	*
-	* @param {MovingEntity} evader - The agent to pursue.
-	* @param {Number} predictionFactor -  This factor determines how far the vehicle predicts the movement of the evader.
-	*/
+	 * Constructs a new pursuit behavior.
+	 *
+	 * @param {MovingEntity} evader - The agent to pursue.
+	 * @param {Number} predictionFactor -  This factor determines how far the vehicle predicts the movement of the evader.
+	 */
 	constructor( evader = null, predictionFactor = 1 ) {
 
 		super();
 
 		/**
-		* The agent to pursue.
-		* @type MovingEntity
-		* @default null
-		*/
+		 * The agent to pursue.
+		 * @type MovingEntity
+		 * @default null
+		 */
 		this.evader = evader;
 
 		/**
-		* This factor determines how far the vehicle predicts the movement of the evader.
-		* @type Number
-		* @default 1
-		*/
+		 * This factor determines how far the vehicle predicts the movement of the evader.
+		 * @type Number
+		 * @default 1
+		 */
 		this.predictionFactor = predictionFactor;
 
 		// internal behaviors
@@ -5349,13 +5349,13 @@ class PursuitBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( vehicle, force /*, delta */ ) {
 
 		const evader = this.evader;
@@ -5407,10 +5407,10 @@ class PursuitBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -5423,11 +5423,11 @@ class PursuitBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {PursuitBehavior} A reference to this behavior.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {PursuitBehavior} A reference to this behavior.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -5440,11 +5440,11 @@ class PursuitBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {PursuitBehavior} A reference to this behavior.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {PursuitBehavior} A reference to this behavior.
+	 */
 	resolveReferences( entities ) {
 
 		this.evader = entities.get( this.evader ) || null;
@@ -5456,16 +5456,16 @@ class PursuitBehavior extends SteeringBehavior {
 const toAgent = new Vector3();
 
 /**
-* This steering produces a force that steers a vehicle away from those in its neighborhood region.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments SteeringBehavior
-*/
+ * This steering produces a force that steers a vehicle away from those in its neighborhood region.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments SteeringBehavior
+ */
 class SeparationBehavior extends SteeringBehavior {
 
 	/**
-	* Constructs a new separation behavior.
-	*/
+	 * Constructs a new separation behavior.
+	 */
 	constructor() {
 
 		super();
@@ -5473,13 +5473,13 @@ class SeparationBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( vehicle, force /*, delta */ ) {
 
 		const neighbors = vehicle.neighbors;
@@ -5514,45 +5514,45 @@ const targetWorld = new Vector3();
 const randomDisplacement = new Vector3();
 
 /**
-* This steering behavior produces a steering force that will give the
-* impression of a random walk through the agent’s environment. The behavior only
-* produces a 2D force (XZ).
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments SteeringBehavior
-*/
+ * This steering behavior produces a steering force that will give the
+ * impression of a random walk through the agent’s environment. The behavior only
+ * produces a 2D force (XZ).
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments SteeringBehavior
+ */
 class WanderBehavior extends SteeringBehavior {
 
 	/**
-	* Constructs a new wander behavior.
-	*
-	* @param {Number} radius - The radius of the wander circle for the wander behavior.
-	* @param {Number} distance - The distance the wander circle is projected in front of the agent.
-	* @param {Number} jitter - The maximum amount of displacement along the sphere each frame.
-	*/
+	 * Constructs a new wander behavior.
+	 *
+	 * @param {Number} radius - The radius of the wander circle for the wander behavior.
+	 * @param {Number} distance - The distance the wander circle is projected in front of the agent.
+	 * @param {Number} jitter - The maximum amount of displacement along the sphere each frame.
+	 */
 	constructor( radius = 1, distance = 5, jitter = 5 ) {
 
 		super();
 
 		/**
-		* The radius of the constraining circle for the wander behavior.
-		* @type Number
-		* @default 1
-		*/
+		 * The radius of the constraining circle for the wander behavior.
+		 * @type Number
+		 * @default 1
+		 */
 		this.radius = radius;
 
 		/**
-		* The distance the wander sphere is projected in front of the agent.
-		* @type Number
-		* @default 5
-		*/
+		 * The distance the wander sphere is projected in front of the agent.
+		 * @type Number
+		 * @default 5
+		 */
 		this.distance = distance;
 
 		/**
-		* The maximum amount of displacement along the sphere each frame.
-		* @type Number
-		* @default 5
-		*/
+		 * The maximum amount of displacement along the sphere each frame.
+		 * @type Number
+		 * @default 5
+		 */
 		this.jitter = jitter;
 
 		this._targetLocal = new Vector3();
@@ -5562,13 +5562,13 @@ class WanderBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Calculates the steering force for a single simulation step.
-	*
-	* @param {Vehicle} vehicle - The game entity the force is produced for.
-	* @param {Vector3} force - The force/result vector.
-	* @param {Number} delta - The time delta.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering force for a single simulation step.
+	 *
+	 * @param {Vehicle} vehicle - The game entity the force is produced for.
+	 * @param {Vector3} force - The force/result vector.
+	 * @param {Number} delta - The time delta.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( vehicle, force, delta ) {
 
 		// this behavior is dependent on the update rate, so this line must be
@@ -5611,10 +5611,10 @@ class WanderBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -5629,11 +5629,11 @@ class WanderBehavior extends SteeringBehavior {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {WanderBehavior} A reference to this behavior.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {WanderBehavior} A reference to this behavior.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -5663,31 +5663,31 @@ function generateRandomPointOnCircle( radius, target ) {
 const force = new Vector3();
 
 /**
-* This class is responsible for managing the steering of a single vehicle. The steering manager
-* can manage multiple steering behaviors and combine their produced force into a single one used
-* by the vehicle.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * This class is responsible for managing the steering of a single vehicle. The steering manager
+ * can manage multiple steering behaviors and combine their produced force into a single one used
+ * by the vehicle.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class SteeringManager {
 
 	/**
-	* Constructs a new steering manager.
-	*
-	* @param  {Vehicle} vehicle - The vehicle that owns this steering manager.
-	*/
+	 * Constructs a new steering manager.
+	 *
+	 * @param  {Vehicle} vehicle - The vehicle that owns this steering manager.
+	 */
 	constructor( vehicle ) {
 
 		/**
-		* The vehicle that owns this steering manager.
-		* @type Vehicle
-		*/
+		 * The vehicle that owns this steering manager.
+		 * @type Vehicle
+		 */
 		this.vehicle = vehicle;
 
 		/**
-		* A list of all steering behaviors.
-		* @type Array
-		*/
+		 * A list of all steering behaviors.
+		 * @type Array
+		 */
 		this.behaviors = new Array();
 
 		this._steeringForce = new Vector3(); // the calculated steering force per simulation step
@@ -5696,11 +5696,11 @@ class SteeringManager {
 	}
 
 	/**
-	* Adds the given steering behavior to this steering manager.
-	*
-	* @param {SteeringBehavior} behavior - The steering behavior to add.
-	* @return {SteeringManager} A reference to this steering manager.
-	*/
+	 * Adds the given steering behavior to this steering manager.
+	 *
+	 * @param {SteeringBehavior} behavior - The steering behavior to add.
+	 * @return {SteeringManager} A reference to this steering manager.
+	 */
 	add( behavior ) {
 
 		this.behaviors.push( behavior );
@@ -5710,11 +5710,11 @@ class SteeringManager {
 	}
 
 	/**
-	* Removes the given steering behavior from this steering manager.
-	*
-	* @param {SteeringBehavior} behavior - The steering behavior to remove.
-	* @return {SteeringManager} A reference to this steering manager.
-	*/
+	 * Removes the given steering behavior from this steering manager.
+	 *
+	 * @param {SteeringBehavior} behavior - The steering behavior to remove.
+	 * @return {SteeringManager} A reference to this steering manager.
+	 */
 	remove( behavior ) {
 
 		const index = this.behaviors.indexOf( behavior );
@@ -5725,10 +5725,10 @@ class SteeringManager {
 	}
 
 	/**
-	* Clears the internal state of this steering manager.
-	*
-	* @return {SteeringManager} A reference to this steering manager.
-	*/
+	 * Clears the internal state of this steering manager.
+	 *
+	 * @return {SteeringManager} A reference to this steering manager.
+	 */
 	clear() {
 
 		this.behaviors.length = 0;
@@ -5738,14 +5738,14 @@ class SteeringManager {
 	}
 
 	/**
-	* Calculates the steering forces for all active steering behaviors and
-	* combines it into a single result force. This method is called in
-	* {@link Vehicle#update}.
-	*
-	* @param {Number} delta - The time delta.
-	* @param {Vector3} result - The force/result vector.
-	* @return {Vector3} The force/result vector.
-	*/
+	 * Calculates the steering forces for all active steering behaviors and
+	 * combines it into a single result force. This method is called in
+	 * {@link Vehicle#update}.
+	 *
+	 * @param {Number} delta - The time delta.
+	 * @param {Vector3} result - The force/result vector.
+	 * @return {Vector3} The force/result vector.
+	 */
 	calculate( delta, result ) {
 
 		this._calculateByOrder( delta );
@@ -5822,10 +5822,10 @@ class SteeringManager {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const data = {
@@ -5847,11 +5847,11 @@ class SteeringManager {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {SteeringManager} A reference to this steering manager.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {SteeringManager} A reference to this steering manager.
+	 */
 	fromJSON( json ) {
 
 		this.clear();
@@ -5968,11 +5968,11 @@ class SteeringManager {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {SteeringManager} A reference to this steering manager.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {SteeringManager} A reference to this steering manager.
+	 */
 	resolveReferences( entities ) {
 
 		const behaviors = this.behaviors;
@@ -5992,27 +5992,27 @@ class SteeringManager {
 }
 
 /**
-* This class can be used to smooth the result of a vector calculation. One use case
-* is the smoothing of the velocity vector of game entities in order to avoid a shaky
-* movements du to conflicting forces.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @author {@link https://github.com/robp94|robp94}
-*/
+ * This class can be used to smooth the result of a vector calculation. One use case
+ * is the smoothing of the velocity vector of game entities in order to avoid a shaky
+ * movements du to conflicting forces.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @author {@link https://github.com/robp94|robp94}
+ */
 class Smoother {
 
 	/**
-	* Constructs a new smoother.
-	*
-	* @param  {Number} count - The amount of samples the smoother will use to average a vector.
-	*/
+	 * Constructs a new smoother.
+	 *
+	 * @param  {Number} count - The amount of samples the smoother will use to average a vector.
+	 */
 	constructor( count = 10 ) {
 
 		/**
-		* The amount of samples the smoother will use to average a vector.
-		* @type Number
-		* @default 10
-		*/
+		 * The amount of samples the smoother will use to average a vector.
+		 * @type Number
+		 * @default 10
+		 */
 		this.count = count;
 
 		this._history = []; // this holds the history
@@ -6029,12 +6029,12 @@ class Smoother {
 	}
 
 	/**
-	* Calculates for the given value a smooth average.
-	*
-	* @param {Vector3} value - The value to smooth.
-	* @param {Vector3} average - The calculated average.
-	* @return {Vector3} The calculated average.
-	*/
+	 * Calculates for the given value a smooth average.
+	 *
+	 * @param {Vector3} value - The value to smooth.
+	 * @param {Vector3} average - The calculated average.
+	 * @return {Vector3} The calculated average.
+	 */
 	calculate( value, average ) {
 
 		// ensure, average is a zero vector
@@ -6072,10 +6072,10 @@ class Smoother {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const data = {
@@ -6101,11 +6101,11 @@ class Smoother {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {Smoother} A reference to this smoother.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {Smoother} A reference to this smoother.
+	 */
 	fromJSON( json ) {
 
 		this.count = json.count;
@@ -6137,59 +6137,59 @@ const target$1 = new Vector3();
 const velocitySmooth = new Vector3();
 
 /**
-* This type of game entity implements a special type of locomotion, the so called
-* *Vehicle Model*. The class uses basic physical metrics in order to implement a
-* realistic movement.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @author {@link https://github.com/robp94|robp94}
-* @augments MovingEntity
-*/
+ * This type of game entity implements a special type of locomotion, the so called
+ * *Vehicle Model*. The class uses basic physical metrics in order to implement a
+ * realistic movement.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @author {@link https://github.com/robp94|robp94}
+ * @augments MovingEntity
+ */
 class Vehicle extends MovingEntity {
 
 	/**
-	* Constructs a new vehicle.
-	*/
+	 * Constructs a new vehicle.
+	 */
 	constructor() {
 
 		super();
 
 		/**
-		* The mass if the vehicle in kilogram.
-		* @type Number
-		* @default 1
-		*/
+		 * The mass if the vehicle in kilogram.
+		 * @type Number
+		 * @default 1
+		 */
 		this.mass = 1;
 
 		/**
-		* The maximum force this entity can produce to power itself.
-		* @type Number
-		* @default 100
-		*/
+		 * The maximum force this entity can produce to power itself.
+		 * @type Number
+		 * @default 100
+		 */
 		this.maxForce = 100;
 
 		/**
-		* The steering manager of this vehicle.
-		* @type SteeringManager
-		*/
+		 * The steering manager of this vehicle.
+		 * @type SteeringManager
+		 */
 		this.steering = new SteeringManager( this );
 
 		/**
-		* An optional smoother to avoid shakiness due to conflicting steering behaviors.
-		* @type Smoother
-		* @default null
-		*/
+		 * An optional smoother to avoid shakiness due to conflicting steering behaviors.
+		 * @type Smoother
+		 * @default null
+		 */
 		this.smoother = null;
 
 	}
 
 	/**
-	* This method is responsible for updating the position based on the force produced
-	* by the internal steering manager.
-	*
-	* @param {Number} delta - The time delta.
-	* @return {Vehicle} A reference to this vehicle.
-	*/
+	 * This method is responsible for updating the position based on the force produced
+	 * by the internal steering manager.
+	 *
+	 * @param {Number} delta - The time delta.
+	 * @return {Vehicle} A reference to this vehicle.
+	 */
 	update( delta ) {
 
 		// calculate steering force
@@ -6252,10 +6252,10 @@ class Vehicle extends MovingEntity {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -6270,11 +6270,11 @@ class Vehicle extends MovingEntity {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {Vehicle} A reference to this vehicle.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {Vehicle} A reference to this vehicle.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -6289,11 +6289,11 @@ class Vehicle extends MovingEntity {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {Vehicle} A reference to this vehicle.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {Vehicle} A reference to this vehicle.
+	 */
 	resolveReferences( entities ) {
 
 		super.resolveReferences( entities );
@@ -6305,20 +6305,20 @@ class Vehicle extends MovingEntity {
 }
 
 /**
-* Base class for representing trigger regions. It's a predefine region in 3D space,
-* owned by one or more triggers. The shape of the trigger can be arbitrary.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Base class for representing trigger regions. It's a predefine region in 3D space,
+ * owned by one or more triggers. The shape of the trigger can be arbitrary.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class TriggerRegion {
 
 	/**
-	* Returns true if the bounding volume of the given game entity touches/intersects
-	* the trigger region. Must be implemented by all concrete trigger regions.
-	*
-	* @param {GameEntity} entity - The entity to test.
-	* @return {Boolean} Whether this trigger touches the given game entity or not.
-	*/
+	 * Returns true if the bounding volume of the given game entity touches/intersects
+	 * the trigger region. Must be implemented by all concrete trigger regions.
+	 *
+	 * @param {GameEntity} entity - The entity to test.
+	 * @return {Boolean} Whether this trigger touches the given game entity or not.
+	 */
 	touching( /* entity */ ) {
 
 		return false;
@@ -6326,10 +6326,10 @@ class TriggerRegion {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		return {
@@ -6339,11 +6339,11 @@ class TriggerRegion {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {TriggerRegion} A reference to this trigger region.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {TriggerRegion} A reference to this trigger region.
+	 */
 	fromJSON( /* json */ ) {
 
 		return this;
@@ -6368,41 +6368,41 @@ const points = [
 ];
 
 /**
-* Class representing an axis-aligned bounding box (AABB).
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class representing an axis-aligned bounding box (AABB).
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class AABB {
 
 	/**
-	* Constructs a new AABB with the given values.
-	*
-	* @param {Vector3} min - The minimum bounds of the AABB.
-	* @param {Vector3} max - The maximum bounds of the AABB.
-	*/
+	 * Constructs a new AABB with the given values.
+	 *
+	 * @param {Vector3} min - The minimum bounds of the AABB.
+	 * @param {Vector3} max - The maximum bounds of the AABB.
+	 */
 	constructor( min = new Vector3(), max = new Vector3() ) {
 
 		/**
-		* The minimum bounds of the AABB.
-		* @type Vector3
-		*/
+		 * The minimum bounds of the AABB.
+		 * @type Vector3
+		 */
 		this.min = min;
 
 		/**
-		* The maximum bounds of the AABB.
-		* @type Vector3
-		*/
+		 * The maximum bounds of the AABB.
+		 * @type Vector3
+		 */
 		this.max = max;
 
 	}
 
 	/**
-	* Sets the given values to this AABB.
-	*
-	* @param {Vector3} min - The minimum bounds of the AABB.
-	* @param {Vector3} max - The maximum bounds of the AABB.
-	* @return {AABB} A reference to this AABB.
-	*/
+	 * Sets the given values to this AABB.
+	 *
+	 * @param {Vector3} min - The minimum bounds of the AABB.
+	 * @param {Vector3} max - The maximum bounds of the AABB.
+	 * @return {AABB} A reference to this AABB.
+	 */
 	set( min, max ) {
 
 		this.min = min;
@@ -6413,11 +6413,11 @@ class AABB {
 	}
 
 	/**
-	* Copies all values from the given AABB to this AABB.
-	*
-	* @param {AABB} aabb - The AABB to copy.
-	* @return {AABB} A reference to this AABB.
-	*/
+	 * Copies all values from the given AABB to this AABB.
+	 *
+	 * @param {AABB} aabb - The AABB to copy.
+	 * @return {AABB} A reference to this AABB.
+	 */
 	copy( aabb ) {
 
 		this.min.copy( aabb.min );
@@ -6428,10 +6428,10 @@ class AABB {
 	}
 
 	/**
-	* Creates a new AABB and copies all values from this AABB.
-	*
-	* @return {AABB} A new AABB.
-	*/
+	 * Creates a new AABB and copies all values from this AABB.
+	 *
+	 * @return {AABB} A new AABB.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -6439,13 +6439,13 @@ class AABB {
 	}
 
 	/**
-	* Ensures the given point is inside this AABB and stores
-	* the result in the given vector.
-	*
-	* @param {Vector3} point - A point in 3D space.
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The result vector.
-	*/
+	 * Ensures the given point is inside this AABB and stores
+	 * the result in the given vector.
+	 *
+	 * @param {Vector3} point - A point in 3D space.
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The result vector.
+	 */
 	clampPoint( point, result ) {
 
 		result.copy( point ).clamp( this.min, this.max );
@@ -6455,26 +6455,26 @@ class AABB {
 	}
 
 	/**
-	* Returns true if the given point is inside this AABB.
-	*
-	* @param {Vector3} point - A point in 3D space.
-	* @return {Boolean} The result of the containments test.
-	*/
+	 * Returns true if the given point is inside this AABB.
+	 *
+	 * @param {Vector3} point - A point in 3D space.
+	 * @return {Boolean} The result of the containments test.
+	 */
 	containsPoint( point ) {
 
 		return point.x < this.min.x || point.x > this.max.x ||
-			point.y < this.min.y || point.y > this.max.y ||
-			point.z < this.min.z || point.z > this.max.z ? false : true;
+		point.y < this.min.y || point.y > this.max.y ||
+		point.z < this.min.z || point.z > this.max.z ? false : true;
 
 	}
 
 	/**
-	* Expands this AABB by the given point. So after this method call,
-	* the given point lies inside the AABB.
-	*
-	* @param {Vector3} point - A point in 3D space.
-	* @return {AABB} A reference to this AABB.
-	*/
+	 * Expands this AABB by the given point. So after this method call,
+	 * the given point lies inside the AABB.
+	 *
+	 * @param {Vector3} point - A point in 3D space.
+	 * @return {AABB} A reference to this AABB.
+	 */
 	expand( point ) {
 
 		this.min.min( point );
@@ -6485,11 +6485,11 @@ class AABB {
 	}
 
 	/**
-	* Computes the center point of this AABB and stores it into the given vector.
-	*
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The result vector.
-	*/
+	 * Computes the center point of this AABB and stores it into the given vector.
+	 *
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The result vector.
+	 */
 	getCenter( result ) {
 
 		return result.addVectors( this.min, this.max ).multiplyScalar( 0.5 );
@@ -6497,11 +6497,11 @@ class AABB {
 	}
 
 	/**
-	* Computes the size (width, height, depth) of this AABB and stores it into the given vector.
-	*
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The result vector.
-	*/
+	 * Computes the size (width, height, depth) of this AABB and stores it into the given vector.
+	 *
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The result vector.
+	 */
 	getSize( result ) {
 
 		return result.subVectors( this.max, this.min );
@@ -6509,25 +6509,25 @@ class AABB {
 	}
 
 	/**
-	* Returns true if the given AABB intersects this AABB.
-	*
-	* @param {AABB} aabb - The AABB to test.
-	* @return {Boolean} The result of the intersection test.
-	*/
+	 * Returns true if the given AABB intersects this AABB.
+	 *
+	 * @param {AABB} aabb - The AABB to test.
+	 * @return {Boolean} The result of the intersection test.
+	 */
 	intersectsAABB( aabb ) {
 
 		return aabb.max.x < this.min.x || aabb.min.x > this.max.x ||
-			aabb.max.y < this.min.y || aabb.min.y > this.max.y ||
-			aabb.max.z < this.min.z || aabb.min.z > this.max.z ? false : true;
+		aabb.max.y < this.min.y || aabb.min.y > this.max.y ||
+		aabb.max.z < this.min.z || aabb.min.z > this.max.z ? false : true;
 
 	}
 
 	/**
-	* Returns true if the given bounding sphere intersects this AABB.
-	*
-	* @param {BoundingSphere} sphere - The bounding sphere to test.
-	* @return {Boolean} The result of the intersection test.
-	*/
+	 * Returns true if the given bounding sphere intersects this AABB.
+	 *
+	 * @param {BoundingSphere} sphere - The bounding sphere to test.
+	 * @return {Boolean} The result of the intersection test.
+	 */
 	intersectsBoundingSphere( sphere ) {
 
 		// find the point on the AABB closest to the sphere center
@@ -6541,12 +6541,12 @@ class AABB {
 	}
 
 	/**
-	* Returns the normal for a given point on this AABB's surface.
-	*
-	* @param {Vector3} point - The point on the surface
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The result vector.
-	*/
+	 * Returns the normal for a given point on this AABB's surface.
+	 *
+	 * @param {Vector3} point - The point on the surface
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The result vector.
+	 */
 	getNormalFromSurfacePoint( point, result ) {
 
 		// from https://www.gamedev.net/forums/topic/551816-finding-the-aabb-surface-normal-from-an-intersection-point-on-aabb/
@@ -6601,12 +6601,12 @@ class AABB {
 	}
 
 	/**
-	* Sets the values of the AABB from the given center and size vector.
-	*
-	* @param {Vector3} center - The center point of the AABB.
-	* @param {Vector3} size - The size of the AABB per axis.
-	* @return {AABB} A reference to this AABB.
-	*/
+	 * Sets the values of the AABB from the given center and size vector.
+	 *
+	 * @param {Vector3} center - The center point of the AABB.
+	 * @param {Vector3} size - The size of the AABB per axis.
+	 * @return {AABB} A reference to this AABB.
+	 */
 	fromCenterAndSize( center, size ) {
 
 		vector.copy( size ).multiplyScalar( 0.5 ); // compute half size
@@ -6619,11 +6619,11 @@ class AABB {
 	}
 
 	/**
-	* Sets the values of the AABB from the given array of points.
-	*
-	* @param {Array} points - An array of 3D vectors representing points in 3D space.
-	* @return {AABB} A reference to this AABB.
-	*/
+	 * Sets the values of the AABB from the given array of points.
+	 *
+	 * @param {Array} points - An array of 3D vectors representing points in 3D space.
+	 * @return {AABB} A reference to this AABB.
+	 */
 	fromPoints( points ) {
 
 		this.min.set( Infinity, Infinity, Infinity );
@@ -6640,11 +6640,11 @@ class AABB {
 	}
 
 	/**
-	* Transforms this AABB with the given 4x4 transformation matrix.
-	*
-	* @param {Matrix4} matrix - The 4x4 transformation matrix.
-	* @return {AABB} A reference to this AABB.
-	*/
+	 * Transforms this AABB with the given 4x4 transformation matrix.
+	 *
+	 * @param {Matrix4} matrix - The 4x4 transformation matrix.
+	 * @return {AABB} A reference to this AABB.
+	 */
 	applyMatrix4( matrix ) {
 
 		const min = this.min;
@@ -6664,11 +6664,11 @@ class AABB {
 	}
 
 	/**
-	* Returns true if the given AABB is deep equal with this AABB.
-	*
-	* @param {AABB} aabb - The AABB to test.
-	* @return {Boolean} The result of the equality test.
-	*/
+	 * Returns true if the given AABB is deep equal with this AABB.
+	 *
+	 * @param {AABB} aabb - The AABB to test.
+	 * @return {Boolean} The result of the equality test.
+	 */
 	equals( aabb ) {
 
 		return ( aabb.min.equals( this.min ) ) && ( aabb.max.equals( this.max ) );
@@ -6676,10 +6676,10 @@ class AABB {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		return {
@@ -6691,11 +6691,11 @@ class AABB {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {AABB} A reference to this AABB.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {AABB} A reference to this AABB.
+	 */
 	fromJSON( json ) {
 
 		this.min.fromArray( json.min );
@@ -6710,19 +6710,19 @@ class AABB {
 const boundingSphereEntity = new BoundingSphere();
 
 /**
-* Class for representing a rectangular trigger region as an AABB.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments TriggerRegion
-*/
+ * Class for representing a rectangular trigger region as an AABB.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments TriggerRegion
+ */
 class RectangularTriggerRegion extends TriggerRegion {
 
 	/**
-	* Constructs a new rectangular trigger region with the given values.
-	*
-	* @param {Vector3} min - The minimum bounds of the region.
-	* @param {Vector3} max - The maximum bounds of the region.
-	*/
+	 * Constructs a new rectangular trigger region with the given values.
+	 *
+	 * @param {Vector3} min - The minimum bounds of the region.
+	 * @param {Vector3} max - The maximum bounds of the region.
+	 */
 	constructor( min = new Vector3(), max = new Vector3() ) {
 
 		super();
@@ -6756,12 +6756,12 @@ class RectangularTriggerRegion extends TriggerRegion {
 	}
 
 	/**
-	* Creates the new rectangular trigger region from a given position and size.
-	*
-	* @param {Vector3} position - The center position of the trigger region.
-	* @param {Vector3} size - The size of the trigger region per axis.
-	* @return {RectangularTriggerRegion} A reference to this trigger region.
-	*/
+	 * Creates the new rectangular trigger region from a given position and size.
+	 *
+	 * @param {Vector3} position - The center position of the trigger region.
+	 * @param {Vector3} size - The size of the trigger region per axis.
+	 * @return {RectangularTriggerRegion} A reference to this trigger region.
+	 */
 	fromPositionAndSize( position, size ) {
 
 		this._aabb.fromCenterAndSize( position, size );
@@ -6771,12 +6771,12 @@ class RectangularTriggerRegion extends TriggerRegion {
 	}
 
 	/**
-	* Returns true if the bounding volume of the given game entity touches/intersects
-	* the trigger region.
-	*
-	* @param {GameEntity} entity - The entity to test.
-	* @return {Boolean} Whether this trigger touches the given game entity or not.
-	*/
+	 * Returns true if the bounding volume of the given game entity touches/intersects
+	 * the trigger region.
+	 *
+	 * @param {GameEntity} entity - The entity to test.
+	 * @return {Boolean} Whether this trigger touches the given game entity or not.
+	 */
 	touching( entity ) {
 
 		boundingSphereEntity.set( entity.position, entity.boundingRadius );
@@ -6786,10 +6786,10 @@ class RectangularTriggerRegion extends TriggerRegion {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -6801,11 +6801,11 @@ class RectangularTriggerRegion extends TriggerRegion {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {RectangularTriggerRegion} A reference to this trigger region.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {RectangularTriggerRegion} A reference to this trigger region.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -6821,19 +6821,19 @@ class RectangularTriggerRegion extends TriggerRegion {
 const boundingSphereEntity$1 = new BoundingSphere();
 
 /**
-* Class for representing a spherical trigger region as a bounding sphere.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments TriggerRegion
-*/
+ * Class for representing a spherical trigger region as a bounding sphere.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments TriggerRegion
+ */
 class SphericalTriggerRegion extends TriggerRegion {
 
 	/**
-	* Constructs a new spherical trigger region with the given values.
-	*
-	* @param {Vector3} position - The center position of the region.
-	* @param {Number} radius - The radius of the region.
-	*/
+	 * Constructs a new spherical trigger region with the given values.
+	 *
+	 * @param {Vector3} position - The center position of the region.
+	 * @param {Number} radius - The radius of the region.
+	 */
 	constructor( position = new Vector3(), radius = 0 ) {
 
 		super();
@@ -6867,12 +6867,12 @@ class SphericalTriggerRegion extends TriggerRegion {
 	}
 
 	/**
-	* Returns true if the bounding volume of the given game entity touches/intersects
-	* the trigger region.
-	*
-	* @param {GameEntity} entity - The entity to test.
-	* @return {Boolean} Whether this trigger touches the given game entity or not.
-	*/
+	 * Returns true if the bounding volume of the given game entity touches/intersects
+	 * the trigger region.
+	 *
+	 * @param {GameEntity} entity - The entity to test.
+	 * @return {Boolean} Whether this trigger touches the given game entity or not.
+	 */
 	touching( entity ) {
 
 		boundingSphereEntity$1.set( entity.position, entity.boundingRadius );
@@ -6882,10 +6882,10 @@ class SphericalTriggerRegion extends TriggerRegion {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -6897,11 +6897,11 @@ class SphericalTriggerRegion extends TriggerRegion {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {SphericalTriggerRegion} A reference to this trigger region.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {SphericalTriggerRegion} A reference to this trigger region.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -6915,31 +6915,31 @@ class SphericalTriggerRegion extends TriggerRegion {
 }
 
 /**
-* Base class for representing triggers. A trigger generates an action if a game entity
-* touches its trigger region, a predefine region in 3D space.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Base class for representing triggers. A trigger generates an action if a game entity
+ * touches its trigger region, a predefine region in 3D space.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Trigger {
 
 	/**
-	* Constructs a new trigger with the given values.
-	*
-	* @param {TriggerRegion} region - The region of the trigger.
-	*/
+	 * Constructs a new trigger with the given values.
+	 *
+	 * @param {TriggerRegion} region - The region of the trigger.
+	 */
 	constructor( region = new TriggerRegion() ) {
 
 		/**
-		* Whether this trigger is active or not.
-		* @type Boolean
-		* @default true
-		*/
+		 * Whether this trigger is active or not.
+		 * @type Boolean
+		 * @default true
+		 */
 		this.active = true;
 
 		/**
-		* The region of the trigger.
-		* @type TriggerRegion
-		*/
+		 * The region of the trigger.
+		 * @type TriggerRegion
+		 */
 		this.region = region;
 
 		//
@@ -6949,12 +6949,12 @@ class Trigger {
 	}
 
 	/**
-	* This method is called per simulation step for all game entities. If the game
-	* entity touches the region of the trigger, the respective action is executed.
-	*
-	* @param {GameEntity} entity - The entity to test
-	* @return {Trigger} A reference to this trigger.
-	*/
+	 * This method is called per simulation step for all game entities. If the game
+	 * entity touches the region of the trigger, the respective action is executed.
+	 *
+	 * @param {GameEntity} entity - The entity to test
+	 * @return {Trigger} A reference to this trigger.
+	 */
 	check( entity ) {
 
 		if ( ( this.active === true ) && ( this.region.touching( entity ) === true ) ) {
@@ -6968,28 +6968,28 @@ class Trigger {
 	}
 
 	/**
-	* This method is called when the trigger should execute its action.
-	* Must be implemented by all concrete triggers.
-	*
-	* @param {GameEntity} entity - The entity that touched the trigger region.
-	* @return {Trigger} A reference to this trigger.
-	*/
+	 * This method is called when the trigger should execute its action.
+	 * Must be implemented by all concrete triggers.
+	 *
+	 * @param {GameEntity} entity - The entity that touched the trigger region.
+	 * @return {Trigger} A reference to this trigger.
+	 */
 	execute( /* entity */ ) {}
 
 	/**
-	* Triggers can have internal states. This method is called per simulation step
-	* and can be used to update the trigger.
-	*
-	* @param {Number} delta - The time delta value.
-	* @return {Trigger} A reference to this trigger.
-	*/
+	 * Triggers can have internal states. This method is called per simulation step
+	 * and can be used to update the trigger.
+	 *
+	 * @param {Number} delta - The time delta value.
+	 * @return {Trigger} A reference to this trigger.
+	 */
 	update( /* delta */ ) {}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		return {
@@ -7001,11 +7001,11 @@ class Trigger {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {Trigger} A reference to this trigger.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {Trigger} A reference to this trigger.
+	 */
 	fromJSON( json ) {
 
 		this.active = json.active;
@@ -7070,35 +7070,35 @@ class Trigger {
 const candidates = [];
 
 /**
-* This class is used for managing all central objects of a game like
-* game entities and triggers.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * This class is used for managing all central objects of a game like
+ * game entities and triggers.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class EntityManager {
 
 	/**
-	* Constructs a new entity manager.
-	*/
+	 * Constructs a new entity manager.
+	 */
 	constructor() {
 
 		/**
-		* A list of {@link GameEntity game entities }.
-		* @type Array
-		*/
+		 * A list of {@link GameEntity game entities }.
+		 * @type Array
+		 */
 		this.entities = new Array();
 
 		/**
-		* A list of {@link Trigger triggers }.
-		* @type Array
-		*/
+		 * A list of {@link Trigger triggers }.
+		 * @type Array
+		 */
 		this.triggers = new Array();
 
 		/**
-		* A reference to a spatial index.
-		* @type CellSpacePartitioning
-		* @default null
-		*/
+		 * A reference to a spatial index.
+		 * @type CellSpacePartitioning
+		 * @default null
+		 */
 		this.spatialIndex = null;
 
 		this._indexMap = new Map(); // used by spatial indices
@@ -7108,11 +7108,11 @@ class EntityManager {
 	}
 
 	/**
-	* Adds a game entity to this entity manager.
-	*
-	* @param {GameEntity} entity - The game entity to add.
-	* @return {EntityManager} A reference to this entity manager.
-	*/
+	 * Adds a game entity to this entity manager.
+	 *
+	 * @param {GameEntity} entity - The game entity to add.
+	 * @return {EntityManager} A reference to this entity manager.
+	 */
 	add( entity ) {
 
 		this.entities.push( entity );
@@ -7124,11 +7124,11 @@ class EntityManager {
 	}
 
 	/**
-	* Removes a game entity from this entity manager.
-	*
-	* @param {GameEntity} entity - The game entity to remove.
-	* @return {EntityManager} A reference to this entity manager.
-	*/
+	 * Removes a game entity from this entity manager.
+	 *
+	 * @param {GameEntity} entity - The game entity to remove.
+	 * @return {EntityManager} A reference to this entity manager.
+	 */
 	remove( entity ) {
 
 		const index = this.entities.indexOf( entity );
@@ -7141,11 +7141,11 @@ class EntityManager {
 	}
 
 	/**
-	* Adds a trigger to this entity manager.
-	*
-	* @param {Trigger} trigger - The trigger to add.
-	* @return {EntityManager} A reference to this entity manager.
-	*/
+	 * Adds a trigger to this entity manager.
+	 *
+	 * @param {Trigger} trigger - The trigger to add.
+	 * @return {EntityManager} A reference to this entity manager.
+	 */
 	addTrigger( trigger ) {
 
 		this.triggers.push( trigger );
@@ -7155,11 +7155,11 @@ class EntityManager {
 	}
 
 	/**
-	* Removes a trigger to this entity manager.
-	*
-	* @param {Trigger} trigger - The trigger to remove.
-	* @return {EntityManager} A reference to this entity manager.
-	*/
+	 * Removes a trigger to this entity manager.
+	 *
+	 * @param {Trigger} trigger - The trigger to remove.
+	 * @return {EntityManager} A reference to this entity manager.
+	 */
 	removeTrigger( trigger ) {
 
 		const index = this.triggers.indexOf( trigger );
@@ -7170,10 +7170,10 @@ class EntityManager {
 	}
 
 	/**
-	* Clears the internal state of this entity manager.
-	*
-	* @return {EntityManager} A reference to this entity manager.
-	*/
+	 * Clears the internal state of this entity manager.
+	 *
+	 * @return {EntityManager} A reference to this entity manager.
+	 */
 	clear() {
 
 		this.entities.length = 0;
@@ -7186,13 +7186,13 @@ class EntityManager {
 	}
 
 	/**
-	* Returns an entity by the given name. If no game entity is found, *null*
-	* is returned. This method should be used once (e.g. at {@link GameEntity#start})
-	* and the result should be cached for later use.
-	*
-	* @param {String} name - The name of the game entity.
-	* @return {GameEntity} The found game entity.
-	*/
+	 * Returns an entity by the given name. If no game entity is found, *null*
+	 * is returned. This method should be used once (e.g. at {@link GameEntity#start})
+	 * and the result should be cached for later use.
+	 *
+	 * @param {String} name - The name of the game entity.
+	 * @return {GameEntity} The found game entity.
+	 */
 	getEntityByName( name ) {
 
 		const entities = this.entities;
@@ -7210,12 +7210,12 @@ class EntityManager {
 	}
 
 	/**
-	* The central update method of this entity manager. Updates all
-	* game entities, triggers and delayed messages.
-	*
-	* @param {Number} delta - The time delta.
-	* @return {EntityManager} A reference to this entity manager.
-	*/
+	 * The central update method of this entity manager. Updates all
+	 * game entities, triggers and delayed messages.
+	 *
+	 * @param {Number} delta - The time delta.
+	 * @return {EntityManager} A reference to this entity manager.
+	 */
 	update( delta ) {
 
 		const entities = this.entities;
@@ -7250,12 +7250,12 @@ class EntityManager {
 	}
 
 	/**
-	* Updates a single entity.
-	*
-	* @param {GameEntity} entity - The game entity to update.
-	* @param {Number} delta - The time delta.
-	* @return {EntityManager} A reference to this entity manager.
-	*/
+	 * Updates a single entity.
+	 *
+	 * @param {GameEntity} entity - The game entity to update.
+	 * @param {Number} delta - The time delta.
+	 * @return {EntityManager} A reference to this entity manager.
+	 */
 	updateEntity( entity, delta ) {
 
 		if ( entity.active === true ) {
@@ -7317,11 +7317,11 @@ class EntityManager {
 	}
 
 	/**
-	* Updates the neighborhood of a single game entity.
-	*
-	* @param {GameEntity} entity - The game entity to update.
-	* @return {EntityManager} A reference to this entity manager.
-	*/
+	 * Updates the neighborhood of a single game entity.
+	 *
+	 * @param {GameEntity} entity - The game entity to update.
+	 * @return {EntityManager} A reference to this entity manager.
+	 */
 	updateNeighborhood( entity ) {
 
 		if ( entity.updateNeighborhood === true ) {
@@ -7372,11 +7372,11 @@ class EntityManager {
 	}
 
 	/**
-	* Updates a single trigger.
-	*
-	* @param {Trigger} trigger - The trigger to update.
-	* @return {EntityManager} A reference to this entity manager.
-	*/
+	 * Updates a single trigger.
+	 *
+	 * @param {Trigger} trigger - The trigger to update.
+	 * @return {EntityManager} A reference to this entity manager.
+	 */
 	updateTrigger( trigger, delta ) {
 
 		if ( trigger.active === true ) {
@@ -7404,15 +7404,15 @@ class EntityManager {
 	}
 
 	/**
-	* Interface for game entities so they can send messages to other game entities.
-	*
-	* @param {GameEntity} sender - The sender.
-	* @param {GameEntity} receiver - The receiver.
-	* @param {String} message - The actual message.
-	* @param {Number} delay - A time value in millisecond used to delay the message dispatching.
-	* @param {Object} data - An object for custom data.
-	* @return {EntityManager} A reference to this entity manager.
-	*/
+	 * Interface for game entities so they can send messages to other game entities.
+	 *
+	 * @param {GameEntity} sender - The sender.
+	 * @param {GameEntity} receiver - The receiver.
+	 * @param {String} message - The actual message.
+	 * @param {Number} delay - A time value in millisecond used to delay the message dispatching.
+	 * @param {Object} data - An object for custom data.
+	 * @return {EntityManager} A reference to this entity manager.
+	 */
 	sendMessage( sender, receiver, message, delay, data ) {
 
 		this._messageDispatcher.dispatch( sender, receiver, message, delay, data );
@@ -7422,10 +7422,10 @@ class EntityManager {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const data = {
@@ -7471,11 +7471,11 @@ class EntityManager {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {EntityManager} A reference to this entity manager.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {EntityManager} A reference to this entity manager.
+	 */
 	fromJSON( json ) {
 
 		this.clear();
@@ -7587,14 +7587,14 @@ class EntityManager {
 	}
 
 	/**
-	* Registers a custom type for deserialization. When calling {@link EntityManager#fromJSON}
-	* the entity manager is able to pick the correct constructor in order to create custom
-	* game entities or triggers.
-	*
-	* @param {String} type - The name of the entity or trigger type.
-	* @param {Function} constructor -  The constructor function.
-	* @return {EntityManager} A reference to this entity manager.
-	*/
+	 * Registers a custom type for deserialization. When calling {@link EntityManager#fromJSON}
+	 * the entity manager is able to pick the correct constructor in order to create custom
+	 * game entities or triggers.
+	 *
+	 * @param {String} type - The name of the entity or trigger type.
+	 * @param {Function} constructor -  The constructor function.
+	 * @return {EntityManager} A reference to this entity manager.
+	 */
 	registerType( type, constructor ) {
 
 		this._typesMap.set( type, constructor );
@@ -7606,17 +7606,17 @@ class EntityManager {
 }
 
 /**
-* Other classes can inherit from this class in order to provide an
-* event based API. Useful for controls development.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Other classes can inherit from this class in order to provide an
+ * event based API. Useful for controls development.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 
 class EventDispatcher {
 
 	/**
-	* Constructs a new event dispatcher.
-	*/
+	 * Constructs a new event dispatcher.
+	 */
 	constructor() {
 
 		this._events = new Map();
@@ -7624,11 +7624,11 @@ class EventDispatcher {
 	}
 
 	/**
-	* Adds an event listener for the given event type.
-	*
-	* @param {String} type - The event type.
-	* @param {Function} listener - The event listener to add.
-	*/
+	 * Adds an event listener for the given event type.
+	 *
+	 * @param {String} type - The event type.
+	 * @param {Function} listener - The event listener to add.
+	 */
 	addEventListener( type, listener ) {
 
 		const events = this._events;
@@ -7650,11 +7650,11 @@ class EventDispatcher {
 	}
 
 	/**
-	* Removes the given event listener for the given event type.
-	*
-	* @param {String} type - The event type.
-	* @param {Function} listener - The event listener to remove.
-	*/
+	 * Removes the given event listener for the given event type.
+	 *
+	 * @param {String} type - The event type.
+	 * @param {Function} listener - The event listener to remove.
+	 */
 	removeEventListener( type, listener ) {
 
 		const events = this._events;
@@ -7671,12 +7671,12 @@ class EventDispatcher {
 	}
 
 	/**
-	* Returns true if the given event listener is set for the given event type.
-	*
-	* @param {String} type - The event type.
-	* @param {Function} listener - The event listener to add.
-	* @return {Boolean} Whether the given event listener is set for the given event type or not.
-	*/
+	 * Returns true if the given event listener is set for the given event type.
+	 *
+	 * @param {String} type - The event type.
+	 * @param {Function} listener - The event listener to add.
+	 * @return {Boolean} Whether the given event listener is set for the given event type or not.
+	 */
 	hasEventListener( type, listener ) {
 
 		const events = this._events;
@@ -7687,10 +7687,10 @@ class EventDispatcher {
 	}
 
 	/**
-	* Dispatches an event to all respective event listeners.
-	*
-	* @param {Object} event - The event object.
-	*/
+	 * Dispatches an event to all respective event listeners.
+	 *
+	 * @param {Object} event - The event object.
+	 */
 	dispatchEvent( event ) {
 
 		const events = this._events;
@@ -7716,41 +7716,41 @@ const v1$2 = new Vector3();
 const v2 = new Vector3();
 
 /**
-* Class representing a plane in 3D space. The plane is specified in Hessian normal form.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class representing a plane in 3D space. The plane is specified in Hessian normal form.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Plane {
 
 	/**
-	* Constructs a new plane with the given values. The sign of {@link Plane#constant} determines the side of the plane on which the origin is located.
-	*
-	* @param {Vector3} normal - The normal vector of the plane.
-	* @param {Number} constant - The distance of the plane from the origin.
-	*/
+	 * Constructs a new plane with the given values. The sign of {@link Plane#constant} determines the side of the plane on which the origin is located.
+	 *
+	 * @param {Vector3} normal - The normal vector of the plane.
+	 * @param {Number} constant - The distance of the plane from the origin.
+	 */
 	constructor( normal = new Vector3( 0, 0, 1 ), constant = 0 ) {
 
 		/**
-		* The normal vector of the plane.
-		* @type Vector3
-		*/
+		 * The normal vector of the plane.
+		 * @type Vector3
+		 */
 		this.normal = normal;
 
 		/**
-		* The distance of the plane from the origin.
-		* @type Number
-		*/
+		 * The distance of the plane from the origin.
+		 * @type Number
+		 */
 		this.constant = constant;
 
 	}
 
 	/**
-	* Sets the given values to this plane.
-	*
-	* @param {Vector3} normal - The normal vector of the plane.
-	* @param {Number} constant - The distance of the plane from the origin.
-	* @return {Plane} A reference to this plane.
-	*/
+	 * Sets the given values to this plane.
+	 *
+	 * @param {Vector3} normal - The normal vector of the plane.
+	 * @param {Number} constant - The distance of the plane from the origin.
+	 * @return {Plane} A reference to this plane.
+	 */
 	set( normal, constant ) {
 
 		this.normal = normal;
@@ -7761,11 +7761,11 @@ class Plane {
 	}
 
 	/**
-	* Copies all values from the given plane to this plane.
-	*
-	* @param {Plane} plane - The plane to copy.
-	* @return {Plane} A reference to this plane.
-	*/
+	 * Copies all values from the given plane to this plane.
+	 *
+	 * @param {Plane} plane - The plane to copy.
+	 * @return {Plane} A reference to this plane.
+	 */
 	copy( plane ) {
 
 		this.normal.copy( plane.normal );
@@ -7776,10 +7776,10 @@ class Plane {
 	}
 
 	/**
-	* Creates a new plane and copies all values from this plane.
-	*
-	* @return {Plane} A new plane.
-	*/
+	 * Creates a new plane and copies all values from this plane.
+	 *
+	 * @return {Plane} A new plane.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -7787,13 +7787,13 @@ class Plane {
 	}
 
 	/**
-	* Computes the signed distance from the given 3D vector to this plane.
-	* The sign of the distance indicates the half-space in which the points lies.
-	* Zero means the point lies on the plane.
-	*
-	* @param {Vector3} point - A point in 3D space.
-	* @return {Number} The signed distance.
-	*/
+	 * Computes the signed distance from the given 3D vector to this plane.
+	 * The sign of the distance indicates the half-space in which the points lies.
+	 * Zero means the point lies on the plane.
+	 *
+	 * @param {Vector3} point - A point in 3D space.
+	 * @return {Number} The signed distance.
+	 */
 	distanceToPoint( point ) {
 
 		return this.normal.dot( point ) + this.constant;
@@ -7801,12 +7801,12 @@ class Plane {
 	}
 
 	/**
-	* Sets the values of the plane from the given normal vector and a coplanar point.
-	*
-	* @param {Vector3} normal - A normalized vector.
-	* @param {Vector3} point - A coplanar point.
-	* @return {Plane} A reference to this plane.
-	*/
+	 * Sets the values of the plane from the given normal vector and a coplanar point.
+	 *
+	 * @param {Vector3} normal - A normalized vector.
+	 * @param {Vector3} point - A coplanar point.
+	 * @return {Plane} A reference to this plane.
+	 */
 	fromNormalAndCoplanarPoint( normal, point ) {
 
 		this.normal.copy( normal );
@@ -7817,13 +7817,13 @@ class Plane {
 	}
 
 	/**
-	* Sets the values of the plane from three given coplanar points.
-	*
-	* @param {Vector3} a - A coplanar point.
-	* @param {Vector3} b - A coplanar point.
-	* @param {Vector3} c - A coplanar point.
-	* @return {Plane} A reference to this plane.
-	*/
+	 * Sets the values of the plane from three given coplanar points.
+	 *
+	 * @param {Vector3} a - A coplanar point.
+	 * @param {Vector3} b - A coplanar point.
+	 * @param {Vector3} c - A coplanar point.
+	 * @return {Plane} A reference to this plane.
+	 */
 	fromCoplanarPoints( a, b, c ) {
 
 		v1$2.subVectors( c, b ).cross( v2.subVectors( a, b ) ).normalize();
@@ -7835,11 +7835,11 @@ class Plane {
 	}
 
 	/**
-	* Returns true if the given plane is deep equal with this plane.
-	*
-	* @param {Plane} plane - The plane to test.
-	* @return {Boolean} The result of the equality test.
-	*/
+	 * Returns true if the given plane is deep equal with this plane.
+	 *
+	 * @param {Plane} plane - The plane to test.
+	 * @return {Boolean} The result of the equality test.
+	 */
 	equals( plane ) {
 
 		return plane.normal.equals( this.normal ) && plane.constant === this.constant;
@@ -7855,18 +7855,18 @@ const plane = new Plane();
 const inverseMatrix = new Matrix4();
 
 /**
-* Class for representing a polygon mesh. The faces consist of triangles.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing a polygon mesh. The faces consist of triangles.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class MeshGeometry {
 
 	/**
-	* Constructs a new mesh geometry.
-	*
-	* @param {TypedArray} vertices - The vertex buffer (Float32Array).
-	* @param {TypedArray} indices - The index buffer (Uint16Array/Uint32Array).
-	*/
+	 * Constructs a new mesh geometry.
+	 *
+	 * @param {TypedArray} vertices - The vertex buffer (Float32Array).
+	 * @param {TypedArray} indices - The index buffer (Uint16Array/Uint32Array).
+	 */
 	constructor( vertices = new Float32Array(), indices = null ) {
 
 		this.vertices = vertices;
@@ -7882,10 +7882,10 @@ class MeshGeometry {
 	}
 
 	/**
-	* Computes an AABB for this geometry.
-	*
-	* @return {MeshGeometry} A reference to this mesh geometry.
-	*/
+	 * Computes an AABB for this geometry.
+	 *
+	 * @return {MeshGeometry} A reference to this mesh geometry.
+	 */
 	computeBoundingVolume() {
 
 		const vertices = this.vertices;
@@ -8032,10 +8032,10 @@ class MeshGeometry {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = {
@@ -8057,11 +8057,11 @@ class MeshGeometry {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {MeshGeometry} A reference to this mesh geometry.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {MeshGeometry} A reference to this mesh geometry.
+	 */
 	fromJSON( json ) {
 
 		this.aabb = new AABB().fromJSON( json.aabb );
@@ -8093,45 +8093,45 @@ class MeshGeometry {
 }
 
 /**
-* Class for representing a timer.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing a timer.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Time {
 
 	/**
-	* Constructs a new time object.
-	*/
+	 * Constructs a new time object.
+	 */
 	constructor() {
 
 		/**
-		* The start time of this timer.
-		* @type Number
-		* @default 0
-		*/
+		 * The start time of this timer.
+		 * @type Number
+		 * @default 0
+		 */
 		this.startTime = 0;
 
 		/**
-		* The time stamp of the last simulation step.
-		* @type Number
-		* @default 0
-		*/
+		 * The time stamp of the last simulation step.
+		 * @type Number
+		 * @default 0
+		 */
 		this.previousTime = 0;
 
 		/**
-		* The time stamp of the current simulation step.
-		* @type Number
-		* @default 0
-		*/
+		 * The time stamp of the current simulation step.
+		 * @type Number
+		 * @default 0
+		 */
 		this.currentTime = 0;
 
 		/**
-		* Whether the Page Visibility API should be used to avoid large time
-		* delta values produced via inactivity or not. This setting is
-		* ignored if the browser does not support the API.
-		* @type Boolean
-		* @default true
-		*/
+		 * Whether the Page Visibility API should be used to avoid large time
+		 * delta values produced via inactivity or not. This setting is
+		 * ignored if the browser does not support the API.
+		 * @type Boolean
+		 * @default true
+		 */
 		this.detectPageVisibility = true;
 
 		//
@@ -8147,10 +8147,10 @@ class Time {
 	}
 
 	/**
-	* Returns the delta time in seconds for the current simulation step.
-	*
-	* @return {Number} The delta time in seconds.
-	*/
+	 * Returns the delta time in seconds for the current simulation step.
+	 *
+	 * @return {Number} The delta time in seconds.
+	 */
 	getDelta() {
 
 		return ( this.currentTime - this.previousTime ) / 1000;
@@ -8158,10 +8158,10 @@ class Time {
 	}
 
 	/**
-	* Returns the elapsed time in seconds of this timer.
-	*
-	* @return {Number} The elapsed time in seconds.
-	*/
+	 * Returns the elapsed time in seconds of this timer.
+	 *
+	 * @return {Number} The elapsed time in seconds.
+	 */
 	getElapsed() {
 
 		return ( this.currentTime - this.startTime ) / 1000;
@@ -8169,10 +8169,10 @@ class Time {
 	}
 
 	/**
-	* Updates the internal state of this timer.
-	*
-	* @return {Time} A reference to this timer.
-	*/
+	 * Updates the internal state of this timer.
+	 *
+	 * @return {Time} A reference to this timer.
+	 */
 	update() {
 
 		this.previousTime = this.currentTime;
@@ -8183,10 +8183,10 @@ class Time {
 	}
 
 	/**
-	* Returns a current time value in milliseconds.
-	*
-	* @return {Number} A current time value in milliseconds.
-	*/
+	 * Returns a current time value in milliseconds.
+	 *
+	 * @return {Number} A current time value in milliseconds.
+	 */
 	now() {
 
 		return ( typeof performance === 'undefined' ? Date : performance ).now();
@@ -8210,26 +8210,26 @@ function handleVisibilityChange() {
 }
 
 /**
-* Not all components of an AI system need to be updated in each simulation step.
-* This class can be used to control the update process by defining how many updates
-* should be executed per second.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Not all components of an AI system need to be updated in each simulation step.
+ * This class can be used to control the update process by defining how many updates
+ * should be executed per second.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Regulator {
 
 	/**
-	* Constructs a new regulator.
-	*
-	* @param {Number} updateFrequency - The amount of updates per second.
-	*/
+	 * Constructs a new regulator.
+	 *
+	 * @param {Number} updateFrequency - The amount of updates per second.
+	 */
 	constructor( updateFrequency = 0 ) {
 
 		/**
-		* The amount of updates per second.
-		* @type Number
-		* @default 0
-		*/
+		 * The amount of updates per second.
+		 * @type Number
+		 * @default 0
+		 */
 		this.updateFrequency = updateFrequency;
 
 		this._time = new Time();
@@ -8238,10 +8238,10 @@ class Regulator {
 	}
 
 	/**
-	* Returns true if it is time to allow the next update.
-	*
-	* @return {Boolean} Whether an update is allowed or not.
-	*/
+	 * Returns true if it is time to allow the next update.
+	 *
+	 * @return {Boolean} Whether an update is allowed or not.
+	 */
 	ready() {
 
 		this._time.update();
@@ -8261,65 +8261,65 @@ class Regulator {
 }
 
 /**
-* Base class for representing a state in context of State-driven agent design.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Base class for representing a state in context of State-driven agent design.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class State {
 
 	/**
-	* This method is called once during a state transition when the {@link StateMachine} makes
-	* this state active.
-	*
-	* @param {GameEntity} owner - The game entity that represents the execution context of this state.
-	*/
+	 * This method is called once during a state transition when the {@link StateMachine} makes
+	 * this state active.
+	 *
+	 * @param {GameEntity} owner - The game entity that represents the execution context of this state.
+	 */
 	enter( /* owner */ ) {}
 
 	/**
-	* This method is called per simulation step if this state is active.
-	*
-	* @param {GameEntity} owner - The game entity that represents the execution context of this state.
-	*/
+	 * This method is called per simulation step if this state is active.
+	 *
+	 * @param {GameEntity} owner - The game entity that represents the execution context of this state.
+	 */
 	execute( /* owner */ ) {}
 
 	/**
-	* This method is called once during a state transition when the {@link StateMachine} makes
-	* this state inactive.
-	*
-	* @param {GameEntity} owner - The game entity that represents the execution context of this state.
-	*/
+	 * This method is called once during a state transition when the {@link StateMachine} makes
+	 * this state inactive.
+	 *
+	 * @param {GameEntity} owner - The game entity that represents the execution context of this state.
+	 */
 	exit( /* owner */ ) {}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {State} A reference to this state.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {State} A reference to this state.
+	 */
 	fromJSON( /* json */ ) {}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {State} A reference to this state.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {State} A reference to this state.
+	 */
 	resolveReferences( /* entities */ ) {}
 
 	/**
-	* This method is called when messaging between game entities occurs.
-	*
-	* @param {GameEntity} owner - The game entity that represents the execution context of this state.
-	* @param {Telegram} telegram - A data structure containing the actual message.
-	* @return {Boolean} Whether the message was processed or not.
-	*/
+	 * This method is called when messaging between game entities occurs.
+	 *
+	 * @param {GameEntity} owner - The game entity that represents the execution context of this state.
+	 * @param {Telegram} telegram - A data structure containing the actual message.
+	 * @return {Boolean} Whether the message was processed or not.
+	 */
 	onMessage( /* owner, telegram */ ) {
 
 		return false;
@@ -8329,47 +8329,47 @@ class State {
 }
 
 /**
-* Finite state machine (FSM) for implementing State-driven agent design.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Finite state machine (FSM) for implementing State-driven agent design.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class StateMachine {
 
 	/**
-	* Constructs a new state machine with the given values.
-	*
-	* @param {GameEntity} owner - The owner of this state machine.
-	*/
+	 * Constructs a new state machine with the given values.
+	 *
+	 * @param {GameEntity} owner - The owner of this state machine.
+	 */
 	constructor( owner = null ) {
 
 		/**
-		* The game entity that owns this state machine.
-		* @type GameEntity
-		*/
+		 * The game entity that owns this state machine.
+		 * @type GameEntity
+		 */
 		this.owner = owner;
 
 		/**
-		* The current state of the game entity.
-		* @type State
-		*/
+		 * The current state of the game entity.
+		 * @type State
+		 */
 		this.currentState = null;
 
 		/**
-		* The previous state of the game entity.
-		* @type State
-		*/
+		 * The previous state of the game entity.
+		 * @type State
+		 */
 		this.previousState = null; // a reference to the last state the agent was in
 
 		/**
-		* This state logic is called every time the state machine is updated.
-		* @type State
-		*/
+		 * This state logic is called every time the state machine is updated.
+		 * @type State
+		 */
 		this.globalState = null;
 
 		/**
-		* A map with all states of the state machine.
-		* @type Map
-		*/
+		 * A map with all states of the state machine.
+		 * @type Map
+		 */
 		this.states = new Map();
 
 		//
@@ -8379,10 +8379,10 @@ class StateMachine {
 	}
 
 	/**
-	* Updates the internal state of the FSM. Usually called by {@link GameEntity#update}.
-	*
-	* @return {StateMachine} A reference to this state machine.
-	*/
+	 * Updates the internal state of the FSM. Usually called by {@link GameEntity#update}.
+	 *
+	 * @return {StateMachine} A reference to this state machine.
+	 */
 	update() {
 
 		if ( this.globalState !== null ) {
@@ -8402,12 +8402,12 @@ class StateMachine {
 	}
 
 	/**
-	* Adds a new state with the given ID to the state machine.
-	*
-	* @param {String} id - The ID of the state.
-	* @param {State} state - The state.
-	* @return {StateMachine} A reference to this state machine.
-	*/
+	 * Adds a new state with the given ID to the state machine.
+	 *
+	 * @param {String} id - The ID of the state.
+	 * @param {State} state - The state.
+	 * @return {StateMachine} A reference to this state machine.
+	 */
 	add( id, state ) {
 
 		if ( state instanceof State ) {
@@ -8425,11 +8425,11 @@ class StateMachine {
 	}
 
 	/**
-	* Removes a state via its ID from the state machine.
-	*
-	* @param {String} id - The ID of the state.
-	* @return {StateMachine} A reference to this state machine.
-	*/
+	 * Removes a state via its ID from the state machine.
+	 *
+	 * @param {String} id - The ID of the state.
+	 * @return {StateMachine} A reference to this state machine.
+	 */
 	remove( id ) {
 
 		this.states.delete( id );
@@ -8439,11 +8439,11 @@ class StateMachine {
 	}
 
 	/**
-	* Returns the state for the given ID.
-	*
-	* @param {String} id - The ID of the state.
-	* @return {State} The state for the given ID.
-	*/
+	 * Returns the state for the given ID.
+	 *
+	 * @param {String} id - The ID of the state.
+	 * @return {State} The state for the given ID.
+	 */
 	get( id ) {
 
 		return this.states.get( id );
@@ -8451,11 +8451,11 @@ class StateMachine {
 	}
 
 	/**
-	* Performs a state change to the state defined by its ID.
-	*
-	* @param {String} id - The ID of the state.
-	* @return {StateMachine} A reference to this state machine.
-	*/
+	 * Performs a state change to the state defined by its ID.
+	 *
+	 * @param {String} id - The ID of the state.
+	 * @return {StateMachine} A reference to this state machine.
+	 */
 	changeTo( id ) {
 
 		const state = this.get( id );
@@ -8467,10 +8467,10 @@ class StateMachine {
 	}
 
 	/**
-	* Returns to the previous state.
-	*
-	* @return {StateMachine} A reference to this state machine.
-	*/
+	 * Returns to the previous state.
+	 *
+	 * @return {StateMachine} A reference to this state machine.
+	 */
 	revert() {
 
 		this._change( this.previousState );
@@ -8480,10 +8480,10 @@ class StateMachine {
 	}
 
 	/**
-	* Returns true if this FSM is in the given state.
-	*
-	* @return {Boolean} Whether this FSM is in the given state or not.
-	*/
+	 * Returns true if this FSM is in the given state.
+	 *
+	 * @return {Boolean} Whether this FSM is in the given state or not.
+	 */
 	in( id ) {
 
 		const state = this.get( id );
@@ -8493,12 +8493,12 @@ class StateMachine {
 	}
 
 	/**
-	* Tries to dispatch the massage to the current or global state and returns true
-	* if the message was processed successfully.
-	*
-	* @param {Telegram} telegram - The telegram with the message data.
-	* @return {Boolean} Whether the message was processed or not.
-	*/
+	 * Tries to dispatch the massage to the current or global state and returns true
+	 * if the message was processed successfully.
+	 *
+	 * @param {Telegram} telegram - The telegram with the message data.
+	 * @return {Boolean} Whether the message was processed or not.
+	 */
 	handleMessage( telegram ) {
 
 		// first see, if the current state is valid and that it can handle the message
@@ -8522,10 +8522,10 @@ class StateMachine {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = {
@@ -8561,11 +8561,11 @@ class StateMachine {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {StateMachine} A reference to this state machine.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {StateMachine} A reference to this state machine.
+	 */
 	fromJSON( json ) {
 
 		this.owner = json.owner;
@@ -8608,11 +8608,11 @@ class StateMachine {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {StateMachine} A reference to this state machine.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {StateMachine} A reference to this state machine.
+	 */
 	resolveReferences( entities ) {
 
 		this.owner = entities.get( this.owner ) || null;
@@ -8628,13 +8628,13 @@ class StateMachine {
 	}
 
 	/**
-	* Registers a custom type for deserialization. When calling {@link StateMachine#fromJSON}
-	* the state machine is able to pick the correct constructor in order to create custom states.
-	*
-	* @param {String} type - The name of the state type.
-	* @param {Function} constructor -  The constructor function.
-	* @return {StateMachine} A reference to this state machine.
-	*/
+	 * Registers a custom type for deserialization. When calling {@link StateMachine#fromJSON}
+	 * the state machine is able to pick the correct constructor in order to create custom states.
+	 *
+	 * @param {String} type - The name of the state type.
+	 * @param {Function} constructor -  The constructor function.
+	 * @return {StateMachine} A reference to this state machine.
+	 */
 	registerType( type, constructor ) {
 
 		this._typesMap.set( type, constructor );
@@ -8660,40 +8660,40 @@ class StateMachine {
 }
 
 /**
-* Base class for representing a term in a {@link FuzzyRule}.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Base class for representing a term in a {@link FuzzyRule}.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class FuzzyTerm {
 
 	/**
-	* Clears the degree of membership value.
-	*
-	* @return {FuzzyTerm} A reference to this term.
-	*/
+	 * Clears the degree of membership value.
+	 *
+	 * @return {FuzzyTerm} A reference to this term.
+	 */
 	clearDegreeOfMembership() {}
 
 	/**
-	* Returns the degree of membership.
-	*
-	* @return {Number} Degree of membership.
-	*/
+	 * Returns the degree of membership.
+	 *
+	 * @return {Number} Degree of membership.
+	 */
 	getDegreeOfMembership() {}
 
 	/**
-	* Updates the degree of membership by the given value. This method is used when
-	* the term is part of a fuzzy rule's consequent.
-	*
-	* @param {Number} value - The value used to update the degree of membership.
-	* @return {FuzzyTerm} A reference to this term.
-	*/
+	 * Updates the degree of membership by the given value. This method is used when
+	 * the term is part of a fuzzy rule's consequent.
+	 *
+	 * @param {Number} value - The value used to update the degree of membership.
+	 * @return {FuzzyTerm} A reference to this term.
+	 */
 	updateDegreeOfMembership( /* value */ ) {}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		return {
@@ -8705,36 +8705,36 @@ class FuzzyTerm {
 }
 
 /**
-* Base class for representing more complex fuzzy terms based on the
-* composite design pattern.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments FuzzyTerm
-*/
+ * Base class for representing more complex fuzzy terms based on the
+ * composite design pattern.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments FuzzyTerm
+ */
 class FuzzyCompositeTerm extends FuzzyTerm {
 
 	/**
-	* Constructs a new fuzzy composite term with the given values.
-	*
-	* @param {Array} terms - An arbitrary amount of fuzzy terms.
-	*/
+	 * Constructs a new fuzzy composite term with the given values.
+	 *
+	 * @param {Array} terms - An arbitrary amount of fuzzy terms.
+	 */
 	constructor( terms = [] ) {
 
 		super();
 
 		/**
-		* List of fuzzy terms.
-		* @type Array
-		*/
+		 * List of fuzzy terms.
+		 * @type Array
+		 */
 		this.terms = terms;
 
 	}
 
 	/**
-	* Clears the degree of membership value.
-	*
-	* @return {FuzzyCompositeTerm} A reference to this term.
-	*/
+	 * Clears the degree of membership value.
+	 *
+	 * @return {FuzzyCompositeTerm} A reference to this term.
+	 */
 	clearDegreeOfMembership() {
 
 		const terms = this.terms;
@@ -8750,12 +8750,12 @@ class FuzzyCompositeTerm extends FuzzyTerm {
 	}
 
 	/**
-	* Updates the degree of membership by the given value. This method is used when
-	* the term is part of a fuzzy rule's consequent.
-	*
-	* @param {Number} value - The value used to update the degree of membership.
-	* @return {FuzzyCompositeTerm} A reference to this term.
-	*/
+	 * Updates the degree of membership by the given value. This method is used when
+	 * the term is part of a fuzzy rule's consequent.
+	 *
+	 * @param {Number} value - The value used to update the degree of membership.
+	 * @return {FuzzyCompositeTerm} A reference to this term.
+	 */
 	updateDegreeOfMembership( value ) {
 
 		const terms = this.terms;
@@ -8771,10 +8771,10 @@ class FuzzyCompositeTerm extends FuzzyTerm {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -8804,18 +8804,18 @@ class FuzzyCompositeTerm extends FuzzyTerm {
 }
 
 /**
-* Class for representing an AND operator. Can be used to construct
-* fuzzy rules.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments FuzzyCompositeTerm
-*/
+ * Class for representing an AND operator. Can be used to construct
+ * fuzzy rules.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments FuzzyCompositeTerm
+ */
 class FuzzyAND extends FuzzyCompositeTerm {
 
 	/**
-	* Constructs a new fuzzy AND operator with the given values. The constructor
-	* accepts and arbitrary amount of fuzzy terms.
-	*/
+	 * Constructs a new fuzzy AND operator with the given values. The constructor
+	 * accepts and arbitrary amount of fuzzy terms.
+	 */
 	constructor() {
 
 		const terms = Array.from( arguments );
@@ -8825,11 +8825,11 @@ class FuzzyAND extends FuzzyCompositeTerm {
 	}
 
 	/**
-	* Returns the degree of membership. The AND operator returns the minimum
-	* degree of membership of the sets it is operating on.
-	*
-	* @return {Number} Degree of membership.
-	*/
+	 * Returns the degree of membership. The AND operator returns the minimum
+	 * degree of membership of the sets it is operating on.
+	 *
+	 * @return {Number} Degree of membership.
+	 */
 	getDegreeOfMembership() {
 
 		const terms = this.terms;
@@ -8851,19 +8851,19 @@ class FuzzyAND extends FuzzyCompositeTerm {
 }
 
 /**
-* Hedges are special unary operators that can be employed to modify the meaning
-* of a fuzzy set. The FAIRLY fuzzy hedge widens the membership function.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments FuzzyCompositeTerm
-*/
+ * Hedges are special unary operators that can be employed to modify the meaning
+ * of a fuzzy set. The FAIRLY fuzzy hedge widens the membership function.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments FuzzyCompositeTerm
+ */
 class FuzzyFAIRLY extends FuzzyCompositeTerm {
 
 	/**
-	* Constructs a new fuzzy FAIRLY hedge with the given values.
-	*
-	* @param {FuzzyTerm} fuzzyTerm - The fuzzy term this hedge is working on.
-	*/
+	 * Constructs a new fuzzy FAIRLY hedge with the given values.
+	 *
+	 * @param {FuzzyTerm} fuzzyTerm - The fuzzy term this hedge is working on.
+	 */
 	constructor( fuzzyTerm = null ) {
 
 		const terms = ( fuzzyTerm !== null ) ? [ fuzzyTerm ] : [];
@@ -8875,10 +8875,10 @@ class FuzzyFAIRLY extends FuzzyCompositeTerm {
 	// FuzzyTerm API
 
 	/**
-	* Clears the degree of membership value.
-	*
-	* @return {FuzzyFAIRLY} A reference to this fuzzy hedge.
-	*/
+	 * Clears the degree of membership value.
+	 *
+	 * @return {FuzzyFAIRLY} A reference to this fuzzy hedge.
+	 */
 	clearDegreeOfMembership() {
 
 		const fuzzyTerm = this.terms[ 0 ];
@@ -8889,10 +8889,10 @@ class FuzzyFAIRLY extends FuzzyCompositeTerm {
 	}
 
 	/**
-	* Returns the degree of membership.
-	*
-	* @return {Number} Degree of membership.
-	*/
+	 * Returns the degree of membership.
+	 *
+	 * @return {Number} Degree of membership.
+	 */
 	getDegreeOfMembership() {
 
 		const fuzzyTerm = this.terms[ 0 ];
@@ -8903,10 +8903,10 @@ class FuzzyFAIRLY extends FuzzyCompositeTerm {
 	}
 
 	/**
-	* Updates the degree of membership by the given value.
-	*
-	* @return {FuzzyFAIRLY} A reference to this fuzzy hedge.
-	*/
+	 * Updates the degree of membership by the given value.
+	 *
+	 * @return {FuzzyFAIRLY} A reference to this fuzzy hedge.
+	 */
 	updateDegreeOfMembership( value ) {
 
 		const fuzzyTerm = this.terms[ 0 ];
@@ -8919,18 +8919,18 @@ class FuzzyFAIRLY extends FuzzyCompositeTerm {
 }
 
 /**
-* Class for representing an OR operator. Can be used to construct
-* fuzzy rules.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments FuzzyCompositeTerm
-*/
+ * Class for representing an OR operator. Can be used to construct
+ * fuzzy rules.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments FuzzyCompositeTerm
+ */
 class FuzzyOR extends FuzzyCompositeTerm {
 
 	/**
-	* Constructs a new fuzzy AND operator with the given values. The constructor
-	* accepts and arbitrary amount of fuzzy terms.
-	*/
+	 * Constructs a new fuzzy AND operator with the given values. The constructor
+	 * accepts and arbitrary amount of fuzzy terms.
+	 */
 	constructor() {
 
 		const terms = Array.from( arguments );
@@ -8940,11 +8940,11 @@ class FuzzyOR extends FuzzyCompositeTerm {
 	}
 
 	/**
-	* Returns the degree of membership. The AND operator returns the maximum
-	* degree of membership of the sets it is operating on.
-	*
-	* @return {Number} Degree of membership.
-	*/
+	 * Returns the degree of membership. The AND operator returns the maximum
+	 * degree of membership of the sets it is operating on.
+	 *
+	 * @return {Number} Degree of membership.
+	 */
 	getDegreeOfMembership() {
 
 		const terms = this.terms;
@@ -8966,19 +8966,19 @@ class FuzzyOR extends FuzzyCompositeTerm {
 }
 
 /**
-* Hedges are special unary operators that can be employed to modify the meaning
-* of a fuzzy set. The FAIRLY fuzzy hedge widens the membership function.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments FuzzyCompositeTerm
-*/
+ * Hedges are special unary operators that can be employed to modify the meaning
+ * of a fuzzy set. The FAIRLY fuzzy hedge widens the membership function.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments FuzzyCompositeTerm
+ */
 class FuzzyVERY extends FuzzyCompositeTerm {
 
 	/**
-	* Constructs a new fuzzy VERY hedge with the given values.
-	*
-	* @param {FuzzyTerm} fuzzyTerm - The fuzzy term this hedge is working on.
-	*/
+	 * Constructs a new fuzzy VERY hedge with the given values.
+	 *
+	 * @param {FuzzyTerm} fuzzyTerm - The fuzzy term this hedge is working on.
+	 */
 	constructor( fuzzyTerm = null ) {
 
 		const terms = ( fuzzyTerm !== null ) ? [ fuzzyTerm ] : [];
@@ -8990,10 +8990,10 @@ class FuzzyVERY extends FuzzyCompositeTerm {
 	// FuzzyTerm API
 
 	/**
-	* Clears the degree of membership value.
-	*
-	* @return {FuzzyVERY} A reference to this fuzzy hedge.
-	*/
+	 * Clears the degree of membership value.
+	 *
+	 * @return {FuzzyVERY} A reference to this fuzzy hedge.
+	 */
 	clearDegreeOfMembership() {
 
 		const fuzzyTerm = this.terms[ 0 ];
@@ -9004,10 +9004,10 @@ class FuzzyVERY extends FuzzyCompositeTerm {
 	}
 
 	/**
-	* Returns the degree of membership.
-	*
-	* @return {Number} Degree of membership.
-	*/
+	 * Returns the degree of membership.
+	 *
+	 * @return {Number} Degree of membership.
+	 */
 	getDegreeOfMembership() {
 
 		const fuzzyTerm = this.terms[ 0 ];
@@ -9018,10 +9018,10 @@ class FuzzyVERY extends FuzzyCompositeTerm {
 	}
 
 	/**
-	* Updates the degree of membership by the given value.
-	*
-	* @return {FuzzyVERY} A reference to this fuzzy hedge.
-	*/
+	 * Updates the degree of membership by the given value.
+	 *
+	 * @return {FuzzyVERY} A reference to this fuzzy hedge.
+	 */
 	updateDegreeOfMembership( value ) {
 
 		const fuzzyTerm = this.terms[ 0 ];
@@ -9034,57 +9034,57 @@ class FuzzyVERY extends FuzzyCompositeTerm {
 }
 
 /**
-* Base class for fuzzy sets. This type of sets are defined by a membership function
-* which can be any arbitrary shape but are typically triangular or trapezoidal. They define
-* a gradual transition from regions completely outside the set to regions completely
-* within the set, thereby enabling a value to have partial membership to a set.
-*
-* This class is derived from {@link FuzzyTerm} so it can be directly used in fuzzy rules.
-* According to the composite design pattern, a fuzzy set can be considered as an atomic fuzzy term.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments FuzzyTerm
-*/
+ * Base class for fuzzy sets. This type of sets are defined by a membership function
+ * which can be any arbitrary shape but are typically triangular or trapezoidal. They define
+ * a gradual transition from regions completely outside the set to regions completely
+ * within the set, thereby enabling a value to have partial membership to a set.
+ *
+ * This class is derived from {@link FuzzyTerm} so it can be directly used in fuzzy rules.
+ * According to the composite design pattern, a fuzzy set can be considered as an atomic fuzzy term.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments FuzzyTerm
+ */
 class FuzzySet extends FuzzyTerm {
 
 	/**
-	* Constructs a new fuzzy set with the given values.
-	*
-	* @param {Number} representativeValue - The maximum of the set's membership function.
-	*/
+	 * Constructs a new fuzzy set with the given values.
+	 *
+	 * @param {Number} representativeValue - The maximum of the set's membership function.
+	 */
 	constructor( representativeValue = 0 ) {
 
 		super();
 
 		/**
-		* Represents the degree of membership to this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the degree of membership to this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.degreeOfMembership = 0;
 
 		/**
-		* The maximum of the set's membership function. For instance, if
-		* the set is triangular then this will be the peak point of the triangular.
-		* If the set has a plateau then this value will be the mid point of the
-		* plateau. Used to avoid runtime calculations.
-		* @type Number
-		* @default 0
-		*/
+		 * The maximum of the set's membership function. For instance, if
+		 * the set is triangular then this will be the peak point of the triangular.
+		 * If the set has a plateau then this value will be the mid point of the
+		 * plateau. Used to avoid runtime calculations.
+		 * @type Number
+		 * @default 0
+		 */
 		this.representativeValue = representativeValue;
 
 		/**
-		* Represents the left border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the left border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.left = 0;
 
 		/**
-		* Represents the right border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the right border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.right = 0;
 
 		//
@@ -9112,23 +9112,23 @@ class FuzzySet extends FuzzyTerm {
 	}
 
 	/**
-	* Computes the degree of membership for the given value. Notice that this method
-	* does not set {@link FuzzySet#degreeOfMembership} since other classes use it in
-	* order to calculate intermediate degree of membership values. This method be
-	* implemented by all concrete fuzzy set classes.
-	*
-	* @param {Number} value - The value used to calculate the degree of membership.
-	* @return {Number} The degree of membership.
-	*/
+	 * Computes the degree of membership for the given value. Notice that this method
+	 * does not set {@link FuzzySet#degreeOfMembership} since other classes use it in
+	 * order to calculate intermediate degree of membership values. This method be
+	 * implemented by all concrete fuzzy set classes.
+	 *
+	 * @param {Number} value - The value used to calculate the degree of membership.
+	 * @return {Number} The degree of membership.
+	 */
 	computeDegreeOfMembership( /* value */ ) {}
 
 	// FuzzyTerm API
 
 	/**
-	* Clears the degree of membership value.
-	*
-	* @return {FuzzySet} A reference to this fuzzy set.
-	*/
+	 * Clears the degree of membership value.
+	 *
+	 * @return {FuzzySet} A reference to this fuzzy set.
+	 */
 	clearDegreeOfMembership() {
 
 		this.degreeOfMembership = 0;
@@ -9138,10 +9138,10 @@ class FuzzySet extends FuzzyTerm {
 	}
 
 	/**
-	* Returns the degree of membership.
-	*
-	* @return {Number} Degree of membership.
-	*/
+	 * Returns the degree of membership.
+	 *
+	 * @return {Number} Degree of membership.
+	 */
 	getDegreeOfMembership() {
 
 		return this.degreeOfMembership;
@@ -9149,11 +9149,11 @@ class FuzzySet extends FuzzyTerm {
 	}
 
 	/**
-	* Updates the degree of membership by the given value. This method is used when
-	* the set is part of a fuzzy rule's consequent.
-	*
-	* @return {FuzzySet} A reference to this fuzzy set.
-	*/
+	 * Updates the degree of membership by the given value. This method is used when
+	 * the set is part of a fuzzy rule's consequent.
+	 *
+	 * @return {FuzzySet} A reference to this fuzzy set.
+	 */
 	updateDegreeOfMembership( value ) {
 
 		// update the degree of membership if the given value is greater than the
@@ -9166,10 +9166,10 @@ class FuzzySet extends FuzzyTerm {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -9185,11 +9185,11 @@ class FuzzySet extends FuzzyTerm {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {FuzzySet} A reference to this fuzzy set.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {FuzzySet} A reference to this fuzzy set.
+	 */
 	fromJSON( json ) {
 
 		this.degreeOfMembership = json.degreeOfMembership;
@@ -9205,21 +9205,21 @@ class FuzzySet extends FuzzyTerm {
 }
 
 /**
-* Class for representing a fuzzy set that has a s-shape membership function with
-* values from highest to lowest.
-*
-* @author robp94 / https://github.com/robp94
-* @augments FuzzySet
-*/
+ * Class for representing a fuzzy set that has a s-shape membership function with
+ * values from highest to lowest.
+ *
+ * @author robp94 / https://github.com/robp94
+ * @augments FuzzySet
+ */
 class LeftSCurveFuzzySet extends FuzzySet {
 
 	/**
-	* Constructs a new S-curve fuzzy set with the given values.
-	*
-	* @param {Number} left - Represents the left border of this fuzzy set.
-	* @param {Number} midpoint - Represents the peak value of this fuzzy set.
-	* @param {Number} right - Represents the right border of this fuzzy set.
-	*/
+	 * Constructs a new S-curve fuzzy set with the given values.
+	 *
+	 * @param {Number} left - Represents the left border of this fuzzy set.
+	 * @param {Number} midpoint - Represents the peak value of this fuzzy set.
+	 * @param {Number} right - Represents the right border of this fuzzy set.
+	 */
 	constructor( left = 0, midpoint = 0, right = 0 ) {
 
 		// the representative value is the midpoint of the plateau of the shoulder
@@ -9229,34 +9229,34 @@ class LeftSCurveFuzzySet extends FuzzySet {
 		super( representativeValue );
 
 		/**
-		* Represents the left border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the left border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.left = left;
 
 		/**
-		* Represents the peak value of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the peak value of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.midpoint = midpoint;
 
 		/**
-		* Represents the right border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the right border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.right = right;
 
 	}
 
 	/**
-	* Computes the degree of membership for the given value.
-	*
-	* @param {Number} value - The value used to calculate the degree of membership.
-	* @return {Number} The degree of membership.
-	*/
+	 * Computes the degree of membership for the given value.
+	 *
+	 * @param {Number} value - The value used to calculate the degree of membership.
+	 * @return {Number} The degree of membership.
+	 */
 	computeDegreeOfMembership( value ) {
 
 		const midpoint = this.midpoint;
@@ -9294,10 +9294,10 @@ class LeftSCurveFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -9309,11 +9309,11 @@ class LeftSCurveFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {LeftSCurveFuzzySet} A reference to this fuzzy set.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {LeftSCurveFuzzySet} A reference to this fuzzy set.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -9327,21 +9327,21 @@ class LeftSCurveFuzzySet extends FuzzySet {
 }
 
 /**
-* Class for representing a fuzzy set that has a left shoulder shape. The range between
-* the midpoint and left border point represents the same DOM.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments FuzzySet
-*/
+ * Class for representing a fuzzy set that has a left shoulder shape. The range between
+ * the midpoint and left border point represents the same DOM.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments FuzzySet
+ */
 class LeftShoulderFuzzySet extends FuzzySet {
 
 	/**
-	* Constructs a new left shoulder fuzzy set with the given values.
-	*
-	* @param {Number} left - Represents the left border of this fuzzy set.
-	* @param {Number} midpoint - Represents the peak value of this fuzzy set.
-	* @param {Number} right - Represents the right border of this fuzzy set.
-	*/
+	 * Constructs a new left shoulder fuzzy set with the given values.
+	 *
+	 * @param {Number} left - Represents the left border of this fuzzy set.
+	 * @param {Number} midpoint - Represents the peak value of this fuzzy set.
+	 * @param {Number} right - Represents the right border of this fuzzy set.
+	 */
 	constructor( left = 0, midpoint = 0, right = 0 ) {
 
 		// the representative value is the midpoint of the plateau of the shoulder
@@ -9351,34 +9351,34 @@ class LeftShoulderFuzzySet extends FuzzySet {
 		super( representativeValue );
 
 		/**
-		* Represents the left border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the left border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.left = left;
 
 		/**
-		* Represents the peak value of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the peak value of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.midpoint = midpoint;
 
 		/**
-		* Represents the right border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the right border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.right = right;
 
 	}
 
 	/**
-	* Computes the degree of membership for the given value.
-	*
-	* @param {Number} value - The value used to calculate the degree of membership.
-	* @return {Number} The degree of membership.
-	*/
+	 * Computes the degree of membership for the given value.
+	 *
+	 * @param {Number} value - The value used to calculate the degree of membership.
+	 * @return {Number} The degree of membership.
+	 */
 	computeDegreeOfMembership( value ) {
 
 		const midpoint = this.midpoint;
@@ -9410,10 +9410,10 @@ class LeftShoulderFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -9425,11 +9425,11 @@ class LeftShoulderFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {LeftShoulderFuzzySet} A reference to this fuzzy set.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {LeftShoulderFuzzySet} A reference to this fuzzy set.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -9443,52 +9443,52 @@ class LeftShoulderFuzzySet extends FuzzySet {
 }
 
 /**
-* Class for representing a fuzzy set that has a normal distribution shape. It can be defined
-* by the mean and standard deviation.
-*
-* @author robp94 / https://github.com/robp94
-* @augments FuzzySet
-*/
+ * Class for representing a fuzzy set that has a normal distribution shape. It can be defined
+ * by the mean and standard deviation.
+ *
+ * @author robp94 / https://github.com/robp94
+ * @augments FuzzySet
+ */
 class NormalDistFuzzySet extends FuzzySet {
 
 	/**
-	* Constructs a new triangular fuzzy set with the given values.
-	*
-	* @param {Number} left - Represents the left border of this fuzzy set.
-	* @param {Number} midpoint - Mean or expectation of the normal distribution.
-	* @param {Number} right - Represents the right border of this fuzzy set.
-	* @param {Number} standardDeviation - Standard deviation of the normal distribution.
-	*/
+	 * Constructs a new triangular fuzzy set with the given values.
+	 *
+	 * @param {Number} left - Represents the left border of this fuzzy set.
+	 * @param {Number} midpoint - Mean or expectation of the normal distribution.
+	 * @param {Number} right - Represents the right border of this fuzzy set.
+	 * @param {Number} standardDeviation - Standard deviation of the normal distribution.
+	 */
 	constructor( left = 0, midpoint = 0, right = 0, standardDeviation = 0 ) {
 
 		super( midpoint );
 
 		/**
-		* Represents the left border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the left border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.left = left;
 
 		/**
-		* Represents the peak value of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the peak value of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.midpoint = midpoint;
 
 		/**
-		* Represents the right border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the right border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.right = right;
 
 		/**
-		* Represents the standard deviation of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the standard deviation of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.standardDeviation = standardDeviation;
 
 		//
@@ -9498,11 +9498,11 @@ class NormalDistFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Computes the degree of membership for the given value.
-	*
-	* @param {Number} value - The value used to calculate the degree of membership.
-	* @return {Number} The degree of membership.
-	*/
+	 * Computes the degree of membership for the given value.
+	 *
+	 * @param {Number} value - The value used to calculate the degree of membership.
+	 * @return {Number} The degree of membership.
+	 */
 	computeDegreeOfMembership( value ) {
 
 		this._updateCache();
@@ -9514,10 +9514,10 @@ class NormalDistFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -9530,11 +9530,11 @@ class NormalDistFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {NormalDistFuzzySet} A reference to this fuzzy set.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {NormalDistFuzzySet} A reference to this fuzzy set.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -9583,21 +9583,21 @@ function probabilityDensity( x, mean, variance ) {
 }
 
 /**
-* Class for representing a fuzzy set that has a s-shape membership function with
-* values from lowest to highest.
-*
-* @author robp94 / https://github.com/robp94
-* @augments FuzzySet
-*/
+ * Class for representing a fuzzy set that has a s-shape membership function with
+ * values from lowest to highest.
+ *
+ * @author robp94 / https://github.com/robp94
+ * @augments FuzzySet
+ */
 class RightSCurveFuzzySet extends FuzzySet {
 
 	/**
-	* Constructs a new S-curve fuzzy set with the given values.
-	*
-	* @param {Number} left - Represents the left border of this fuzzy set.
-	* @param {Number} midpoint - Represents the peak value of this fuzzy set.
-	* @param {Number} right - Represents the right border of this fuzzy set.
-	*/
+	 * Constructs a new S-curve fuzzy set with the given values.
+	 *
+	 * @param {Number} left - Represents the left border of this fuzzy set.
+	 * @param {Number} midpoint - Represents the peak value of this fuzzy set.
+	 * @param {Number} right - Represents the right border of this fuzzy set.
+	 */
 	constructor( left = 0, midpoint = 0, right = 0 ) {
 
 		// the representative value is the midpoint of the plateau of the shoulder
@@ -9607,34 +9607,34 @@ class RightSCurveFuzzySet extends FuzzySet {
 		super( representativeValue );
 
 		/**
-		* Represents the left border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the left border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.left = left;
 
 		/**
-		* Represents the peak value of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the peak value of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.midpoint = midpoint;
 
 		/**
-		* Represents the right border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the right border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.right = right;
 
 	}
 
 	/**
-	* Computes the degree of membership for the given value.
-	*
-	* @param {Number} value - The value used to calculate the degree of membership.
-	* @return {Number} The degree of membership.
-	*/
+	 * Computes the degree of membership for the given value.
+	 *
+	 * @param {Number} value - The value used to calculate the degree of membership.
+	 * @return {Number} The degree of membership.
+	 */
 	computeDegreeOfMembership( value ) {
 
 		const midpoint = this.midpoint;
@@ -9673,10 +9673,10 @@ class RightSCurveFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -9688,11 +9688,11 @@ class RightSCurveFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {RightSCurveFuzzySet} A reference to this fuzzy set.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {RightSCurveFuzzySet} A reference to this fuzzy set.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -9706,21 +9706,21 @@ class RightSCurveFuzzySet extends FuzzySet {
 }
 
 /**
-* Class for representing a fuzzy set that has a right shoulder shape. The range between
-* the midpoint and right border point represents the same DOM.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments FuzzySet
-*/
+ * Class for representing a fuzzy set that has a right shoulder shape. The range between
+ * the midpoint and right border point represents the same DOM.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments FuzzySet
+ */
 class RightShoulderFuzzySet extends FuzzySet {
 
 	/**
-	* Constructs a new right shoulder fuzzy set with the given values.
-	*
-	* @param {Number} left - Represents the left border of this fuzzy set.
-	* @param {Number} midpoint - Represents the peak value of this fuzzy set.
-	* @param {Number} right - Represents the right border of this fuzzy set.
-	*/
+	 * Constructs a new right shoulder fuzzy set with the given values.
+	 *
+	 * @param {Number} left - Represents the left border of this fuzzy set.
+	 * @param {Number} midpoint - Represents the peak value of this fuzzy set.
+	 * @param {Number} right - Represents the right border of this fuzzy set.
+	 */
 	constructor( left = 0, midpoint = 0, right = 0 ) {
 
 		// the representative value is the midpoint of the plateau of the shoulder
@@ -9730,34 +9730,34 @@ class RightShoulderFuzzySet extends FuzzySet {
 		super( representativeValue );
 
 		/**
-		* Represents the left border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the left border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.left = left;
 
 		/**
-		* Represents the peak value of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the peak value of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.midpoint = midpoint;
 
 		/**
-		* Represents the right border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the right border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.right = right;
 
 	}
 
 	/**
-	* Computes the degree of membership for the given value.
-	*
-	* @param {Number} value - The value used to calculate the degree of membership.
-	* @return {Number} The degree of membership.
-	*/
+	 * Computes the degree of membership for the given value.
+	 *
+	 * @param {Number} value - The value used to calculate the degree of membership.
+	 * @return {Number} The degree of membership.
+	 */
 	computeDegreeOfMembership( value ) {
 
 		const midpoint = this.midpoint;
@@ -9789,10 +9789,10 @@ class RightShoulderFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -9804,11 +9804,11 @@ class RightShoulderFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {RightShoulderFuzzySet} A reference to this fuzzy set.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {RightShoulderFuzzySet} A reference to this fuzzy set.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -9822,54 +9822,54 @@ class RightShoulderFuzzySet extends FuzzySet {
 }
 
 /**
-* Class for representing a fuzzy set that is a singleton. In its range, the degree of
-* membership is always one.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments FuzzySet
-*/
+ * Class for representing a fuzzy set that is a singleton. In its range, the degree of
+ * membership is always one.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments FuzzySet
+ */
 class SingletonFuzzySet extends FuzzySet {
 
 	/**
-	* Constructs a new singleton fuzzy set with the given values.
-	*
-	* @param {Number} left - Represents the left border of this fuzzy set.
-	* @param {Number} midpoint - Represents the peak value of this fuzzy set.
-	* @param {Number} right - Represents the right border of this fuzzy set.
-	*/
+	 * Constructs a new singleton fuzzy set with the given values.
+	 *
+	 * @param {Number} left - Represents the left border of this fuzzy set.
+	 * @param {Number} midpoint - Represents the peak value of this fuzzy set.
+	 * @param {Number} right - Represents the right border of this fuzzy set.
+	 */
 	constructor( left = 0, midpoint = 0, right = 0 ) {
 
 		super( midpoint );
 
 		/**
-		* Represents the left border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the left border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.left = left;
 
 		/**
-		* Represents the peak value of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the peak value of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.midpoint = midpoint;
 
 		/**
-		* Represents the right border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the right border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.right = right;
 
 	}
 
 	/**
-	* Computes the degree of membership for the given value.
-	*
-	* @param {Number} value - The value used to calculate the degree of membership.
-	* @return {Number} The degree of membership.
-	*/
+	 * Computes the degree of membership for the given value.
+	 *
+	 * @param {Number} value - The value used to calculate the degree of membership.
+	 * @return {Number} The degree of membership.
+	 */
 	computeDegreeOfMembership( value ) {
 
 		const left = this.left;
@@ -9880,10 +9880,10 @@ class SingletonFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -9895,11 +9895,11 @@ class SingletonFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {SingletonFuzzySet} A reference to this fuzzy set.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {SingletonFuzzySet} A reference to this fuzzy set.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -9913,54 +9913,54 @@ class SingletonFuzzySet extends FuzzySet {
 }
 
 /**
-* Class for representing a fuzzy set that has a triangular shape. It can be defined
-* by a left point, a midpoint (peak) and a right point.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments FuzzySet
-*/
+ * Class for representing a fuzzy set that has a triangular shape. It can be defined
+ * by a left point, a midpoint (peak) and a right point.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments FuzzySet
+ */
 class TriangularFuzzySet extends FuzzySet {
 
 	/**
-	* Constructs a new triangular fuzzy set with the given values.
-	*
-	* @param {Number} left - Represents the left border of this fuzzy set.
-	* @param {Number} midpoint - Represents the peak value of this fuzzy set.
-	* @param {Number} right - Represents the right border of this fuzzy set.
-	*/
+	 * Constructs a new triangular fuzzy set with the given values.
+	 *
+	 * @param {Number} left - Represents the left border of this fuzzy set.
+	 * @param {Number} midpoint - Represents the peak value of this fuzzy set.
+	 * @param {Number} right - Represents the right border of this fuzzy set.
+	 */
 	constructor( left = 0, midpoint = 0, right = 0 ) {
 
 		super( midpoint );
 
 		/**
-		* Represents the left border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the left border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.left = left;
 
 		/**
-		* Represents the peak value of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the peak value of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.midpoint = midpoint;
 
 		/**
-		* Represents the right border of this fuzzy set.
-		* @type Number
-		* @default 0
-		*/
+		 * Represents the right border of this fuzzy set.
+		 * @type Number
+		 * @default 0
+		 */
 		this.right = right;
 
 	}
 
 	/**
-	* Computes the degree of membership for the given value.
-	*
-	* @param {Number} value - The value used to calculate the degree of membership.
-	* @return {Number} The degree of membership.
-	*/
+	 * Computes the degree of membership for the given value.
+	 *
+	 * @param {Number} value - The value used to calculate the degree of membership.
+	 * @return {Number} The degree of membership.
+	 */
 	computeDegreeOfMembership( value ) {
 
 		const midpoint = this.midpoint;
@@ -9994,10 +9994,10 @@ class TriangularFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -10009,11 +10009,11 @@ class TriangularFuzzySet extends FuzzySet {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {TriangularFuzzySet} A reference to this fuzzy set.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {TriangularFuzzySet} A reference to this fuzzy set.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -10027,45 +10027,45 @@ class TriangularFuzzySet extends FuzzySet {
 }
 
 /**
-* Class for representing a fuzzy rule. Fuzzy rules are comprised of an antecedent and
-* a consequent in the form: IF antecedent THEN consequent.
-*
-* Compared to ordinary if/else statements with discrete values, the consequent term
-* of a fuzzy rule can fire to a matter of degree.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing a fuzzy rule. Fuzzy rules are comprised of an antecedent and
+ * a consequent in the form: IF antecedent THEN consequent.
+ *
+ * Compared to ordinary if/else statements with discrete values, the consequent term
+ * of a fuzzy rule can fire to a matter of degree.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class FuzzyRule {
 
 	/**
-	* Constructs a new fuzzy rule with the given values.
-	*
-	* @param {FuzzyTerm} antecedent - Represents the condition of the rule.
-	* @param {FuzzyTerm} consequence - Describes the consequence if the condition is satisfied.
-	*/
+	 * Constructs a new fuzzy rule with the given values.
+	 *
+	 * @param {FuzzyTerm} antecedent - Represents the condition of the rule.
+	 * @param {FuzzyTerm} consequence - Describes the consequence if the condition is satisfied.
+	 */
 	constructor( antecedent = null, consequence = null ) {
 
 		/**
-		* Represents the condition of the rule.
-		* @type FuzzyTerm
-		* @default null
-		*/
+		 * Represents the condition of the rule.
+		 * @type FuzzyTerm
+		 * @default null
+		 */
 		this.antecedent = antecedent;
 
 		/**
-		* Describes the consequence if the condition is satisfied.
-		* @type FuzzyTerm
-		* @default null
-		*/
+		 * Describes the consequence if the condition is satisfied.
+		 * @type FuzzyTerm
+		 * @default null
+		 */
 		this.consequence = consequence;
 
 	}
 
 	/**
-	* Initializes the consequent term of this fuzzy rule.
-	*
-	* @return {FuzzyRule} A reference to this fuzzy rule.
-	*/
+	 * Initializes the consequent term of this fuzzy rule.
+	 *
+	 * @return {FuzzyRule} A reference to this fuzzy rule.
+	 */
 	initConsequence() {
 
 		this.consequence.clearDegreeOfMembership();
@@ -10075,11 +10075,11 @@ class FuzzyRule {
 	}
 
 	/**
-	* Evaluates the rule and updates the degree of membership of the consequent term with
-	* the degree of membership of the antecedent term.
-	*
-	* @return {FuzzyRule} A reference to this fuzzy rule.
-	*/
+	 * Evaluates the rule and updates the degree of membership of the consequent term with
+	 * the degree of membership of the antecedent term.
+	 *
+	 * @return {FuzzyRule} A reference to this fuzzy rule.
+	 */
 	evaluate() {
 
 		this.consequence.updateDegreeOfMembership( this.antecedent.getDegreeOfMembership() );
@@ -10089,10 +10089,10 @@ class FuzzyRule {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = {};
@@ -10109,12 +10109,12 @@ class FuzzyRule {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @param {Map} fuzzySets - Maps fuzzy sets to UUIDs.
-	* @return {FuzzyRule} A reference to this fuzzy rule.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @param {Map} fuzzySets - Maps fuzzy sets to UUIDs.
+	 * @return {FuzzyRule} A reference to this fuzzy rule.
+	 */
 	fromJSON( json, fuzzySets ) {
 
 		function parseTerm( termJSON ) {
@@ -10184,50 +10184,50 @@ class FuzzyRule {
 }
 
 /**
-* Class for representing a fuzzy linguistic variable (FLV). A FLV is the
-* composition of one or more fuzzy sets to represent a concept or domain
-* qualitatively. For example fuzzs sets "Dumb", "Average", and "Clever"
-* are members of the fuzzy linguistic variable "IQ".
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing a fuzzy linguistic variable (FLV). A FLV is the
+ * composition of one or more fuzzy sets to represent a concept or domain
+ * qualitatively. For example fuzzs sets "Dumb", "Average", and "Clever"
+ * are members of the fuzzy linguistic variable "IQ".
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class FuzzyVariable {
 
 	/**
-	* Constructs a new fuzzy linguistic variable.
-	*/
+	 * Constructs a new fuzzy linguistic variable.
+	 */
 	constructor() {
 
 		/**
-		* An array of the fuzzy sets that comprise this FLV.
-		* @type Array
-		*/
+		 * An array of the fuzzy sets that comprise this FLV.
+		 * @type Array
+		 */
 		this.fuzzySets = new Array();
 
 		/**
-		* The minimum value range of this FLV. This value is
-		* automatically updated when adding/removing fuzzy sets.
-		* @type Number
-		* @default Infinity
-		*/
+		 * The minimum value range of this FLV. This value is
+		 * automatically updated when adding/removing fuzzy sets.
+		 * @type Number
+		 * @default Infinity
+		 */
 		this.minRange = Infinity;
 
 		/**
-		* The maximum value range of this FLV. This value is
-		* automatically updated when adding/removing fuzzy sets.
-		* @type Number
-		* @default - Infinity
-		*/
+		 * The maximum value range of this FLV. This value is
+		 * automatically updated when adding/removing fuzzy sets.
+		 * @type Number
+		 * @default - Infinity
+		 */
 		this.maxRange = - Infinity;
 
 	}
 
 	/**
-	* Adds the given fuzzy set to this FLV.
-	*
-	* @param {FuzzySet} fuzzySet - The fuzzy set to add.
-	* @return {FuzzyVariable} A reference to this FLV.
-	*/
+	 * Adds the given fuzzy set to this FLV.
+	 *
+	 * @param {FuzzySet} fuzzySet - The fuzzy set to add.
+	 * @return {FuzzyVariable} A reference to this FLV.
+	 */
 	add( fuzzySet ) {
 
 		this.fuzzySets.push( fuzzySet );
@@ -10242,11 +10242,11 @@ class FuzzyVariable {
 	}
 
 	/**
-	* Removes the given fuzzy set from this FLV.
-	*
-	* @param {FuzzySet} fuzzySet - The fuzzy set to remove.
-	* @return {FuzzyVariable} A reference to this FLV.
-	*/
+	 * Removes the given fuzzy set from this FLV.
+	 *
+	 * @param {FuzzySet} fuzzySet - The fuzzy set to remove.
+	 * @return {FuzzyVariable} A reference to this FLV.
+	 */
 	remove( fuzzySet ) {
 
 		const fuzzySets = this.fuzzySets;
@@ -10273,12 +10273,12 @@ class FuzzyVariable {
 	}
 
 	/**
-	* Fuzzifies a value by calculating its degree of membership in each of
-	* this variable's fuzzy sets.
-	*
-	* @param {Number} value - The crips value to fuzzify.
-	* @return {FuzzyVariable} A reference to this FLV.
-	*/
+	 * Fuzzifies a value by calculating its degree of membership in each of
+	 * this variable's fuzzy sets.
+	 *
+	 * @param {Number} value - The crips value to fuzzify.
+	 * @return {FuzzyVariable} A reference to this FLV.
+	 */
 	fuzzify( value ) {
 
 		if ( value < this.minRange || value > this.maxRange ) {
@@ -10303,10 +10303,10 @@ class FuzzyVariable {
 	}
 
 	/**
-	* Defuzzifies the FLV using the "Average of Maxima" (MaxAv) method.
-	*
-	* @return {Number} The defuzzified, crips value.
-	*/
+	 * Defuzzifies the FLV using the "Average of Maxima" (MaxAv) method.
+	 *
+	 * @return {Number} The defuzzified, crips value.
+	 */
 	defuzzifyMaxAv() {
 
 		// the average of maxima (MaxAv for short) defuzzification method scales the
@@ -10331,11 +10331,11 @@ class FuzzyVariable {
 	}
 
 	/**
-	* Defuzzifies the FLV using the "Centroid" method.
-	*
-	* @param {Number} samples - The amount of samples used for defuzzification.
-	* @return {Number} The defuzzified, crips value.
-	*/
+	 * Defuzzifies the FLV using the "Centroid" method.
+	 *
+	 * @param {Number} samples - The amount of samples used for defuzzification.
+	 * @return {Number} The defuzzified, crips value.
+	 */
 	defuzzifyCentroid( samples = 10 ) {
 
 		const fuzzySets = this.fuzzySets;
@@ -10368,10 +10368,10 @@ class FuzzyVariable {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = {
@@ -10393,11 +10393,11 @@ class FuzzyVariable {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {FuzzyVariable} A reference to this fuzzy variable.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {FuzzyVariable} A reference to this fuzzy variable.
+	 */
 	fromJSON( json ) {
 
 		this.minRange = parseFloat( json.minRange );
@@ -10441,40 +10441,40 @@ class FuzzyVariable {
 }
 
 /**
-* Class for representing a fuzzy module. Instances of this class are used by
-* game entities for fuzzy inference. A fuzzy module is a collection of fuzzy variables
-* and the rules that operate on them.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing a fuzzy module. Instances of this class are used by
+ * game entities for fuzzy inference. A fuzzy module is a collection of fuzzy variables
+ * and the rules that operate on them.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class FuzzyModule {
 
 	/**
-	* Constructs a new fuzzy module.
-	*/
+	 * Constructs a new fuzzy module.
+	 */
 	constructor() {
 
 		/**
-		* An array of the fuzzy rules.
-		* @type Array
-		*/
+		 * An array of the fuzzy rules.
+		 * @type Array
+		 */
 		this.rules = new Array();
 
 		/**
-		* A map of FLVs.
-		* @type Map
-		*/
+		 * A map of FLVs.
+		 * @type Map
+		 */
 		this.flvs = new Map();
 
 	}
 
 	/**
-	* Adds the given FLV under the given name to this fuzzy module.
-	*
-	* @param {String} name - The name of the FLV.
-	* @param {FuzzyVariable} flv - The FLV to add.
-	* @return {FuzzyModule} A reference to this fuzzy module.
-	*/
+	 * Adds the given FLV under the given name to this fuzzy module.
+	 *
+	 * @param {String} name - The name of the FLV.
+	 * @param {FuzzyVariable} flv - The FLV to add.
+	 * @return {FuzzyModule} A reference to this fuzzy module.
+	 */
 	addFLV( name, flv ) {
 
 		this.flvs.set( name, flv );
@@ -10484,11 +10484,11 @@ class FuzzyModule {
 	}
 
 	/**
-	* Remove the FLV under the given name from this fuzzy module.
-	*
-	* @param {String} name - The name of the FLV to remove.
-	* @return {FuzzyModule} A reference to this fuzzy module.
-	*/
+	 * Remove the FLV under the given name from this fuzzy module.
+	 *
+	 * @param {String} name - The name of the FLV to remove.
+	 * @return {FuzzyModule} A reference to this fuzzy module.
+	 */
 	removeFLV( name ) {
 
 		this.flvs.delete( name );
@@ -10498,11 +10498,11 @@ class FuzzyModule {
 	}
 
 	/**
-	* Adds the given fuzzy rule to this fuzzy module.
-	*
-	* @param {FuzzyRule} rule - The fuzzy rule to add.
-	* @return {FuzzyModule} A reference to this fuzzy module.
-	*/
+	 * Adds the given fuzzy rule to this fuzzy module.
+	 *
+	 * @param {FuzzyRule} rule - The fuzzy rule to add.
+	 * @return {FuzzyModule} A reference to this fuzzy module.
+	 */
 	addRule( rule ) {
 
 		this.rules.push( rule );
@@ -10512,11 +10512,11 @@ class FuzzyModule {
 	}
 
 	/**
-	* Removes the given fuzzy rule from this fuzzy module.
-	*
-	* @param {FuzzyRule} rule - The fuzzy rule to remove.
-	* @return {FuzzyModule} A reference to this fuzzy module.
-	*/
+	 * Removes the given fuzzy rule from this fuzzy module.
+	 *
+	 * @param {FuzzyRule} rule - The fuzzy rule to remove.
+	 * @return {FuzzyModule} A reference to this fuzzy module.
+	 */
 	removeRule( rule ) {
 
 		const rules = this.rules;
@@ -10529,12 +10529,12 @@ class FuzzyModule {
 	}
 
 	/**
-	* Calls the fuzzify method of the defined FLV with the given value.
-	*
-	* @param {String} name - The name of the FLV
-	* @param {Number} value - The crips value to fuzzify.
-	* @return {FuzzyModule} A reference to this fuzzy module.
-	*/
+	 * Calls the fuzzify method of the defined FLV with the given value.
+	 *
+	 * @param {String} name - The name of the FLV
+	 * @param {Number} value - The crips value to fuzzify.
+	 * @return {FuzzyModule} A reference to this fuzzy module.
+	 */
 	fuzzify( name, value ) {
 
 		const flv = this.flvs.get( name );
@@ -10546,12 +10546,12 @@ class FuzzyModule {
 	}
 
 	/**
-	* Given a fuzzy variable and a defuzzification method this returns a crisp value.
-	*
-	* @param {String} name - The name of the FLV
-	* @param {String} type - The type of defuzzification.
-	* @return {Number} The defuzzified, crips value.
-	*/
+	 * Given a fuzzy variable and a defuzzification method this returns a crisp value.
+	 *
+	 * @param {String} name - The name of the FLV
+	 * @param {String} type - The type of defuzzification.
+	 * @return {Number} The defuzzified, crips value.
+	 */
 	defuzzify( name, type = FuzzyModule.DEFUZ_TYPE.MAXAV ) {
 
 		const flvs = this.flvs;
@@ -10610,10 +10610,10 @@ class FuzzyModule {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = {
@@ -10646,11 +10646,11 @@ class FuzzyModule {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {FuzzyModule} A reference to this fuzzy module.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {FuzzyModule} A reference to this fuzzy module.
+	 */
 	fromJSON( json ) {
 
 		const fuzzySets = new Map(); // used for rules
@@ -10700,55 +10700,55 @@ FuzzyModule.DEFUZ_TYPE = Object.freeze( {
 } );
 
 /**
-* Base class for representing a goal in context of Goal-driven agent design.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Base class for representing a goal in context of Goal-driven agent design.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Goal {
 
 	/**
-	* Constructs a new goal.
-	*
-	* @param {GameEntity} owner - The owner of this goal.
-	*/
+	 * Constructs a new goal.
+	 *
+	 * @param {GameEntity} owner - The owner of this goal.
+	 */
 	constructor( owner = null ) {
 
 		/**
-		* The owner of this goal.
-		* @type GameEntity
-		*/
+		 * The owner of this goal.
+		 * @type GameEntity
+		 */
 		this.owner = owner;
 
 		/**
-		* The status of this goal.
-		* @type Status
-		* @default INACTIVE
-		*/
+		 * The status of this goal.
+		 * @type Status
+		 * @default INACTIVE
+		 */
 		this.status = Goal.STATUS.INACTIVE;
 
 	}
 
 	/**
-	* Executed when this goal is activated.
-	*/
+	 * Executed when this goal is activated.
+	 */
 	activate() {}
 
 	/**
-	* Executed in each simulation step.
-	*/
+	 * Executed in each simulation step.
+	 */
 	execute() {}
 
 	/**
-	* Executed when this goal is satisfied.
-	*/
+	 * Executed when this goal is satisfied.
+	 */
 	terminate() {}
 
 	/**
-	* Goals can handle messages. Many don't though, so this defines a default behavior
-	*
-	* @param {Telegram} telegram - The telegram with the message data.
-	* @return {Boolean} Whether the message was processed or not.
-	*/
+	 * Goals can handle messages. Many don't though, so this defines a default behavior
+	 *
+	 * @param {Telegram} telegram - The telegram with the message data.
+	 * @return {Boolean} Whether the message was processed or not.
+	 */
 	handleMessage( /* telegram */ ) {
 
 		return false;
@@ -10756,10 +10756,10 @@ class Goal {
 	}
 
 	/**
-	* Returns true if the status of this goal is *ACTIVE*.
-	*
-	* @return {Boolean} Whether the goal is active or not.
-	*/
+	 * Returns true if the status of this goal is *ACTIVE*.
+	 *
+	 * @return {Boolean} Whether the goal is active or not.
+	 */
 	active() {
 
 		return this.status === Goal.STATUS.ACTIVE;
@@ -10767,10 +10767,10 @@ class Goal {
 	}
 
 	/**
-	* Returns true if the status of this goal is *INACTIVE*.
-	*
-	* @return {Boolean} Whether the goal is inactive or not.
-	*/
+	 * Returns true if the status of this goal is *INACTIVE*.
+	 *
+	 * @return {Boolean} Whether the goal is inactive or not.
+	 */
 	inactive() {
 
 		return this.status === Goal.STATUS.INACTIVE;
@@ -10778,10 +10778,10 @@ class Goal {
 	}
 
 	/**
-	* Returns true if the status of this goal is *COMPLETED*.
-	*
-	* @return {Boolean} Whether the goal is completed or not.
-	*/
+	 * Returns true if the status of this goal is *COMPLETED*.
+	 *
+	 * @return {Boolean} Whether the goal is completed or not.
+	 */
 	completed() {
 
 		return this.status === Goal.STATUS.COMPLETED;
@@ -10789,10 +10789,10 @@ class Goal {
 	}
 
 	/**
-	* Returns true if the status of this goal is *FAILED*.
-	*
-	* @return {Boolean} Whether the goal is failed or not.
-	*/
+	 * Returns true if the status of this goal is *FAILED*.
+	 *
+	 * @return {Boolean} Whether the goal is failed or not.
+	 */
 	failed() {
 
 		return this.status === Goal.STATUS.FAILED;
@@ -10800,10 +10800,10 @@ class Goal {
 	}
 
 	/**
-	* Ensures the goal is replanned if it has failed.
-	*
-	* @return {Goal} A reference to this goal.
-	*/
+	 * Ensures the goal is replanned if it has failed.
+	 *
+	 * @return {Goal} A reference to this goal.
+	 */
 	replanIfFailed() {
 
 		if ( this.failed() === true ) {
@@ -10817,10 +10817,10 @@ class Goal {
 	}
 
 	/**
-	* Ensures the goal is activated if it is inactive.
-	*
-	* @return {Goal} A reference to this goal.
-	*/
+	 * Ensures the goal is activated if it is inactive.
+	 *
+	 * @return {Goal} A reference to this goal.
+	 */
 	activateIfInactive() {
 
 		if ( this.inactive() === true ) {
@@ -10836,10 +10836,10 @@ class Goal {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		return {
@@ -10851,11 +10851,11 @@ class Goal {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {Goal} A reference to this goal.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {Goal} A reference to this goal.
+	 */
 	fromJSON( json ) {
 
 		this.owner = json.owner; // uuid
@@ -10866,11 +10866,11 @@ class Goal {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {Goal} A reference to this goal.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {Goal} A reference to this goal.
+	 */
 	resolveReferences( entities ) {
 
 		this.owner = entities.get( this.owner ) || null;
@@ -10889,36 +10889,36 @@ Goal.STATUS = Object.freeze( {
 } );
 
 /**
-* Class representing a composite goal. Essentially it's a goal which consists of subgoals.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments Goal
-*/
+ * Class representing a composite goal. Essentially it's a goal which consists of subgoals.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments Goal
+ */
 class CompositeGoal extends Goal {
 
 	/**
-	* Constructs a new composite goal.
-	*
-	* @param {GameEntity} owner - The owner of this composite goal.
-	*/
+	 * Constructs a new composite goal.
+	 *
+	 * @param {GameEntity} owner - The owner of this composite goal.
+	 */
 	constructor( owner = null ) {
 
 		super( owner );
 
 		/**
-		* A list of subgoals.
-		* @type Array
-		*/
+		 * A list of subgoals.
+		 * @type Array
+		 */
 		this.subgoals = new Array();
 
 	}
 
 	/**
-	* Adds a goal as a subgoal to this instance.
-	*
-	* @param {Goal} goal - The subgoal to add.
-	* @return {Goal} A reference to this goal.
-	*/
+	 * Adds a goal as a subgoal to this instance.
+	 *
+	 * @param {Goal} goal - The subgoal to add.
+	 * @return {Goal} A reference to this goal.
+	 */
 	addSubgoal( goal ) {
 
 		this.subgoals.unshift( goal );
@@ -10928,11 +10928,11 @@ class CompositeGoal extends Goal {
 	}
 
 	/**
-	* Removes a subgoal from this instance.
-	*
-	* @param {Goal} goal - The subgoal to remove.
-	* @return {Goal} A reference to this goal.
-	*/
+	 * Removes a subgoal from this instance.
+	 *
+	 * @param {Goal} goal - The subgoal to remove.
+	 * @return {Goal} A reference to this goal.
+	 */
 	removeSubgoal( goal ) {
 
 		const index = this.subgoals.indexOf( goal );
@@ -10943,11 +10943,11 @@ class CompositeGoal extends Goal {
 	}
 
 	/**
-	* Removes all subgoals and ensures {@link Goal#terminate} is called
-	* for each subgoal.
-	*
-	* @return {Goal} A reference to this goal.
-	*/
+	 * Removes all subgoals and ensures {@link Goal#terminate} is called
+	 * for each subgoal.
+	 *
+	 * @return {Goal} A reference to this goal.
+	 */
 	clearSubgoals() {
 
 		const subgoals = this.subgoals;
@@ -10967,10 +10967,10 @@ class CompositeGoal extends Goal {
 	}
 
 	/**
-	* Returns the current subgoal. If no subgoals are defined, *null* is returned.
-	*
-	* @return {Goal} The current subgoal.
-	*/
+	 * Returns the current subgoal. If no subgoals are defined, *null* is returned.
+	 *
+	 * @return {Goal} The current subgoal.
+	 */
 	currentSubgoal() {
 
 		const length = this.subgoals.length;
@@ -10988,10 +10988,10 @@ class CompositeGoal extends Goal {
 	}
 
 	/**
-	* Executes the current subgoal of this composite goal.
-	*
-	* @return {Status} The status of this composite subgoal.
-	*/
+	 * Executes the current subgoal of this composite goal.
+	 *
+	 * @return {Status} The status of this composite subgoal.
+	 */
 	executeSubgoals() {
 
 		const subgoals = this.subgoals;
@@ -11057,10 +11057,10 @@ class CompositeGoal extends Goal {
 	}
 
 	/**
-	* Returns true if this composite goal has subgoals.
-	*
-	* @return {Boolean} Whether the composite goal has subgoals or not.
-	*/
+	 * Returns true if this composite goal has subgoals.
+	 *
+	 * @return {Boolean} Whether the composite goal has subgoals or not.
+	 */
 	hasSubgoals() {
 
 		return this.subgoals.length > 0;
@@ -11068,10 +11068,10 @@ class CompositeGoal extends Goal {
 	}
 
 	/**
-	* Returns true if the given message was processed by the current subgoal.
-	*
-	* @return {Boolean} Whether the message was processed or not.
-	*/
+	 * Returns true if the given message was processed by the current subgoal.
+	 *
+	 * @return {Boolean} Whether the message was processed or not.
+	 */
 	handleMessage( telegram ) {
 
 		const subgoal = this.currentSubgoal();
@@ -11087,10 +11087,10 @@ class CompositeGoal extends Goal {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -11109,11 +11109,11 @@ class CompositeGoal extends Goal {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {CompositeGoal} A reference to this composite goal.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {CompositeGoal} A reference to this composite goal.
+	 */
 	resolveReferences( entities ) {
 
 		super.resolveReferences( entities );
@@ -11132,37 +11132,37 @@ class CompositeGoal extends Goal {
 }
 
 /**
-* Base class for representing a goal evaluator in context of Goal-driven agent design.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Base class for representing a goal evaluator in context of Goal-driven agent design.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class GoalEvaluator {
 
 	/**
-	* Constructs a new goal evaluator.
-	*
-	* @param {Number} characterBias - Can be used to adjust the preferences of agents.
-	*/
+	 * Constructs a new goal evaluator.
+	 *
+	 * @param {Number} characterBias - Can be used to adjust the preferences of agents.
+	 */
 	constructor( characterBias = 1 ) {
 
 		/**
-		* Can be used to adjust the preferences of agents. When the desirability score
-		* for a goal has been evaluated, it is multiplied by this value.
-		* @type Number
-		* @default 1
-		*/
+		 * Can be used to adjust the preferences of agents. When the desirability score
+		 * for a goal has been evaluated, it is multiplied by this value.
+		 * @type Number
+		 * @default 1
+		 */
 		this.characterBias = characterBias;
 
 	}
 
 	/**
-	* Calculates the desirability. It's a score between 0 and 1 representing the desirability
-	* of a goal. This goal is considered as a top level strategy of the agent like *Explore* or
-	* *AttackTarget*. Must be implemented by all concrete goal evaluators.
-	*
-	* @param {GameEntity} owner - The owner of this goal evaluator.
-	* @return {Number} The desirability.
-	*/
+	 * Calculates the desirability. It's a score between 0 and 1 representing the desirability
+	 * of a goal. This goal is considered as a top level strategy of the agent like *Explore* or
+	 * *AttackTarget*. Must be implemented by all concrete goal evaluators.
+	 *
+	 * @param {GameEntity} owner - The owner of this goal evaluator.
+	 * @return {Number} The desirability.
+	 */
 	calculateDesirability( /* owner */ ) {
 
 		return 0;
@@ -11170,18 +11170,18 @@ class GoalEvaluator {
 	}
 
 	/**
-	* Executed if this goal evaluator produces the highest desirability. Must be implemented
-	* by all concrete goal evaluators.
-	*
-	* @param {GameEntity} owner - The owner of this goal evaluator.
-	*/
+	 * Executed if this goal evaluator produces the highest desirability. Must be implemented
+	 * by all concrete goal evaluators.
+	 *
+	 * @param {GameEntity} owner - The owner of this goal evaluator.
+	 */
 	setGoal( /* owner */ ) {}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		return {
@@ -11192,11 +11192,11 @@ class GoalEvaluator {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {GoalEvaluator} A reference to this goal evaluator.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {GoalEvaluator} A reference to this goal evaluator.
+	 */
 	fromJSON( json ) {
 
 		this.characterBias = json.characterBias;
@@ -11208,26 +11208,26 @@ class GoalEvaluator {
 }
 
 /**
-* Class for representing the brain of a game entity.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments CompositeGoal
-*/
+ * Class for representing the brain of a game entity.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments CompositeGoal
+ */
 class Think extends CompositeGoal {
 
 	/**
-	* Constructs a new *Think* object.
-	*
-	* @param {GameEntity} owner - The owner of this instance.
-	*/
+	 * Constructs a new *Think* object.
+	 *
+	 * @param {GameEntity} owner - The owner of this instance.
+	 */
 	constructor( owner = null ) {
 
 		super( owner );
 
 		/**
-		* A list of goal evaluators.
-		* @type Array
-		*/
+		 * A list of goal evaluators.
+		 * @type Array
+		 */
 		this.evaluators = new Array();
 
 		//
@@ -11237,8 +11237,8 @@ class Think extends CompositeGoal {
 	}
 
 	/**
-	* Executed when this goal is activated.
-	*/
+	 * Executed when this goal is activated.
+	 */
 	activate() {
 
 		this.arbitrate();
@@ -11246,8 +11246,8 @@ class Think extends CompositeGoal {
 	}
 
 	/**
-	* Executed in each simulation step.
-	*/
+	 * Executed in each simulation step.
+	 */
 	execute() {
 
 		this.activateIfInactive();
@@ -11263,8 +11263,8 @@ class Think extends CompositeGoal {
 	}
 
 	/**
-	* Executed when this goal is satisfied.
-	*/
+	 * Executed when this goal is satisfied.
+	 */
 	terminate() {
 
 		this.clearSubgoals();
@@ -11272,11 +11272,11 @@ class Think extends CompositeGoal {
 	}
 
 	/**
-	* Adds the given goal evaluator to this instance.
-	*
-	* @param {GoalEvaluator} evaluator - The goal evaluator to add.
-	* @return {Think} A reference to this instance.
-	*/
+	 * Adds the given goal evaluator to this instance.
+	 *
+	 * @param {GoalEvaluator} evaluator - The goal evaluator to add.
+	 * @return {Think} A reference to this instance.
+	 */
 	addEvaluator( evaluator ) {
 
 		this.evaluators.push( evaluator );
@@ -11286,11 +11286,11 @@ class Think extends CompositeGoal {
 	}
 
 	/**
-	* Removes the given goal evaluator from this instance.
-	*
-	* @param {GoalEvaluator} evaluator - The goal evaluator to remove.
-	* @return {Think} A reference to this instance.
-	*/
+	 * Removes the given goal evaluator from this instance.
+	 *
+	 * @param {GoalEvaluator} evaluator - The goal evaluator to remove.
+	 * @return {Think} A reference to this instance.
+	 */
 	removeEvaluator( evaluator ) {
 
 		const index = this.evaluators.indexOf( evaluator );
@@ -11301,12 +11301,12 @@ class Think extends CompositeGoal {
 	}
 
 	/**
-	* This method represents the top level decision process of an agent.
-	* It iterates through each goal evaluator and selects the one that
-	* has the highest score as the current goal.
-	*
-	* @return {Think} A reference to this instance.
-	*/
+	 * This method represents the top level decision process of an agent.
+	 * It iterates through each goal evaluator and selects the one that
+	 * has the highest score as the current goal.
+	 *
+	 * @return {Think} A reference to this instance.
+	 */
 	arbitrate() {
 
 		const evaluators = this.evaluators;
@@ -11349,10 +11349,10 @@ class Think extends CompositeGoal {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = super.toJSON();
@@ -11371,11 +11371,11 @@ class Think extends CompositeGoal {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-  * @return {Think} A reference to this instance.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {Think} A reference to this instance.
+	 */
 	fromJSON( json ) {
 
 		super.fromJSON( json );
@@ -11460,14 +11460,14 @@ class Think extends CompositeGoal {
 	}
 
 	/**
-	* Registers a custom type for deserialization. When calling {@link Think#fromJSON}
-	* this instance is able to pick the correct constructor in order to create custom
-	* goals or goal evaluators.
-	*
-	* @param {String} type - The name of the goal or goal evaluator.
-	* @param {Function} constructor -  The constructor function.
-	* @return {Think} A reference to this instance.
-	*/
+	 * Registers a custom type for deserialization. When calling {@link Think#fromJSON}
+	 * this instance is able to pick the correct constructor in order to create custom
+	 * goals or goal evaluators.
+	 *
+	 * @param {String} type - The name of the goal or goal evaluator.
+	 * @param {Function} constructor -  The constructor function.
+	 * @return {Think} A reference to this instance.
+	 */
 	registerType( type, constructor ) {
 
 		this._typesMap.set( type, constructor );
@@ -11479,50 +11479,50 @@ class Think extends CompositeGoal {
 }
 
 /**
-* Base class for graph edges.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Base class for graph edges.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Edge {
 
 	/**
-	* Constructs a new edge.
-	*
-	* @param {Number} from - The index of the from node.
-	* @param {Number} to - The index of the to node.
-	* @param {Number} cost - The cost of this edge.
-	*/
+	 * Constructs a new edge.
+	 *
+	 * @param {Number} from - The index of the from node.
+	 * @param {Number} to - The index of the to node.
+	 * @param {Number} cost - The cost of this edge.
+	 */
 	constructor( from = - 1, to = - 1, cost = 0 ) {
 
 		/**
-		* The index of the *from* node.
-		* @type Number
-		* @default -1
-		*/
+		 * The index of the *from* node.
+		 * @type Number
+		 * @default -1
+		 */
 		this.from = from;
 
 		/**
-		* The index of the *to* node.
-		* @type Number
-		* @default -1
-		*/
+		 * The index of the *to* node.
+		 * @type Number
+		 * @default -1
+		 */
 		this.to = to;
 
 		/**
-		* The cost of this edge. This could be for example a distance or time value.
-		* @type Number
-		* @default 0
-		*/
+		 * The cost of this edge. This could be for example a distance or time value.
+		 * @type Number
+		 * @default 0
+		 */
 		this.cost = cost;
 
 	}
 
 	/**
-	* Copies all values from the given edge to this edge.
-	*
-	* @param {Edge} edge - The edge to copy.
-	* @return {Edge} A reference to this edge.
-	*/
+	 * Copies all values from the given edge to this edge.
+	 *
+	 * @param {Edge} edge - The edge to copy.
+	 * @return {Edge} A reference to this edge.
+	 */
 	copy( edge ) {
 
 		this.from = edge.from;
@@ -11534,10 +11534,10 @@ class Edge {
 	}
 
 	/**
-	* Creates a new edge and copies all values from this edge.
-	*
-	* @return {Edge} A new edge.
-	*/
+	 * Creates a new edge and copies all values from this edge.
+	 *
+	 * @return {Edge} A new edge.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -11579,24 +11579,24 @@ class Edge {
 }
 
 /**
-* Base class for graph nodes.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Base class for graph nodes.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Node {
 
 	/**
-	* Constructs a new node.
-	*
-	* @param {Number} index - The unique index of this node.
-	*/
+	 * Constructs a new node.
+	 *
+	 * @param {Number} index - The unique index of this node.
+	 */
 	constructor( index = - 1 ) {
 
 		/**
-		* The unique index of this node. The default value *-1* means invalid index.
-		* @type Number
-		* @default -1
-		*/
+		 * The unique index of this node. The default value *-1* means invalid index.
+		 * @type Number
+		 * @default -1
+		 */
 		this.index = index;
 
 	}
@@ -11631,25 +11631,25 @@ class Node {
 }
 
 /**
-* Class representing a sparse graph implementation based on adjacency lists.
-* A sparse graph can be used to model many different types of graphs like navigation
-* graphs (pathfinding), dependency graphs (e.g. technology trees) or state graphs
-* (a representation of every possible state in a game).
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class representing a sparse graph implementation based on adjacency lists.
+ * A sparse graph can be used to model many different types of graphs like navigation
+ * graphs (pathfinding), dependency graphs (e.g. technology trees) or state graphs
+ * (a representation of every possible state in a game).
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Graph {
 
 	/**
-	* Constructs a new graph.
-	*/
+	 * Constructs a new graph.
+	 */
 	constructor() {
 
 		/**
-		* Whether this graph is directed or not.
-		* @type Boolean
-		* @default false
-		*/
+		 * Whether this graph is directed or not.
+		 * @type Boolean
+		 * @default false
+		 */
 		this.digraph = false;
 
 		this._nodes = new Map(); // contains all nodes in a map: (nodeIndex => node)
@@ -11658,11 +11658,11 @@ class Graph {
 	}
 
 	/**
-	* Adds a node to the graph.
-	*
-	* @param {Node} node - The node to add.
-	* @return {Graph} A reference to this graph.
-	*/
+	 * Adds a node to the graph.
+	 *
+	 * @param {Node} node - The node to add.
+	 * @return {Graph} A reference to this graph.
+	 */
 	addNode( node ) {
 
 		const index = node.index;
@@ -11675,12 +11675,12 @@ class Graph {
 	}
 
 	/**
-	* Adds an edge to the graph. If the graph is undirected, the method
-	* automatically creates the opponent edge.
-	*
-	* @param {Edge} edge - The edge to add.
-	* @return {Graph} A reference to this graph.
-	*/
+	 * Adds an edge to the graph. If the graph is undirected, the method
+	 * automatically creates the opponent edge.
+	 *
+	 * @param {Edge} edge - The edge to add.
+	 * @return {Graph} A reference to this graph.
+	 */
 	addEdge( edge ) {
 
 		let edges;
@@ -11705,12 +11705,12 @@ class Graph {
 	}
 
 	/**
-	* Returns a node for the given node index. If no node is found,
-	* *null* is returned.
-	*
-	* @param {Number} index - The index of the node.
-	* @return {Node} The requested node.
-	*/
+	 * Returns a node for the given node index. If no node is found,
+	 * *null* is returned.
+	 *
+	 * @param {Number} index - The index of the node.
+	 * @return {Node} The requested node.
+	 */
 	getNode( index ) {
 
 		return this._nodes.get( index ) || null;
@@ -11718,13 +11718,13 @@ class Graph {
 	}
 
 	/**
-	* Returns an edge for the given *from* and *to* node indices.
-	* If no node is found, *null* is returned.
-	*
-	* @param {Number} from - The index of the from node.
-	* @param {Number} to - The index of the to node.
-	* @return {Edge} The requested edge.
-	*/
+	 * Returns an edge for the given *from* and *to* node indices.
+	 * If no node is found, *null* is returned.
+	 *
+	 * @param {Number} from - The index of the from node.
+	 * @param {Number} to - The index of the to node.
+	 * @return {Edge} The requested edge.
+	 */
 	getEdge( from, to ) {
 
 		if ( this.hasNode( from ) && this.hasNode( to ) ) {
@@ -11750,11 +11750,11 @@ class Graph {
 	}
 
 	/**
-	* Gathers all nodes of the graph and stores them into the given array.
-	*
-	* @param {Array} result - The result array.
-	* @return {Array} The result array.
-	*/
+	 * Gathers all nodes of the graph and stores them into the given array.
+	 *
+	 * @param {Array} result - The result array.
+	 * @return {Array} The result array.
+	 */
 	getNodes( result ) {
 
 		result.length = 0;
@@ -11765,13 +11765,13 @@ class Graph {
 	}
 
 	/**
-	* Gathers all edges leading from the given node index and stores them
-	* into the given array.
-	*
-	* @param {Number} index - The node index.
-	* @param {Array} result - The result array.
-	* @return {Array} The result array.
-	*/
+	 * Gathers all edges leading from the given node index and stores them
+	 * into the given array.
+	 *
+	 * @param {Number} index - The node index.
+	 * @param {Array} result - The result array.
+	 * @return {Array} The result array.
+	 */
 	getEdgesOfNode( index, result ) {
 
 		const edges = this._edges.get( index );
@@ -11788,10 +11788,10 @@ class Graph {
 	}
 
 	/**
-	* Returns the node count of the graph.
-	*
-	* @return {number} The amount of nodes.
-	*/
+	 * Returns the node count of the graph.
+	 *
+	 * @return {number} The amount of nodes.
+	 */
 	getNodeCount() {
 
 		return this._nodes.size;
@@ -11799,10 +11799,10 @@ class Graph {
 	}
 
 	/**
-	* Returns the edge count of the graph.
-	*
-	* @return {number} The amount of edges.
-	*/
+	 * Returns the edge count of the graph.
+	 *
+	 * @return {number} The amount of edges.
+	 */
 	getEdgeCount() {
 
 		let count = 0;
@@ -11818,12 +11818,12 @@ class Graph {
 	}
 
 	/**
-	* Removes the given node from the graph and all edges which are connected
-	* with this node.
-	*
-	* @param {Node} node - The node to remove.
-	* @return {Graph} A reference to this graph.
-	*/
+	 * Removes the given node from the graph and all edges which are connected
+	 * with this node.
+	 *
+	 * @param {Node} node - The node to remove.
+	 * @return {Graph} A reference to this graph.
+	 */
 	removeNode( node ) {
 
 		this._nodes.delete( node.index );
@@ -11887,12 +11887,12 @@ class Graph {
 	}
 
 	/**
-	* Removes the given edge from the graph. If the graph is undirected, the
-	* method also removes the opponent edge.
-	*
-	* @param {Edge} edge - The edge to remove.
-	* @return {Graph} A reference to this graph.
-	*/
+	 * Removes the given edge from the graph. If the graph is undirected, the
+	 * method also removes the opponent edge.
+	 *
+	 * @param {Edge} edge - The edge to remove.
+	 * @return {Graph} A reference to this graph.
+	 */
 	removeEdge( edge ) {
 
 		// delete the edge from the node's edge list
@@ -11933,11 +11933,11 @@ class Graph {
 	}
 
 	/**
-	* Return true if the graph has the given node index.
-	*
-	* @param {Number} index - The node index to test.
-	* @return {Boolean} Whether this graph has the node or not.
-	*/
+	 * Return true if the graph has the given node index.
+	 *
+	 * @param {Number} index - The node index to test.
+	 * @return {Boolean} Whether this graph has the node or not.
+	 */
 	hasNode( index ) {
 
 		return this._nodes.has( index );
@@ -11945,13 +11945,13 @@ class Graph {
 	}
 
 	/**
-	* Return true if the graph has an edge connecting the given
-	* *from* and *to* node indices.
-	*
-	* @param {Number} from - The index of the from node.
-	* @param {Number} to - The index of the to node.
-	* @return {Boolean} Whether this graph has the edge or not.
-	*/
+	 * Return true if the graph has an edge connecting the given
+	 * *from* and *to* node indices.
+	 *
+	 * @param {Number} from - The index of the from node.
+	 * @param {Number} to - The index of the to node.
+	 * @return {Boolean} Whether this graph has the edge or not.
+	 */
 	hasEdge( from, to ) {
 
 		if ( this.hasNode( from ) && this.hasNode( to ) ) {
@@ -11981,10 +11981,10 @@ class Graph {
 	}
 
 	/**
-	* Removes all nodes and edges from this graph.
-	*
-	* @return {Graph} A reference to this graph.
-	*/
+	 * Removes all nodes and edges from this graph.
+	 *
+	 * @return {Graph} A reference to this graph.
+	 */
 	clear() {
 
 		this._nodes.clear();
@@ -12061,22 +12061,22 @@ class Graph {
 }
 
 /**
-* Class for representing a heuristic for graph search algorithms based
-* on the euclidean distance. The heuristic assumes that the node have
-* a *position* property of type {@link Vector3}.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing a heuristic for graph search algorithms based
+ * on the euclidean distance. The heuristic assumes that the node have
+ * a *position* property of type {@link Vector3}.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class HeuristicPolicyEuclid {
 
 	/**
-	* Calculates the euclidean distance between two nodes.
-	*
-	* @param {Graph} graph - The graph.
-	* @param {Number} source - The index of the source node.
-	* @param {Number} target - The index of the target node.
-	* @return {Number} The euclidean distance between both nodes.
-	*/
+	 * Calculates the euclidean distance between two nodes.
+	 *
+	 * @param {Graph} graph - The graph.
+	 * @param {Number} source - The index of the source node.
+	 * @param {Number} target - The index of the target node.
+	 * @return {Number} The euclidean distance between both nodes.
+	 */
 	static calculate( graph, source, target ) {
 
 		const sourceNode = graph.getNode( source );
@@ -12089,22 +12089,22 @@ class HeuristicPolicyEuclid {
 }
 
 /**
-* Class for representing a heuristic for graph search algorithms based
-* on the squared euclidean distance. The heuristic assumes that the node
-* have a *position* property of type {@link Vector3}.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing a heuristic for graph search algorithms based
+ * on the squared euclidean distance. The heuristic assumes that the node
+ * have a *position* property of type {@link Vector3}.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class HeuristicPolicyEuclidSquared {
 
 	/**
-	* Calculates the squared euclidean distance between two nodes.
-	*
-	* @param {Graph} graph - The graph.
-	* @param {Number} source - The index of the source node.
-	* @param {Number} target - The index of the target node.
-	* @return {Number} The squared euclidean distance between both nodes.
-	*/
+	 * Calculates the squared euclidean distance between two nodes.
+	 *
+	 * @param {Graph} graph - The graph.
+	 * @param {Number} source - The index of the source node.
+	 * @param {Number} target - The index of the target node.
+	 * @return {Number} The squared euclidean distance between both nodes.
+	 */
 	static calculate( graph, source, target ) {
 
 		const sourceNode = graph.getNode( source );
@@ -12117,22 +12117,22 @@ class HeuristicPolicyEuclidSquared {
 }
 
 /**
-* Class for representing a heuristic for graph search algorithms based
-* on the manhattan distance. The heuristic assumes that the node
-* have a *position* property of type {@link Vector3}.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing a heuristic for graph search algorithms based
+ * on the manhattan distance. The heuristic assumes that the node
+ * have a *position* property of type {@link Vector3}.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class HeuristicPolicyManhattan {
 
 	/**
-	* Calculates the manhattan distance between two nodes.
-	*
-	* @param {Graph} graph - The graph.
-	* @param {Number} source - The index of the source node.
-	* @param {Number} target - The index of the target node.
-	* @return {Number} The manhattan distance between both nodes.
-	*/
+	 * Calculates the manhattan distance between two nodes.
+	 *
+	 * @param {Graph} graph - The graph.
+	 * @param {Number} source - The index of the source node.
+	 * @param {Number} target - The index of the target node.
+	 * @return {Number} The manhattan distance between both nodes.
+	 */
 	static calculate( graph, source, target ) {
 
 		const sourceNode = graph.getNode( source );
@@ -12145,22 +12145,22 @@ class HeuristicPolicyManhattan {
 }
 
 /**
-* Class for representing a heuristic for graph search algorithms based
-* on Dijkstra's algorithm.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing a heuristic for graph search algorithms based
+ * on Dijkstra's algorithm.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class HeuristicPolicyDijkstra {
 
 	/**
-	* This heuristic always returns *0*. The {@link AStar} algorithm
-	* behaves with this heuristic exactly like {@link Dijkstra}
-	*
-	* @param {Graph} graph - The graph.
-	* @param {Number} source - The index of the source node.
-	* @param {Number} target - The index of the target node.
-	* @return {Number} The manhattan distance between both nodes.
-	*/
+	 * This heuristic always returns *0*. The {@link AStar} algorithm
+	 * behaves with this heuristic exactly like {@link Dijkstra}
+	 *
+	 * @param {Graph} graph - The graph.
+	 * @param {Number} source - The index of the source node.
+	 * @param {Number} target - The index of the target node.
+	 * @return {Number} The manhattan distance between both nodes.
+	 */
 	static calculate( /* graph, source, target */ ) {
 
 		return 0;
@@ -12179,39 +12179,39 @@ class HeuristicPolicyDijkstra {
 class PriorityQueue {
 
 	/**
-	* Constructs a new priority queue.
-	*
-	* @param {Function} compare - The compare function used for sorting.
-	*/
+	 * Constructs a new priority queue.
+	 *
+	 * @param {Function} compare - The compare function used for sorting.
+	 */
 	constructor( compare = defaultCompare ) {
 
 		/**
-		* The data items of the priority queue.
-		* @type Array
-		*/
+		 * The data items of the priority queue.
+		 * @type Array
+		 */
 		this.data = new Array();
 
 		/**
-		* The length of the priority queue.
-		* @type Number
-		* @default 0
-		*/
+		 * The length of the priority queue.
+		 * @type Number
+		 * @default 0
+		 */
 		this.length = 0;
 
 		/**
-		* The compare function used for sorting.
-		* @type Function
-		* @default defaultCompare
-		*/
+		 * The compare function used for sorting.
+		 * @type Function
+		 * @default defaultCompare
+		 */
 		this.compare = compare;
 
 	}
 
 	/**
-	* Pushes an item to the priority queue.
-	*
-	* @param {Object} item - The item to add.
-	*/
+	 * Pushes an item to the priority queue.
+	 *
+	 * @param {Object} item - The item to add.
+	 */
 	push( item ) {
 
 		this.data.push( item );
@@ -12221,11 +12221,11 @@ class PriorityQueue {
 	}
 
 	/**
-	* Returns the item with the highest priority and removes
-	* it from the priority queue.
-	*
-	* @return {Object} The item with the highest priority.
-	*/
+	 * Returns the item with the highest priority and removes
+	 * it from the priority queue.
+	 *
+	 * @return {Object} The item with the highest priority.
+	 */
 	pop() {
 
 		if ( this.length === 0 ) return null;
@@ -12247,10 +12247,10 @@ class PriorityQueue {
 	}
 
 	/**
-	* Returns the item with the highest priority without removal.
-	*
-	* @return {Object} The item with the highest priority.
-	*/
+	 * Returns the item with the highest priority without removal.
+	 *
+	 * @return {Object} The item with the highest priority.
+	 */
 	peek() {
 
 		return this.data[ 0 ] || null;
@@ -12320,51 +12320,51 @@ function defaultCompare( a, b ) {
 }
 
 /**
-* Implementation of the AStar algorithm.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Implementation of the AStar algorithm.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class AStar {
 
 	/**
-	* Constructs an AStar algorithm object.
-	*
-	* @param {Graph} graph - The graph.
-	* @param {Number} source - The node index of the source node.
-	* @param {Number} target - The node index of the target node.
-	*/
+	 * Constructs an AStar algorithm object.
+	 *
+	 * @param {Graph} graph - The graph.
+	 * @param {Number} source - The node index of the source node.
+	 * @param {Number} target - The node index of the target node.
+	 */
 	constructor( graph = null, source = - 1, target = - 1 ) {
 
 		/**
-		* The graph.
-		* @type Graph
-		*/
+		 * The graph.
+		 * @type Graph
+		 */
 		this.graph = graph;
 
 		/**
-		* The node index of the source node.
-		* @type Number
-		*/
+		 * The node index of the source node.
+		 * @type Number
+		 */
 		this.source = source;
 
 		/**
-		* The node index of the target node.
-		* @type Number
-		*/
+		 * The node index of the target node.
+		 * @type Number
+		 */
 		this.target = target;
 
 		/**
-		* Whether the search was successful or not.
-		* @type Boolean
-		* @default false
-		*/
+		 * Whether the search was successful or not.
+		 * @type Boolean
+		 * @default false
+		 */
 		this.found = false;
 
 		/**
-		* The heuristic of the search.
-		* @type Object
-		* @default HeuristicPolicyEuclid
-		*/
+		 * The heuristic of the search.
+		 * @type Object
+		 * @default HeuristicPolicyEuclid
+		 */
 		this.heuristic = HeuristicPolicyEuclid;
 
 		this._cost = new Map(); // contains the "real" accumulative cost to a node
@@ -12374,11 +12374,11 @@ class AStar {
 	}
 
 	/**
-	* Executes the graph search. If the search was successful, {@link AStar#found}
-	* is set to true.
-	*
-	* @return {AStar} A reference to this AStar object.
-	*/
+	 * Executes the graph search. If the search was successful, {@link AStar#found}
+	 * is set to true.
+	 *
+	 * @return {AStar} A reference to this AStar object.
+	 */
 	search() {
 
 		const outgoingEdges = new Array();
@@ -12469,10 +12469,10 @@ class AStar {
 	}
 
 	/**
-	* Returns the shortest path from the source to the target node as an array of node indices.
-	*
-	* @return {Array} The shortest path.
-	*/
+	 * Returns the shortest path from the source to the target node as an array of node indices.
+	 *
+	 * @return {Array} The shortest path.
+	 */
 	getPath() {
 
 		// array of node indices that comprise the shortest path from the source to the target
@@ -12508,10 +12508,10 @@ class AStar {
 	}
 
 	/**
-	* Returns the search tree of the algorithm as an array of edges.
-	*
-	* @return {Array} The search tree.
-	*/
+	 * Returns the search tree of the algorithm as an array of edges.
+	 *
+	 * @return {Array} The search tree.
+	 */
 	getSearchTree() {
 
 		return [ ...this._shortestPathTree.values() ];
@@ -12519,10 +12519,10 @@ class AStar {
 	}
 
 	/**
-	* Clears the internal state of the object. A new search is now possible.
-	*
-	* @return {AStar} A reference to this AStar object.
-	*/
+	 * Clears the internal state of the object. A new search is now possible.
+	 *
+	 * @return {AStar} A reference to this AStar object.
+	 */
 	clear() {
 
 		this.found = false;
@@ -12545,44 +12545,44 @@ function compare( a, b ) {
 }
 
 /**
-* Implementation of Breadth-first Search.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Implementation of Breadth-first Search.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class BFS {
 
 	/**
-	* Constructs a BFS algorithm object.
-	*
-	* @param {Graph} graph - The graph.
-	* @param {Number} source - The node index of the source node.
-	* @param {Number} target - The node index of the target node.
-	*/
+	 * Constructs a BFS algorithm object.
+	 *
+	 * @param {Graph} graph - The graph.
+	 * @param {Number} source - The node index of the source node.
+	 * @param {Number} target - The node index of the target node.
+	 */
 	constructor( graph = null, source = - 1, target = - 1 ) {
 
 		/**
-		* The graph.
-		* @type Graph
-		*/
+		 * The graph.
+		 * @type Graph
+		 */
 		this.graph = graph;
 
 		/**
-		* The node index of the source node.
-		* @type Number
-		*/
+		 * The node index of the source node.
+		 * @type Number
+		 */
 		this.source = source;
 
 		/**
-		* The node index of the target node.
-		* @type Number
-		*/
+		 * The node index of the target node.
+		 * @type Number
+		 */
 		this.target = target;
 
 		/**
-		* Whether the search was successful or not.
-		* @type Boolean
-		* @default false
-		*/
+		 * Whether the search was successful or not.
+		 * @type Boolean
+		 * @default false
+		 */
 		this.found = false;
 
 		this._route = new Map(); // this holds the route taken to the target
@@ -12593,11 +12593,11 @@ class BFS {
 	}
 
 	/**
-	* Executes the graph search. If the search was successful, {@link BFS#found}
-	* is set to true.
-	*
-	* @return {BFS} A reference to this BFS object.
-	*/
+	 * Executes the graph search. If the search was successful, {@link BFS#found}
+	 * is set to true.
+	 *
+	 * @return {BFS} A reference to this BFS object.
+	 */
 	search() {
 
 		// create a queue(FIFO) of edges, done via an array
@@ -12679,10 +12679,10 @@ class BFS {
 	}
 
 	/**
-	* Returns the shortest path from the source to the target node as an array of node indices.
-	*
-	* @return {Array} The shortest path.
-	*/
+	 * Returns the shortest path from the source to the target node as an array of node indices.
+	 *
+	 * @return {Array} The shortest path.
+	 */
 	getPath() {
 
 		// array of node indices that comprise the shortest path from the source to the target
@@ -12718,10 +12718,10 @@ class BFS {
 	}
 
 	/**
-	* Returns the search tree of the algorithm as an array of edges.
-	*
-	* @return {Array} The search tree.
-	*/
+	 * Returns the search tree of the algorithm as an array of edges.
+	 *
+	 * @return {Array} The search tree.
+	 */
 	getSearchTree() {
 
 		return [ ...this._spanningTree ];
@@ -12729,10 +12729,10 @@ class BFS {
 	}
 
 	/**
-	* Clears the internal state of the object. A new search is now possible.
-	*
-	* @return {BFS} A reference to this BFS object.
-	*/
+	 * Clears the internal state of the object. A new search is now possible.
+	 *
+	 * @return {BFS} A reference to this BFS object.
+	 */
 	clear() {
 
 		this.found = false;
@@ -12748,44 +12748,44 @@ class BFS {
 }
 
 /**
-* Implementation of Depth-first Search.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Implementation of Depth-first Search.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class DFS {
 
 	/**
-	* Constructs a DFS algorithm object.
-	*
-	* @param {Graph} graph - The graph.
-	* @param {Number} source - The node index of the source node.
-	* @param {Number} target - The node index of the target node.
-	*/
+	 * Constructs a DFS algorithm object.
+	 *
+	 * @param {Graph} graph - The graph.
+	 * @param {Number} source - The node index of the source node.
+	 * @param {Number} target - The node index of the target node.
+	 */
 	constructor( graph = null, source = - 1, target = - 1 ) {
 
 		/**
-		* The graph.
-		* @type Graph
-		*/
+		 * The graph.
+		 * @type Graph
+		 */
 		this.graph = graph;
 
 		/**
-		* The node index of the source node.
-		* @type Number
-		*/
+		 * The node index of the source node.
+		 * @type Number
+		 */
 		this.source = source;
 
 		/**
-		* The node index of the target node.
-		* @type Number
-		*/
+		 * The node index of the target node.
+		 * @type Number
+		 */
 		this.target = target;
 
 		/**
-		* Whether the search was successful or not.
-		* @type Boolean
-		* @default false
-		*/
+		 * Whether the search was successful or not.
+		 * @type Boolean
+		 * @default false
+		 */
 		this.found = false;
 
 		this._route = new Map(); // this holds the route taken to the target
@@ -12796,11 +12796,11 @@ class DFS {
 	}
 
 	/**
-	* Executes the graph search. If the search was successful, {@link DFS#found}
-	* is set to true.
-	*
-	* @return {DFS} A reference to this DFS object.
-	*/
+	 * Executes the graph search. If the search was successful, {@link DFS#found}
+	 * is set to true.
+	 *
+	 * @return {DFS} A reference to this DFS object.
+	 */
 	search() {
 
 		// create a stack(LIFO) of edges, done via an array
@@ -12876,10 +12876,10 @@ class DFS {
 	}
 
 	/**
-	* Returns the shortest path from the source to the target node as an array of node indices.
-	*
-	* @return {Array} The shortest path.
-	*/
+	 * Returns the shortest path from the source to the target node as an array of node indices.
+	 *
+	 * @return {Array} The shortest path.
+	 */
 	getPath() {
 
 		// array of node indices that comprise the shortest path from the source to the target
@@ -12915,10 +12915,10 @@ class DFS {
 	}
 
 	/**
-	* Returns the search tree of the algorithm as an array of edges.
-	*
-	* @return {Array} The search tree.
-	*/
+	 * Returns the search tree of the algorithm as an array of edges.
+	 *
+	 * @return {Array} The search tree.
+	 */
 	getSearchTree() {
 
 		return [ ...this._spanningTree ];
@@ -12926,10 +12926,10 @@ class DFS {
 	}
 
 	/**
-	* Clears the internal state of the object. A new search is now possible.
-	*
-	* @return {DFS} A reference to this DFS object.
-	*/
+	 * Clears the internal state of the object. A new search is now possible.
+	 *
+	 * @return {DFS} A reference to this DFS object.
+	 */
 	clear() {
 
 		this.found = false;
@@ -12945,44 +12945,44 @@ class DFS {
 }
 
 /**
-* Implementation of Dijkstra's algorithm.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Implementation of Dijkstra's algorithm.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Dijkstra {
 
 	/**
-	* Constructs a Dijkstra algorithm object.
-	*
-	* @param {Graph} graph - The graph.
-	* @param {Number} source - The node index of the source node.
-	* @param {Number} target - The node index of the target node.
-	*/
+	 * Constructs a Dijkstra algorithm object.
+	 *
+	 * @param {Graph} graph - The graph.
+	 * @param {Number} source - The node index of the source node.
+	 * @param {Number} target - The node index of the target node.
+	 */
 	constructor( graph = null, source = - 1, target = - 1 ) {
 
 		/**
-		* The graph.
-		* @type Graph
-		*/
+		 * The graph.
+		 * @type Graph
+		 */
 		this.graph = graph;
 
 		/**
-		* The node index of the source node.
-		* @type Number
-		*/
+		 * The node index of the source node.
+		 * @type Number
+		 */
 		this.source = source;
 
 		/**
-		* The node index of the target node.
-		* @type Number
-		*/
+		 * The node index of the target node.
+		 * @type Number
+		 */
 		this.target = target;
 
 		/**
-		* Whether the search was successful or not.
-		* @type Boolean
-		* @default false
-		*/
+		 * Whether the search was successful or not.
+		 * @type Boolean
+		 * @default false
+		 */
 		this.found = false;
 
 		this._cost = new Map(); // total cost of the bast path so far for a given node
@@ -12992,11 +12992,11 @@ class Dijkstra {
 	}
 
 	/**
-	* Executes the graph search. If the search was successful, {@link Dijkstra#found}
-	* is set to true.
-	*
-	* @return {Dijkstra} A reference to this Dijkstra object.
-	*/
+	 * Executes the graph search. If the search was successful, {@link Dijkstra#found}
+	 * is set to true.
+	 *
+	 * @return {Dijkstra} A reference to this Dijkstra object.
+	 */
 	search() {
 
 		const outgoingEdges = new Array();
@@ -13078,10 +13078,10 @@ class Dijkstra {
 	}
 
 	/**
-	* Returns the shortest path from the source to the target node as an array of node indices.
-	*
-	* @return {Array} The shortest path.
-	*/
+	 * Returns the shortest path from the source to the target node as an array of node indices.
+	 *
+	 * @return {Array} The shortest path.
+	 */
 	getPath() {
 
 		// array of node indices that comprise the shortest path from the source to the target
@@ -13117,10 +13117,10 @@ class Dijkstra {
 	}
 
 	/**
-	* Returns the search tree of the algorithm as an array of edges.
-	*
-	* @return {Array} The search tree.
-	*/
+	 * Returns the search tree of the algorithm as an array of edges.
+	 *
+	 * @return {Array} The search tree.
+	 */
 	getSearchTree() {
 
 		return [ ...this._shortestPathTree.values() ];
@@ -13128,10 +13128,10 @@ class Dijkstra {
 	}
 
 	/**
-	* Clears the internal state of the object. A new search is now possible.
-	*
-	* @return {Dijkstra} A reference to this Dijkstra object.
-	*/
+	 * Clears the internal state of the object. A new search is now possible.
+	 *
+	 * @return {Dijkstra} A reference to this Dijkstra object.
+	 */
 	clear() {
 
 		this.found = false;
@@ -13157,41 +13157,41 @@ const p1 = new Vector3();
 const p2 = new Vector3();
 
 /**
-* Class representing a 3D line segment.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class representing a 3D line segment.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class LineSegment {
 
 	/**
-	* Constructs a new line segment with the given values.
-	*
-	* @param {Vector3} from - The start point of the line segment.
-	* @param {Vector3} to - The end point of the line segment.
-	*/
+	 * Constructs a new line segment with the given values.
+	 *
+	 * @param {Vector3} from - The start point of the line segment.
+	 * @param {Vector3} to - The end point of the line segment.
+	 */
 	constructor( from = new Vector3(), to = new Vector3() ) {
 
 		/**
-		* The start point of the line segment.
-		* @type Vector3
-		*/
+		 * The start point of the line segment.
+		 * @type Vector3
+		 */
 		this.from = from;
 
 		/**
-		* The end point of the line segment.
-		* @type Vector3
-		*/
+		 * The end point of the line segment.
+		 * @type Vector3
+		 */
 		this.to = to;
 
 	}
 
 	/**
-	* Sets the given values to this line segment.
-	*
-	* @param {Vector3} from - The start point of the line segment.
-	* @param {Vector3} to - The end point of the line segment.
-	* @return {LineSegment} A reference to this line segment.
-	*/
+	 * Sets the given values to this line segment.
+	 *
+	 * @param {Vector3} from - The start point of the line segment.
+	 * @param {Vector3} to - The end point of the line segment.
+	 * @return {LineSegment} A reference to this line segment.
+	 */
 	set( from, to ) {
 
 		this.from = from;
@@ -13202,11 +13202,11 @@ class LineSegment {
 	}
 
 	/**
-	* Copies all values from the given line segment to this line segment.
-	*
-	* @param {LineSegment} lineSegment - The line segment to copy.
-	* @return {LineSegment} A reference to this line segment.
-	*/
+	 * Copies all values from the given line segment to this line segment.
+	 *
+	 * @param {LineSegment} lineSegment - The line segment to copy.
+	 * @return {LineSegment} A reference to this line segment.
+	 */
 	copy( lineSegment ) {
 
 		this.from.copy( lineSegment.from );
@@ -13217,10 +13217,10 @@ class LineSegment {
 	}
 
 	/**
-	* Creates a new line segment and copies all values from this line segment.
-	*
-	* @return {LineSegment} A new line segment.
-	*/
+	 * Creates a new line segment and copies all values from this line segment.
+	 *
+	 * @return {LineSegment} A new line segment.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -13228,12 +13228,12 @@ class LineSegment {
 	}
 
 	/**
-	* Computes the difference vector between the end and start point of this
-	* line segment and stores the result in the given vector.
-	*
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The result vector.
-	*/
+	 * Computes the difference vector between the end and start point of this
+	 * line segment and stores the result in the given vector.
+	 *
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The result vector.
+	 */
 	delta( result ) {
 
 		return result.subVectors( this.to, this.from );
@@ -13241,14 +13241,14 @@ class LineSegment {
 	}
 
 	/**
-	* Computes a position on the line segment according to the given t value
-	* and stores the result in the given 3D vector. The t value has usually a range of
-	* [0, 1] where 0 means start position and 1 the end position.
-	*
-	* @param {Number} t - A scalar value representing a position on the line segment.
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The result vector.
-	*/
+	 * Computes a position on the line segment according to the given t value
+	 * and stores the result in the given 3D vector. The t value has usually a range of
+	 * [0, 1] where 0 means start position and 1 the end position.
+	 *
+	 * @param {Number} t - A scalar value representing a position on the line segment.
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The result vector.
+	 */
 	at( t, result ) {
 
 		return this.delta( result ).multiplyScalar( t ).add( this.from );
@@ -13256,15 +13256,15 @@ class LineSegment {
 	}
 
 	/**
-	* Computes the closest point on an infinite line defined by the line segment.
-	* It's possible to clamp the closest point so it does not exceed the start and
-	* end position of the line segment.
-	*
-	* @param {Vector3} point - A point in 3D space.
-	* @param {Boolean} clampToLine - Indicates if the results should be clamped.
-	* @param {Vector3} result - The result vector.
-	* @return {Vector3} The closest point.
-	*/
+	 * Computes the closest point on an infinite line defined by the line segment.
+	 * It's possible to clamp the closest point so it does not exceed the start and
+	 * end position of the line segment.
+	 *
+	 * @param {Vector3} point - A point in 3D space.
+	 * @param {Boolean} clampToLine - Indicates if the results should be clamped.
+	 * @param {Vector3} result - The result vector.
+	 * @return {Vector3} The closest point.
+	 */
 	closestPointToPoint( point, clampToLine, result ) {
 
 		const t = this.closestPointToPointParameter( point, clampToLine );
@@ -13274,14 +13274,14 @@ class LineSegment {
 	}
 
 	/**
-	* Computes a scalar value which represents the closest point on an infinite line
-	* defined by the line segment. It's possible to clamp this value so it does not
-	* exceed the start and end position of the line segment.
-	*
-	* @param {Vector3} point - A point in 3D space.
-	* @param {Boolean} clampToLine - Indicates if the results should be clamped.
-	* @return {Number} A scalar representing the closest point.
-	*/
+	 * Computes a scalar value which represents the closest point on an infinite line
+	 * defined by the line segment. It's possible to clamp this value so it does not
+	 * exceed the start and end position of the line segment.
+	 *
+	 * @param {Vector3} point - A point in 3D space.
+	 * @param {Boolean} clampToLine - Indicates if the results should be clamped.
+	 * @return {Number} A scalar representing the closest point.
+	 */
 	closestPointToPointParameter( point, clampToLine = true ) {
 
 		p1.subVectors( point, this.from );
@@ -13299,11 +13299,11 @@ class LineSegment {
 	}
 
 	/**
-	* Returns true if the given line segment is deep equal with this line segment.
-	*
-	* @param {LineSegment} lineSegment - The line segment to test.
-	* @return {Boolean} The result of the equality test.
-	*/
+	 * Returns true if the given line segment is deep equal with this line segment.
+	 *
+	 * @param {LineSegment} lineSegment - The line segment to test.
+	 * @return {Boolean} The result of the equality test.
+	 */
 	equals( lineSegment ) {
 
 		return lineSegment.from.equals( this.from ) && lineSegment.to.equals( this.to );
@@ -13313,20 +13313,20 @@ class LineSegment {
 }
 
 /**
-* Class for representing navigation edges.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments Edge
-*/
+ * Class for representing navigation edges.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments Edge
+ */
 class NavEdge extends Edge {
 
 	/**
-	* Constructs a navigation edge.
-	*
-	* @param {Number} from - The index of the from node.
-	* @param {Number} to - The index of the to node.
-	* @param {Number} cost - The cost of this edge.
-	*/
+	 * Constructs a navigation edge.
+	 *
+	 * @param {Number} from - The index of the from node.
+	 * @param {Number} to - The index of the to node.
+	 * @param {Number} cost - The cost of this edge.
+	 */
 	constructor( from = - 1, to = - 1, cost = 0 ) {
 
 		super( from, to, cost );
@@ -13336,34 +13336,34 @@ class NavEdge extends Edge {
 }
 
 /**
-* Class for representing navigation nodes.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @augments Node
-*/
+ * Class for representing navigation nodes.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @augments Node
+ */
 class NavNode extends Node {
 
 	/**
-	* Constructs a new navigation node.
-	*
-	* @param {Number} index - The unique index of this node.
-	* @param {Vector3} position - The position of the node in 3D space.
-	* @param {Object} userData - Custom user data connected to this node.
-	*/
+	 * Constructs a new navigation node.
+	 *
+	 * @param {Number} index - The unique index of this node.
+	 * @param {Vector3} position - The position of the node in 3D space.
+	 * @param {Object} userData - Custom user data connected to this node.
+	 */
 	constructor( index = - 1, position = new Vector3(), userData = {} ) {
 
 		super( index );
 
 		/**
-		* The position of the node in 3D space.
-		* @type Vector3
-		*/
+		 * The position of the node in 3D space.
+		 * @type Vector3
+		 */
 		this.position = position;
 
 		/**
-		* Custom user data connected to this node.
-		* @type Object
-		*/
+		 * Custom user data connected to this node.
+		 * @type Object
+		 */
 		this.userData = userData;
 
 	}
@@ -13371,19 +13371,19 @@ class NavNode extends Node {
 }
 
 /**
-* Class with graph helpers.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class with graph helpers.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class GraphUtils {
 
 	/**
-	* Generates a navigation graph with a planar grid layout based on the given parameters.
-	*
-	* @param {Number} size - The size (width and depth) in x and z direction
-	* @param {Number} segments - The amount of segments in x and z direction.
-	* @return {Graph} The new graph.
-	*/
+	 * Generates a navigation graph with a planar grid layout based on the given parameters.
+	 *
+	 * @param {Number} size - The size (width and depth) in x and z direction
+	 * @param {Number} segments - The amount of segments in x and z direction.
+	 * @return {Graph} The new graph.
+	 */
 	static createGridLayout( size, segments ) {
 
 		const graph = new Graph();
@@ -13458,35 +13458,35 @@ class GraphUtils {
 }
 
 /**
-* A corridor is a sequence of portal edges representing a walkable way within a navigation mesh. The class is able
-* to find the shortest path through this corridor as a sequence of waypoints.
-* Code is based on the following {@link https://github.com/nickjanssen/PatrolJS/blob/master/patrol.js implementation}.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @author {@link https://github.com/robp94|robp94}
-*/
+ * A corridor is a sequence of portal edges representing a walkable way within a navigation mesh. The class is able
+ * to find the shortest path through this corridor as a sequence of waypoints.
+ * Code is based on the following {@link https://github.com/nickjanssen/PatrolJS/blob/master/patrol.js implementation}.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @author {@link https://github.com/robp94|robp94}
+ */
 class Corridor {
 
 	/**
-	* Creates a new corridor.
-	*/
+	 * Creates a new corridor.
+	 */
 	constructor() {
 
 		/**
-		* The portal edges of the corridor.
-		* @type Array
-		*/
+		 * The portal edges of the corridor.
+		 * @type Array
+		 */
 		this.portalEdges = new Array();
 
 	}
 
 	/**
-	* Adds a portal edge defined by its left and right vertex to this corridor.
-	*
-	* @param {Vector3} left - The left point (origin) of the portal edge.
-	* @param {Vector3} right - The right point (destination) of the portal edge.
-	* @return {Corridor} A reference to this corridor.
-	*/
+	 * Adds a portal edge defined by its left and right vertex to this corridor.
+	 *
+	 * @param {Vector3} left - The left point (origin) of the portal edge.
+	 * @param {Vector3} right - The right point (destination) of the portal edge.
+	 * @return {Corridor} A reference to this corridor.
+	 */
 	push( left, right ) {
 
 		this.portalEdges.push( {
@@ -13499,10 +13499,10 @@ class Corridor {
 	}
 
 	/**
-	* Generates the shortest path through the corridor as an array of 3D vectors.
-	*
-	* @return {Array} An array of 3D waypoints.
-	*/
+	 * Generates the shortest path through the corridor as an array of 3D vectors.
+	 *
+	 * @return {Array} An array of 3D waypoints.
+	 */
 	generate() {
 
 		const portalEdges = this.portalEdges;
@@ -13621,57 +13621,57 @@ class Corridor {
 }
 
 /**
-* Implementation of a half-edge data structure, also known as
-* {@link https://en.wikipedia.org/wiki/Doubly_connected_edge_list Doubly connected edge list}.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Implementation of a half-edge data structure, also known as
+ * {@link https://en.wikipedia.org/wiki/Doubly_connected_edge_list Doubly connected edge list}.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class HalfEdge {
 
 	/**
-	* Constructs a new half-edge.
-	*
-	* @param {Vector3} vertex - The (origin) vertex of this half-edge.
-	*/
+	 * Constructs a new half-edge.
+	 *
+	 * @param {Vector3} vertex - The (origin) vertex of this half-edge.
+	 */
 	constructor( vertex = new Vector3() ) {
 
 		/**
-		* The (origin) vertex of this half-edge.
-		* @type Vector3
-		*/
+		 * The (origin) vertex of this half-edge.
+		 * @type Vector3
+		 */
 		this.vertex = vertex;
 
 		/**
-		* A reference to the next half-edge.
-		* @type HalfEdge
-		*/
+		 * A reference to the next half-edge.
+		 * @type HalfEdge
+		 */
 		this.next = null;
 
 		/**
-		* A reference to the previous half-edge.
-		* @type HalfEdge
-		*/
+		 * A reference to the previous half-edge.
+		 * @type HalfEdge
+		 */
 		this.prev = null;
 
 		/**
-		* A reference to the opponent half-edge.
-		* @type HalfEdge
-		*/
+		 * A reference to the opponent half-edge.
+		 * @type HalfEdge
+		 */
 		this.twin = null;
 
 		/**
-		* A reference to its polygon/face.
-		* @type Polygon
-		*/
+		 * A reference to its polygon/face.
+		 * @type Polygon
+		 */
 		this.polygon = null;
 
 	}
 
 	/**
-	* Returns the origin vertex of this half-edge.
-	*
-	* @return {Vector3} The origin vertex.
-	*/
+	 * Returns the origin vertex of this half-edge.
+	 *
+	 * @return {Vector3} The origin vertex.
+	 */
 	from() {
 
 		return this.vertex;
@@ -13679,10 +13679,10 @@ class HalfEdge {
 	}
 
 	/**
-	* Returns the destination vertex of this half-edge.
-	*
-	* @return {Vector3} The destination vertex.
-	*/
+	 * Returns the destination vertex of this half-edge.
+	 *
+	 * @return {Vector3} The destination vertex.
+	 */
 	to() {
 
 		return this.next ? this.next.vertex : null;
@@ -13690,10 +13690,10 @@ class HalfEdge {
 	}
 
 	/**
-	* Computes the length of this half-edge.
-	*
-	* @return {Number} The length of this half-edge.
-	*/
+	 * Computes the length of this half-edge.
+	 *
+	 * @return {Number} The length of this half-edge.
+	 */
 	length() {
 
 		const from = this.from();
@@ -13710,10 +13710,10 @@ class HalfEdge {
 	}
 
 	/**
-	* Computes the squared length of this half-edge.
-	*
-	* @return {Number} The squared length of this half-edge.
-	*/
+	 * Computes the squared length of this half-edge.
+	 *
+	 * @return {Number} The squared length of this half-edge.
+	 */
 	squaredLength() {
 
 		const from = this.from();
@@ -13739,69 +13739,69 @@ const newPosition = new Vector3();
 const lineSegment = new LineSegment();
 
 /**
-* Implementation of a navigation mesh. A navigation mesh is a network of convex polygons
-* which define the walkable areas of a game environment. A convex polygon allows unobstructed travel
-* from any point in the polygon to any other. This is useful because it enables the navigation mesh
-* to be represented using a graph where each node represents a convex polygon and their respective edges
-* represent the neighborly relations to other polygons. More compact navigation graphs leads
-* to faster graph search execution.
-*
-* This particular implementation is able to merge convex polygons into bigger ones as long
-* as they keep their convexity and coplanarity. The performance of the path finding process and convex region tests
-* for complex navigation meshes can be improved by using a spatial index like {@link CellSpacePartitioning}.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @author {@link https://github.com/robp94|robp94}
-*/
+ * Implementation of a navigation mesh. A navigation mesh is a network of convex polygons
+ * which define the walkable areas of a game environment. A convex polygon allows unobstructed travel
+ * from any point in the polygon to any other. This is useful because it enables the navigation mesh
+ * to be represented using a graph where each node represents a convex polygon and their respective edges
+ * represent the neighborly relations to other polygons. More compact navigation graphs leads
+ * to faster graph search execution.
+ *
+ * This particular implementation is able to merge convex polygons into bigger ones as long
+ * as they keep their convexity and coplanarity. The performance of the path finding process and convex region tests
+ * for complex navigation meshes can be improved by using a spatial index like {@link CellSpacePartitioning}.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @author {@link https://github.com/robp94|robp94}
+ */
 class NavMesh {
 
 	/**
-	* Constructs a new navigation mesh.
-	*/
+	 * Constructs a new navigation mesh.
+	 */
 	constructor() {
 
 		/**
-		* The internal navigation graph of this navigation mesh representing neighboring polygons.
-		* @type Graph
-		*/
+		 * The internal navigation graph of this navigation mesh representing neighboring polygons.
+		 * @type Graph
+		 */
 		this.graph = new Graph();
 		this.graph.digraph = true;
 
 		/**
-		* The list of convex regions.
-		* @type Array
-		*/
+		 * The list of convex regions.
+		 * @type Array
+		 */
 		this.regions = new Array();
 
 		/**
-		* A reference to a spatial index.
-		* @type CellSpacePartitioning
-		* @default null
-		*/
+		 * A reference to a spatial index.
+		 * @type CellSpacePartitioning
+		 * @default null
+		 */
 		this.spatialIndex = null;
 
 		/**
-		* The tolerance value for the coplanar test.
-		* @type Number
-		* @default 1e-3
-		*/
+		 * The tolerance value for the coplanar test.
+		 * @type Number
+		 * @default 1e-3
+		 */
 		this.epsilonCoplanarTest = 1e-3;
 
 		/**
-		* The tolerance value for the containment test.
-		* @type Number
-		* @default 1
-		*/
+		 * The tolerance value for the containment test.
+		 * @type Number
+		 * @default 1
+		 */
 		this.epsilonContainsTest = 1;
 
 	}
 
 	/**
-	* Creates the navigation mesh from an array of convex polygons.
-	*
-	* @param {Array} polygons - An array of convex polygons.
-	* @return {NavMesh} A reference to this navigation mesh.
-	*/
+	 * Creates the navigation mesh from an array of convex polygons.
+	 *
+	 * @param {Array} polygons - An array of convex polygons.
+	 * @return {NavMesh} A reference to this navigation mesh.
+	 */
 	fromPolygons( polygons ) {
 
 		this.clear();
@@ -13886,10 +13886,10 @@ class NavMesh {
 	}
 
 	/**
-	* Clears the internal state of this navigation mesh.
-	*
-	* @return {NavMesh} A reference to this navigation mesh.
-	*/
+	 * Clears the internal state of this navigation mesh.
+	 *
+	 * @return {NavMesh} A reference to this navigation mesh.
+	 */
 	clear() {
 
 		this.graph.clear();
@@ -13901,11 +13901,11 @@ class NavMesh {
 	}
 
 	/**
-	* Returns the closest convex region for the given point in 3D space.
-	*
-	* @param {Vector3} point - A point in 3D space.
-	* @return {Polygon} The closest convex region.
-	*/
+	 * Returns the closest convex region for the given point in 3D space.
+	 *
+	 * @param {Vector3} point - A point in 3D space.
+	 * @return {Polygon} The closest convex region.
+	 */
 	getClosestRegion( point ) {
 
 		const regions = this.regions;
@@ -13933,10 +13933,10 @@ class NavMesh {
 	}
 
 	/**
-	* Returns at random a convex region from the navigation mesh.
-	*
-	* @return {Polygon} The convex region.
-	*/
+	 * Returns at random a convex region from the navigation mesh.
+	 *
+	 * @return {Polygon} The convex region.
+	 */
 	getRandomRegion() {
 
 		const regions = this.regions;
@@ -13950,14 +13950,14 @@ class NavMesh {
 	}
 
 	/**
-	* Returns the region that contains the given point. The computational overhead
-	* of this method for complex navigation meshes can greatly reduced by using a spatial index.
-	* If not convex region contains the point, *null* is returned.
-	*
-	* @param {Vector3} point - A point in 3D space.
-	* @param {Number} epsilon - Tolerance value for the containment test.
-	* @return {Polygon} The convex region that contains the point.
-	*/
+	 * Returns the region that contains the given point. The computational overhead
+	 * of this method for complex navigation meshes can greatly reduced by using a spatial index.
+	 * If not convex region contains the point, *null* is returned.
+	 *
+	 * @param {Vector3} point - A point in 3D space.
+	 * @param {Number} epsilon - Tolerance value for the containment test.
+	 * @return {Polygon} The convex region that contains the point.
+	 */
 	getRegionForPoint( point, epsilon = 1e-3 ) {
 
 		let regions;
@@ -13992,14 +13992,14 @@ class NavMesh {
 	}
 
 	/**
-	* Returns the shortest path that leads from the given start position to the end position.
-	* The computational overhead of this method for complex navigation meshes can greatly
-	* reduced by using a spatial index.
-	*
-	* @param {Vector3} from - The start/source position.
-	* @param {Vector3} to - The end/destination position.
-	* @return {Array} The shortest path as an array of points.
-	*/
+	 * Returns the shortest path that leads from the given start position to the end position.
+	 * The computational overhead of this method for complex navigation meshes can greatly
+	 * reduced by using a spatial index.
+	 *
+	 * @param {Vector3} from - The start/source position.
+	 * @param {Vector3} to - The end/destination position.
+	 * @return {Array} The shortest path as an array of points.
+	 */
 	findPath( from, to ) {
 
 		const graph = this.graph;
@@ -14072,16 +14072,16 @@ class NavMesh {
 	}
 
 	/**
-	* This method can be used to restrict the movement of a game entity on the navigation mesh.
-	* Instead of preventing any form of translation when a game entity hits a border edge, the
-	* movement is clamped along the contour of the navigation mesh.
-	*
-	* @param {Polygon} currentRegion - The current convex region of the game entity.
-	* @param {Vector3} startPosition - The original start position of the entity for the current simulation step.
-	* @param {Vector3} endPosition - The original end position of the entity for the current simulation step.
-	* @param {Vector3} clampPosition - The clamped position of the entity for the current simulation step.
-	* @return {Polygon} The new convex region the game entity is in.
-	*/
+	 * This method can be used to restrict the movement of a game entity on the navigation mesh.
+	 * Instead of preventing any form of translation when a game entity hits a border edge, the
+	 * movement is clamped along the contour of the navigation mesh.
+	 *
+	 * @param {Polygon} currentRegion - The current convex region of the game entity.
+	 * @param {Vector3} startPosition - The original start position of the entity for the current simulation step.
+	 * @param {Vector3} endPosition - The original end position of the entity for the current simulation step.
+	 * @param {Vector3} clampPosition - The clamped position of the entity for the current simulation step.
+	 * @return {Polygon} The new convex region the game entity is in.
+	 */
 	clampMovement( currentRegion, startPosition, endPosition, clampPosition ) {
 
 		let newRegion = this.getRegionForPoint( endPosition, this.epsilonContainsTest );
@@ -14187,11 +14187,11 @@ class NavMesh {
 	}
 
 	/**
-	* Updates the spatial index by assigning all convex regions to the
-	* partitions of the spatial index.
-	*
-	* @return {NavMesh} A reference to this navigation mesh.
-	*/
+	 * Updates the spatial index by assigning all convex regions to the
+	 * partitions of the spatial index.
+	 *
+	 * @return {NavMesh} A reference to this navigation mesh.
+	 */
 	updateSpatialIndex() {
 
 		if ( this.spatialIndex !== null ) {
@@ -14389,46 +14389,46 @@ function descending( a, b ) {
 }
 
 /**
-* Class for representing a planar polygon with an arbitrary amount of edges.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-* @author {@link https://github.com/robp94|robp94}
-*/
+ * Class for representing a planar polygon with an arbitrary amount of edges.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ * @author {@link https://github.com/robp94|robp94}
+ */
 class Polygon {
 
 	/**
-	* Constructs a new polygon.
-	*/
+	 * Constructs a new polygon.
+	 */
 	constructor() {
 
 		/**
-		* The centroid of this polygon.
-		* @type Vector3
-		*/
+		 * The centroid of this polygon.
+		 * @type Vector3
+		 */
 		this.centroid = new Vector3();
 
 		/**
-		* A reference to the first half-edge of this polygon.
-		* @type HalfEdge
-		*/
+		 * A reference to the first half-edge of this polygon.
+		 * @type HalfEdge
+		 */
 		this.edge = null;
 
 		/**
-		* A plane abstraction of this polygon.
-		* @type Plane
-		*/
+		 * A plane abstraction of this polygon.
+		 * @type Plane
+		 */
 		this.plane = new Plane();
 
 	}
 
 	/**
-	* Creates the polygon based on the given array of points in 3D space.
-	* The method assumes the contour (the sequence of points) is defined
-	* in CCW order.
-	*
-	* @param {Array} points - The array of points.
-	* @return {Polygon} A reference to this polygon.
-	*/
+	 * Creates the polygon based on the given array of points in 3D space.
+	 * The method assumes the contour (the sequence of points) is defined
+	 * in CCW order.
+	 *
+	 * @param {Array} points - The array of points.
+	 * @return {Polygon} A reference to this polygon.
+	 */
 	fromContour( points ) {
 
 		const edges = new Array();
@@ -14457,17 +14457,17 @@ class Polygon {
 
 				current = edges[ i ];
 				prev = edges[ l - 1 ];
-			 	next = edges[ i + 1 ];
+				next = edges[ i + 1 ];
 
 			} else if ( i === ( l - 1 ) ) {
 
 				current = edges[ i ];
-			 	prev = edges[ i - 1 ];
+				prev = edges[ i - 1 ];
 				next = edges[ 0 ];
 
 			} else {
 
-			 	current = edges[ i ];
+				current = edges[ i ];
 				prev = edges[ i - 1 ];
 				next = edges[ i + 1 ];
 
@@ -14492,10 +14492,10 @@ class Polygon {
 	}
 
 	/**
-	* Computes the centroid for this polygon.
-	*
-	* @return {Polygon} A reference to this polygon.
-	*/
+	 * Computes the centroid for this polygon.
+	 *
+	 * @return {Polygon} A reference to this polygon.
+	 */
 	computeCentroid() {
 
 		const centroid = this.centroid;
@@ -14521,12 +14521,12 @@ class Polygon {
 	}
 
 	/**
-	* Returns true if the polygon contains the given point.
-	*
-	* @param {Vector3} point - The point to test.
-	* @param {Number} epsilon - A tolerance value.
-	* @return {Boolean} Whether this polygon contain the given point or not.
-	*/
+	 * Returns true if the polygon contains the given point.
+	 *
+	 * @param {Vector3} point - The point to test.
+	 * @param {Number} epsilon - A tolerance value.
+	 * @return {Boolean} Whether this polygon contain the given point or not.
+	 */
 	contains( point, epsilon = 1e-3 ) {
 
 		const plane = this.plane;
@@ -14564,10 +14564,10 @@ class Polygon {
 	}
 
 	/**
-	* Returns true if the polygon is convex.
-	*
-	* @return {Boolean} Whether this polygon is convex or not.
-	*/
+	 * Returns true if the polygon is convex.
+	 *
+	 * @return {Boolean} Whether this polygon is convex or not.
+	 */
 	convex() {
 
 		let edge = this.edge;
@@ -14593,11 +14593,11 @@ class Polygon {
 	}
 
 	/**
-	* Returns true if the polygon is coplanar.
-	*
-	* @param {Number} epsilon - A tolerance value.
-	* @return {Boolean} Whether this polygon is coplanar or not.
-	*/
+	 * Returns true if the polygon is coplanar.
+	 *
+	 * @param {Number} epsilon - A tolerance value.
+	 * @return {Boolean} Whether this polygon is coplanar or not.
+	 */
 	coplanar( epsilon = 1e-3 ) {
 
 		const plane = this.plane;
@@ -14622,12 +14622,12 @@ class Polygon {
 	}
 
 	/**
-	* Determines the contour (sequence of points) of this polygon and
-	* stores the result in the given array.
-	*
-	* @param {Array} result - The result array.
-	* @return {Array} The result array.
-	*/
+	 * Determines the contour (sequence of points) of this polygon and
+	 * stores the result in the given array.
+	 *
+	 * @param {Array} result - The result array.
+	 * @return {Array} The result array.
+	 */
 	getContour( result ) {
 
 		let edge = this.edge;
@@ -14647,14 +14647,14 @@ class Polygon {
 	}
 
 	/**
-	* Determines the portal edge that can be used to reach the
-	* given polygon over its twin reference. The result is stored
-	* in the given portal edge data structure.
-	*
-	* @param {Polygon} polygon - The array of points.
-	* @param {Object} portalEdge - The portal edge.
-	* @return {Object} The portal edge.
-	*/
+	 * Determines the portal edge that can be used to reach the
+	 * given polygon over its twin reference. The result is stored
+	 * in the given portal edge data structure.
+	 *
+	 * @param {Polygon} polygon - The array of points.
+	 * @param {Object} portalEdge - The portal edge.
+	 * @return {Object} The portal edge.
+	 */
 	getPortalEdgeTo( polygon, portalEdge ) {
 
 		let edge = this.edge;
@@ -14695,22 +14695,22 @@ function leftOn( a, b, c ) {
 }
 
 /**
-* Class for loading navigation meshes as glTF assets. The loader supports
-* *glTF* and *glb* files, embedded buffers, index and non-indexed geometries.
-* Interleaved geometry data are not yet supported.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for loading navigation meshes as glTF assets. The loader supports
+ * *glTF* and *glb* files, embedded buffers, index and non-indexed geometries.
+ * Interleaved geometry data are not yet supported.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class NavMeshLoader {
 
 	/**
-	* Loads a {@link NavMesh navigation mesh} from the given URL. The second parameter can be used
-	* to influence the parsing of the navigation mesh.
-	*
-	* @param {String} url - The URL of the glTF asset.
-	* @param {Object} options - The configuration object.
-	* @return {Promise} A promise representing the loading and parsing process.
-	*/
+	 * Loads a {@link NavMesh navigation mesh} from the given URL. The second parameter can be used
+	 * to influence the parsing of the navigation mesh.
+	 *
+	 * @param {String} url - The URL of the glTF asset.
+	 * @param {Object} options - The configuration object.
+	 * @return {Promise} A promise representing the loading and parsing process.
+	 */
 	load( url, options ) {
 
 		return new Promise( ( resolve, reject ) => {
@@ -14986,11 +14986,11 @@ class Parser {
 
 				} ).catch( ( error ) => {
 
-					Logger.error( 'YUKA.NavMeshLoader: Unable to load buffer.', error );
+				Logger.error( 'YUKA.NavMeshLoader: Unable to load buffer.', error );
 
-					reject( error );
+				reject( error );
 
-				} );
+			} );
 
 		} );
 
@@ -15147,39 +15147,39 @@ const BINARY_EXTENSION_HEADER_LENGTH = 12;
 const BINARY_EXTENSION_CHUNK_TYPES = { JSON: 0x4E4F534A, BIN: 0x004E4942 };
 
 /**
-* Class for representing a single partition in context of cell-space partitioning.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing a single partition in context of cell-space partitioning.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class Cell {
 
 	/**
-	* Constructs a new cell with the given values.
-	*
-	* @param {AABB} aabb - The bounding volume of the cell.
-	*/
+	 * Constructs a new cell with the given values.
+	 *
+	 * @param {AABB} aabb - The bounding volume of the cell.
+	 */
 	constructor( aabb = new AABB() ) {
 
 		/**
-		* The bounding volume of the cell.
-		* @type AABB
-		*/
+		 * The bounding volume of the cell.
+		 * @type AABB
+		 */
 		this.aabb = aabb;
 
 		/**
-		* The list of entries which belong to this cell.
-		* @type Array
-		*/
+		 * The list of entries which belong to this cell.
+		 * @type Array
+		 */
 		this.entries = new Array();
 
 	}
 
 	/**
-	* Adds an entry to this cell.
-	*
-	* @param {Any} entry - The entry to add.
-	* @return {Cell} A reference to this cell.
-	*/
+	 * Adds an entry to this cell.
+	 *
+	 * @param {Any} entry - The entry to add.
+	 * @return {Cell} A reference to this cell.
+	 */
 	add( entry ) {
 
 		this.entries.push( entry );
@@ -15189,11 +15189,11 @@ class Cell {
 	}
 
 	/**
-	* Removes an entry from this cell.
-	*
-	* @param {Any} entry - The entry to remove.
-	* @return {Cell} A reference to this cell.
-	*/
+	 * Removes an entry from this cell.
+	 *
+	 * @param {Any} entry - The entry to remove.
+	 * @return {Cell} A reference to this cell.
+	 */
 	remove( entry ) {
 
 		const index = this.entries.indexOf( entry );
@@ -15204,10 +15204,10 @@ class Cell {
 	}
 
 	/**
-	* Removes all entries from this cell.
-	*
-	* @return {Cell} A reference to this cell.
-	*/
+	 * Removes all entries from this cell.
+	 *
+	 * @return {Cell} A reference to this cell.
+	 */
 	makeEmpty() {
 
 		this.entries.length = 0;
@@ -15217,10 +15217,10 @@ class Cell {
 	}
 
 	/**
-	* Returns true if this cell is empty.
-	*
-	* @return {Boolean} Whether this cell is empty or not.
-	*/
+	 * Returns true if this cell is empty.
+	 *
+	 * @return {Boolean} Whether this cell is empty or not.
+	 */
 	empty() {
 
 		return this.entries.length === 0;
@@ -15228,11 +15228,11 @@ class Cell {
 	}
 
 	/**
-	* Returns true if the given AABB intersects the internal bounding volume of this cell.
-	*
-	* @param {AABB} aabb - The AABB to test.
-	* @return {Boolean} Whether this cell intersects with the given AABB or not.
-	*/
+	 * Returns true if the given AABB intersects the internal bounding volume of this cell.
+	 *
+	 * @param {AABB} aabb - The AABB to test.
+	 * @return {Boolean} Whether this cell intersects with the given AABB or not.
+	 */
 	intersects( aabb ) {
 
 		return this.aabb.intersectsAABB( aabb );
@@ -15240,10 +15240,10 @@ class Cell {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = {
@@ -15265,11 +15265,11 @@ class Cell {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {Cell} A reference to this game entity.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {Cell} A reference to this game entity.
+	 */
 	fromJSON( json ) {
 
 		this.aabb.fromJSON( json.aabb );
@@ -15280,11 +15280,11 @@ class Cell {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {Cell} A reference to this cell.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {Cell} A reference to this cell.
+	 */
 	resolveReferences( entities ) {
 
 		const entries = this.entries;
@@ -15306,68 +15306,68 @@ const aabb = new AABB();
 const contour = new Array();
 
 /**
-* This class is used for cell-space partitioning, a basic approach for implementing
-* a spatial index. The 3D space is divided up into a number of cells. A cell contains a
-* list of references to all the entities it contains. Compared to other spatial indices like
-* octrees, the division of the 3D space is coarse and often not balanced but the computational
-* overhead for calculating the index of a specific cell based on a position vector is very fast.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * This class is used for cell-space partitioning, a basic approach for implementing
+ * a spatial index. The 3D space is divided up into a number of cells. A cell contains a
+ * list of references to all the entities it contains. Compared to other spatial indices like
+ * octrees, the division of the 3D space is coarse and often not balanced but the computational
+ * overhead for calculating the index of a specific cell based on a position vector is very fast.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class CellSpacePartitioning {
 
 	/**
-	* Constructs a new spatial index with the given values.
-	*
-	* @param {Number} width - The width of the entire spatial index.
-	* @param {Number} height - The height of the entire spatial index.
-	* @param {Number} depth - The depth of the entire spatial index.
-	* @param {Number} cellsX - The amount of cells along the x-axis.
-	* @param {Number} cellsY - The amount of cells along the y-axis.
-	* @param {Number} cellsZ - The amount of cells along the z-axis.
-	*/
+	 * Constructs a new spatial index with the given values.
+	 *
+	 * @param {Number} width - The width of the entire spatial index.
+	 * @param {Number} height - The height of the entire spatial index.
+	 * @param {Number} depth - The depth of the entire spatial index.
+	 * @param {Number} cellsX - The amount of cells along the x-axis.
+	 * @param {Number} cellsY - The amount of cells along the y-axis.
+	 * @param {Number} cellsZ - The amount of cells along the z-axis.
+	 */
 	constructor( width, height, depth, cellsX, cellsY, cellsZ ) {
 
 		/**
-		* The list of partitions.
-		* @type Array
-		*/
+		 * The list of partitions.
+		 * @type Array
+		 */
 		this.cells = new Array();
 
 		/**
-		* The width of the entire spatial index.
-		* @type Number
-		*/
+		 * The width of the entire spatial index.
+		 * @type Number
+		 */
 		this.width = width;
 
 		/**
-		* The height of the entire spatial index.
-		* @type Number
-		*/
+		 * The height of the entire spatial index.
+		 * @type Number
+		 */
 		this.height = height;
 
 		/**
-		* The depth of the entire spatial index.
-		* @type Number
-		*/
+		 * The depth of the entire spatial index.
+		 * @type Number
+		 */
 		this.depth = depth;
 
 		/**
-		* The amount of cells along the x-axis.
-		* @type Number
-		*/
+		 * The amount of cells along the x-axis.
+		 * @type Number
+		 */
 		this.cellsX = cellsX;
 
 		/**
-		* The amount of cells along the y-axis.
-		* @type Number
-		*/
+		 * The amount of cells along the y-axis.
+		 * @type Number
+		 */
 		this.cellsY = cellsY;
 
 		/**
-		* The amount of cells along the z-axis.
-		* @type Number
-		*/
+		 * The amount of cells along the z-axis.
+		 * @type Number
+		 */
 		this.cellsZ = cellsZ;
 
 		this._halfWidth = this.width / 2;
@@ -15418,12 +15418,12 @@ class CellSpacePartitioning {
 	}
 
 	/**
-	* Updates the partitioning index of a given game entity.
-	*
-	* @param {GameEntity} entity - The entity to update.
-	* @param {Number} currentIndex - The current partition index of the entity.
-	* @return {Number} The new partitioning index for the given game entity.
-	*/
+	 * Updates the partitioning index of a given game entity.
+	 *
+	 * @param {GameEntity} entity - The entity to update.
+	 * @param {Number} currentIndex - The current partition index of the entity.
+	 * @return {Number} The new partitioning index for the given game entity.
+	 */
 	updateEntity( entity, currentIndex = - 1 ) {
 
 		const newIndex = this.getIndexForPosition( entity.position );
@@ -15445,12 +15445,12 @@ class CellSpacePartitioning {
 	}
 
 	/**
-	* Adds an entity to a specific partition.
-	*
-	* @param {GameEntity} entity - The entity to add.
-	* @param {Number} index - The partition index.
-	* @return {CellSpacePartitioning} A reference to this spatial index.
-	*/
+	 * Adds an entity to a specific partition.
+	 *
+	 * @param {GameEntity} entity - The entity to add.
+	 * @param {Number} index - The partition index.
+	 * @return {CellSpacePartitioning} A reference to this spatial index.
+	 */
 	addEntityToPartition( entity, index ) {
 
 		const cell = this.cells[ index ];
@@ -15461,12 +15461,12 @@ class CellSpacePartitioning {
 	}
 
 	/**
-	* Removes an entity from a specific partition.
-	*
-	* @param {GameEntity} entity - The entity to remove.
-	* @param {Number} index - The partition index.
-	* @return {CellSpacePartitioning} A reference to this spatial index.
-	*/
+	 * Removes an entity from a specific partition.
+	 *
+	 * @param {GameEntity} entity - The entity to remove.
+	 * @param {Number} index - The partition index.
+	 * @return {CellSpacePartitioning} A reference to this spatial index.
+	 */
 	removeEntityFromPartition( entity, index ) {
 
 		const cell = this.cells[ index ];
@@ -15477,11 +15477,11 @@ class CellSpacePartitioning {
 	}
 
 	/**
-	* Computes the partition index for the given position vector.
-	*
-	* @param {Vector3} position - The given position.
-	* @return {Number} The partition index.
-	*/
+	 * Computes the partition index for the given position vector.
+	 *
+	 * @param {Vector3} position - The given position.
+	 * @return {Number} The partition index.
+	 */
 	getIndexForPosition( position ) {
 
 		clampedPosition.copy( position ).clamp( this._min, this._max );
@@ -15503,16 +15503,16 @@ class CellSpacePartitioning {
 	}
 
 	/**
-	* Performs a query to the spatial index according the the given position and
-	* radius. The method approximates the query position and radius with an AABB and
-	* then performs an intersection test with all non-empty cells in order to determine
-	* relevant partitions. Stores the result in the given result array.
-	*
-	* @param {Vector3} position - The given query position.
-	* @param {Number} radius - The given query radius.
-	* @param {Array} result - The result array.
-	* @return {Array} The result array.
-	*/
+	 * Performs a query to the spatial index according the the given position and
+	 * radius. The method approximates the query position and radius with an AABB and
+	 * then performs an intersection test with all non-empty cells in order to determine
+	 * relevant partitions. Stores the result in the given result array.
+	 *
+	 * @param {Vector3} position - The given query position.
+	 * @param {Number} radius - The given query radius.
+	 * @param {Array} result - The result array.
+	 * @return {Array} The result array.
+	 */
 	query( position, radius, result ) {
 
 		const cells = this.cells;
@@ -15543,10 +15543,10 @@ class CellSpacePartitioning {
 	}
 
 	/**
-	* Removes all entities from all partitions.
-	*
-	* @return {CellSpacePartitioning} A reference to this spatial index.
-	*/
+	 * Removes all entities from all partitions.
+	 *
+	 * @return {CellSpacePartitioning} A reference to this spatial index.
+	 */
 	makeEmpty() {
 
 		const cells = this.cells;
@@ -15562,11 +15562,11 @@ class CellSpacePartitioning {
 	}
 
 	/**
-	* Adds a polygon to the spatial index. A polygon is approximated with an AABB.
-	*
-	* @param {Polygon} polygon - The polygon to add.
-	* @return {CellSpacePartitioning} A reference to this spatial index.
-	*/
+	 * Adds a polygon to the spatial index. A polygon is approximated with an AABB.
+	 *
+	 * @param {Polygon} polygon - The polygon to add.
+	 * @return {CellSpacePartitioning} A reference to this spatial index.
+	 */
 	addPolygon( polygon ) {
 
 		const cells = this.cells;
@@ -15659,11 +15659,11 @@ class CellSpacePartitioning {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {CellSpacePartitioning} A reference to this cell space portioning.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {CellSpacePartitioning} A reference to this cell space portioning.
+	 */
 	resolveReferences( entities ) {
 
 		for ( let i = 0, l = this.cells.length; i < l; i ++ ) {
@@ -15677,53 +15677,53 @@ class CellSpacePartitioning {
 }
 
 /**
-* Class for representing the memory information about a single game entity.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing the memory information about a single game entity.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class MemoryRecord {
 
 	/**
-	* Constructs a new memory record.
-	*
-	* @param {GameEntity} entity - The game entity that is represented by this memory record.
-	*/
+	 * Constructs a new memory record.
+	 *
+	 * @param {GameEntity} entity - The game entity that is represented by this memory record.
+	 */
 	constructor( entity = null ) {
 
 		/**
-		* The game entity that is represented by this memory record.
-		* @type GameEntity
-		*/
+		 * The game entity that is represented by this memory record.
+		 * @type GameEntity
+		 */
 		this.entity = entity;
 
 		/**
-		* Records the time the entity was last sensed (e.g. seen or heard). Used to determine
-		* if a game entity can "remember" this record or not.
-		* @type Number
-		* @default - 1
-		*/
+		 * Records the time the entity was last sensed (e.g. seen or heard). Used to determine
+		 * if a game entity can "remember" this record or not.
+		 * @type Number
+		 * @default - 1
+		 */
 		this.timeLastSensed = - 1;
 
 		/**
-		* Marks the position where the opponent was last sensed.
-		* @type Vector3
-		*/
+		 * Marks the position where the opponent was last sensed.
+		 * @type Vector3
+		 */
 		this.lastSensedPosition = new Vector3();
 
 		/**
-		* Whether this game entity is visible or not.
-		* @type Boolean
-		* @default false
-		*/
+		 * Whether this game entity is visible or not.
+		 * @type Boolean
+		 * @default false
+		 */
 		this.visible = false;
 
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		return {
@@ -15737,11 +15737,11 @@ class MemoryRecord {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {MemoryRecord} A reference to this memory record.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {MemoryRecord} A reference to this memory record.
+	 */
 	fromJSON( json ) {
 
 		this.entity = json.entity; // uuid
@@ -15754,11 +15754,11 @@ class MemoryRecord {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {MemoryRecord} A reference to this memory record.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {MemoryRecord} A reference to this memory record.
+	 */
 	resolveReferences( entities ) {
 
 		this.entity = entities.get( this.entity ) || null;
@@ -15770,57 +15770,57 @@ class MemoryRecord {
 }
 
 /**
-* Class for representing the memory system of a game entity. It is used for managing,
-* filtering, and remembering sensory input.
-*
-* @author {@link https://github.com/Mugen87|Mugen87}
-*/
+ * Class for representing the memory system of a game entity. It is used for managing,
+ * filtering, and remembering sensory input.
+ *
+ * @author {@link https://github.com/Mugen87|Mugen87}
+ */
 class MemorySystem {
 
 	/**
-	* Constructs a new memory system.
-	*
-	* @param {GameEntity} owner - The game entity that owns this memory system.
-	*/
+	 * Constructs a new memory system.
+	 *
+	 * @param {GameEntity} owner - The game entity that owns this memory system.
+	 */
 	constructor( owner = null ) {
 
 		/**
-		* The game entity that owns this memory system.
-		* @type GameEntity
-		*/
+		 * The game entity that owns this memory system.
+		 * @type GameEntity
+		 */
 		this.owner = owner;
 
 		/**
-		* Used to simulate memory of sensory events. It contains {@link MemoryRecord memory records}
-		* of all relevant game entities in the environment. The records are usually update by
-		* the owner of the memory system.
-		* @type Array
-		*/
+		 * Used to simulate memory of sensory events. It contains {@link MemoryRecord memory records}
+		 * of all relevant game entities in the environment. The records are usually update by
+		 * the owner of the memory system.
+		 * @type Array
+		 */
 		this.records = new Array();
 
 		/**
-		* Same as {@link MemorySystem#records} but used for fast access via the game entity.
-		* @type Map
-		*/
+		 * Same as {@link MemorySystem#records} but used for fast access via the game entity.
+		 * @type Map
+		 */
 		this.recordsMap = new Map();
 
 		/**
-		* Represents the duration of the game entities short term memory in seconds.
-		* When a bot requests a list of all recently sensed game entities, this value
-		* is used to determine if the bot is able to remember a game entity or not.
-		* @type Number
-		* @default 1
-		*/
+		 * Represents the duration of the game entities short term memory in seconds.
+		 * When a bot requests a list of all recently sensed game entities, this value
+		 * is used to determine if the bot is able to remember a game entity or not.
+		 * @type Number
+		 * @default 1
+		 */
 		this.memorySpan = 1;
 
 	}
 
 	/**
-	* Returns the memory record of the given game entity.
-	*
-	* @param {GameEntity} entity - The game entity.
-	* @return {MemoryRecord} The memory record for this game entity.
-	*/
+	 * Returns the memory record of the given game entity.
+	 *
+	 * @param {GameEntity} entity - The game entity.
+	 * @return {MemoryRecord} The memory record for this game entity.
+	 */
 	getRecord( entity ) {
 
 		return this.recordsMap.get( entity );
@@ -15828,11 +15828,11 @@ class MemorySystem {
 	}
 
 	/**
-	* Creates a memory record for the given game entity.
-	*
-	* @param {GameEntity} entity - The game entity.
-	* @return {MemorySystem} A reference to this memory system.
-	*/
+	 * Creates a memory record for the given game entity.
+	 *
+	 * @param {GameEntity} entity - The game entity.
+	 * @return {MemorySystem} A reference to this memory system.
+	 */
 	createRecord( entity ) {
 
 		const record = new MemoryRecord( entity );
@@ -15845,11 +15845,11 @@ class MemorySystem {
 	}
 
 	/**
-	* Deletes the memory record for the given game entity.
-	*
-	* @param {GameEntity} entity - The game entity.
-	* @return {MemorySystem} A reference to this memory system.
-	*/
+	 * Deletes the memory record for the given game entity.
+	 *
+	 * @param {GameEntity} entity - The game entity.
+	 * @return {MemorySystem} A reference to this memory system.
+	 */
 	deleteRecord( entity ) {
 
 		const record = this.getRecord( entity );
@@ -15863,11 +15863,11 @@ class MemorySystem {
 	}
 
 	/**
-	* Returns true if there is a memory record for the given game entity.
-	*
-	* @param {GameEntity} entity - The game entity.
-	* @return {Boolean} Whether the game entity has a memory record or not.
-	*/
+	 * Returns true if there is a memory record for the given game entity.
+	 *
+	 * @param {GameEntity} entity - The game entity.
+	 * @return {Boolean} Whether the game entity has a memory record or not.
+	 */
 	hasRecord( entity ) {
 
 		return this.recordsMap.has( entity );
@@ -15875,10 +15875,10 @@ class MemorySystem {
 	}
 
 	/**
-	* Removes all memory records from the memory system.
-	*
-	* @return {MemorySystem} A reference to this memory system.
-	*/
+	 * Removes all memory records from the memory system.
+	 *
+	 * @return {MemorySystem} A reference to this memory system.
+	 */
 	clear() {
 
 		this.records.length = 0;
@@ -15889,12 +15889,12 @@ class MemorySystem {
 	}
 
 	/**
-	* Determines all valid memory record and stores the result in the given array.
-	*
-	* @param {Number} currentTime - The current elapsed time.
-	* @param {Array} result - The result array.
-	* @return {Array} The result array.
-	*/
+	 * Determines all valid memory record and stores the result in the given array.
+	 *
+	 * @param {Number} currentTime - The current elapsed time.
+	 * @param {Array} result - The result array.
+	 * @return {Array} The result array.
+	 */
 	getValidMemoryRecords( currentTime, result ) {
 
 		const records = this.records;
@@ -15918,10 +15918,10 @@ class MemorySystem {
 	}
 
 	/**
-	* Transforms this instance into a JSON object.
-	*
-	* @return {Object} The JSON object.
-	*/
+	 * Transforms this instance into a JSON object.
+	 *
+	 * @return {Object} The JSON object.
+	 */
 	toJSON() {
 
 		const json = {
@@ -15945,11 +15945,11 @@ class MemorySystem {
 	}
 
 	/**
-	* Restores this instance from the given JSON object.
-	*
-	* @param {Object} json - The JSON object.
-	* @return {MemorySystem} A reference to this memory system.
-	*/
+	 * Restores this instance from the given JSON object.
+	 *
+	 * @param {Object} json - The JSON object.
+	 * @return {MemorySystem} A reference to this memory system.
+	 */
 	fromJSON( json ) {
 
 		this.owner = json.owner; // uuid
@@ -15971,11 +15971,11 @@ class MemorySystem {
 	}
 
 	/**
-	* Restores UUIDs with references to GameEntity objects.
-	*
-	* @param {Map} entities - Maps game entities to UUIDs.
-	* @return {MemorySystem} A reference to this memory system.
-	*/
+	 * Restores UUIDs with references to GameEntity objects.
+	 *
+	 * @param {Map} entities - Maps game entities to UUIDs.
+	 * @return {MemorySystem} A reference to this memory system.
+	 */
 	resolveReferences( entities ) {
 
 		this.owner = entities.get( this.owner ) || null;
@@ -16206,48 +16206,48 @@ class Vision {
 }
 
 /**
-* Base class for representing tasks. A task is an isolated unit of work that is
-* processed in an asynchronous way. Tasks are managed within a {@link TaskQueue task queue}.
-*
-* @author {@link https://github.com/robp94|robp94}
-*/
+ * Base class for representing tasks. A task is an isolated unit of work that is
+ * processed in an asynchronous way. Tasks are managed within a {@link TaskQueue task queue}.
+ *
+ * @author {@link https://github.com/robp94|robp94}
+ */
 class Task {
 
 	/**
-	* This method represents the actual unit of work.
-	* Must be implemented by all concrete tasks.
-	*/
+	 * This method represents the actual unit of work.
+	 * Must be implemented by all concrete tasks.
+	 */
 	execute() {}
 
 }
 
 /**
-* This class is used for task management. Tasks are processed in an asynchronous
-* way when there is idle time within a single simulation step or after a defined amount
-* of time (deadline). The class is a wrapper around {@link https://w3.org/TR/requestidlecallback|requestidlecallback()},
-* a JavaScript API for cooperative scheduling of background tasks.
-*
-* @author {@link https://github.com/robp94|robp94}
-*/
+ * This class is used for task management. Tasks are processed in an asynchronous
+ * way when there is idle time within a single simulation step or after a defined amount
+ * of time (deadline). The class is a wrapper around {@link https://w3.org/TR/requestidlecallback|requestidlecallback()},
+ * a JavaScript API for cooperative scheduling of background tasks.
+ *
+ * @author {@link https://github.com/robp94|robp94}
+ */
 class TaskQueue {
 
 	/**
-	* Constructs a new task queue.
-	*/
+	 * Constructs a new task queue.
+	 */
 	constructor() {
 
 		/**
-		* A list of pending tasks.
-		* @type Array
-		*/
+		 * A list of pending tasks.
+		 * @type Array
+		 */
 		this.tasks = new Array();
 
 		/**
-		* Used to control the asynchronous processing.
-		*  - timeout: After this amount of time (in ms), a scheduled task is executed even if
-		*	  doing so risks causing a negative performance impact (e.g. bad frame time).
-		* @type Object
-		*/
+		 * Used to control the asynchronous processing.
+		 *  - timeout: After this amount of time (in ms), a scheduled task is executed even if
+		 *	  doing so risks causing a negative performance impact (e.g. bad frame time).
+		 * @type Object
+		 */
 		this.options = {
 			timeout: 1000 // ms
 		};
@@ -16261,11 +16261,11 @@ class TaskQueue {
 	}
 
 	/**
-	* Adds the given task to the task queue.
-	*
-	* @param {Task} task - The task to add.
-	* @return {TaskQueue} A reference to this task queue.
-	*/
+	 * Adds the given task to the task queue.
+	 *
+	 * @param {Task} task - The task to add.
+	 * @return {TaskQueue} A reference to this task queue.
+	 */
 	enqueue( task ) {
 
 		this.tasks.push( task );
@@ -16275,11 +16275,11 @@ class TaskQueue {
 	}
 
 	/**
-	* Updates the internal state of the task queue. Should be called
-	* per simulation step.
-	*
-	* @return {TaskQueue} A reference to this task queue.
-	*/
+	 * Updates the internal state of the task queue. Should be called
+	 * per simulation step.
+	 *
+	 * @return {TaskQueue} A reference to this task queue.
+	 */
 	update() {
 
 		if ( this.tasks.length > 0 ) {
@@ -16304,12 +16304,12 @@ class TaskQueue {
 }
 
 /**
-* This function controls the processing of tasks. It schedules tasks when there
-* is idle time at the end of a simulation step.
-*
-* @param {Object} deadline - This object contains a function which returns
-* a number indicating how much time remains for task processing.
-*/
+ * This function controls the processing of tasks. It schedules tasks when there
+ * is idle time at the end of a simulation step.
+ *
+ * @param {Object} deadline - This object contains a function which returns
+ * a number indicating how much time remains for task processing.
+ */
 function runTaskQueue( deadline ) {
 
 	const tasks = this.tasks;
