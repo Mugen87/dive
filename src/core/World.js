@@ -2,7 +2,7 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { EntityManager, Time, GameEntity } from '../lib/yuka.module.js';
+import { EntityManager, Time } from '../lib/yuka.module.js';
 import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer } from '../lib/three.module.js';
 import { HemisphereLight, DirectionalLight } from '../lib/three.module.js';
 import { AxesHelper } from '../lib/three.module.js';
@@ -11,11 +11,13 @@ import { OrbitControls } from '../lib/OrbitControls.module.js';
 import { AssetManager } from './AssetManager.js';
 import { NavMeshUtils } from '../etc/NavMeshUtils.js';
 import { SceneUtils } from '../etc/SceneUtils.js';
+import { Level } from '../entities/Level.js';
 
 import { Enemy } from '../entities/Enemy.js';
 import { PathPlanner } from '../etc/PathPlanner.js';
 
 import * as DAT from '../lib/dat.gui.module.js';
+import { MeshGeometry } from "../lib/yuka.module";
 
 class World {
 
@@ -71,7 +73,7 @@ class World {
 
 			this._initScene();
 			this._initEnemies();
-			this._initGround();
+			this._initLevel();
 			this._initNavMesh();
 			this._initControls();
 			this._initUI();
@@ -216,14 +218,18 @@ class World {
 
 	}
 
-	_initGround() {
+	_initLevel() {
 
 		const renderComponent = this.assetManager.models.get( 'ground' );
+		const mesh = renderComponent.children[ 0 ];
+		const vertices = mesh.geometry.attributes.position.array;
+		const indices = mesh.geometry.index.array;
 
-		const ground = new GameEntity();
-		ground.setRenderComponent( renderComponent, sync );
+		const level = new Level( new MeshGeometry( vertices, indices ) );
+		level.name = 'Level';
+		level.setRenderComponent( renderComponent, sync );
 
-		this.add( ground );
+		this.add( level );
 
 	}
 
