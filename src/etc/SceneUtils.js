@@ -3,6 +3,7 @@
  */
 
 import { MemoryRecord } from '../lib/yuka.module.js';
+import { Sprite, SpriteMaterial, CanvasTexture } from '../lib/three.module.js';
 
 class SceneUtils {
 
@@ -46,6 +47,34 @@ class SceneUtils {
 		} );
 
 		return clone;
+
+	}
+
+	static createUUIDLabel( uuid ) {
+
+		const canvas = document.createElement( 'canvas' );
+		const context = canvas.getContext( '2d' );
+
+		canvas.width = 512;
+		canvas.height = 64;
+
+		context.fillStyle = '#ee0808';
+		context.fillRect( 0, 0, canvas.width, canvas.height );
+
+		context.fillStyle = '#ffffff';
+		context.font = '24px Arial';
+		context.textAlign = 'center';
+		context.textBaseline = 'middle';
+		context.fillText( uuid, canvas.width / 2, canvas.height / 2 );
+
+		const texture = new CanvasTexture( canvas );
+		const material = new SpriteMaterial( { map: texture } );
+
+		const sprite = new Sprite( material );
+
+		sprite.scale.set( 4, 0.5, 1 );
+
+		return sprite;
 
 	}
 

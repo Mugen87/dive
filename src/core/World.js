@@ -52,8 +52,9 @@ class World {
 		this.helpers = {
 			convexRegionHelper: null,
 			axesHelper: null,
+			graphHelper: null,
 			pathHelpers: new Array(),
-			graphHelper: null
+			uuidHelpers: new Array()
 		};
 
 		this.uiParameter = {
@@ -61,6 +62,7 @@ class World {
 			showAxes: true,
 			showPaths: true,
 			showGraph: true,
+			showUUIDHelpers: false,
 			enableSimulation: true,
 			printMemoryRecords: () => {
 
@@ -216,6 +218,15 @@ class World {
 				this.scene.add( pathHelper );
 				this.helpers.pathHelpers.push( pathHelper );
 
+				//
+
+				const uuidHelper = SceneUtils.createUUIDLabel( enemy.uuid );
+				uuidHelper.position.y = 2;
+				uuidHelper.visible = false;
+
+				renderComponent.add( uuidHelper );
+				this.helpers.uuidHelpers.push( uuidHelper );
+
 			}
 
 		}
@@ -287,9 +298,9 @@ class World {
 
 			folderNavMesh.add( params, 'showPaths', 1, 30 ).name( 'show navigation paths' ).onChange( ( value ) => {
 
-				for ( let i = 0, l = this.helpers.pathHelpers.length; i < l; i ++ ) {
+				for ( const pathHelper of this.helpers.pathHelpers ) {
 
-					this.helpers.pathHelpers[ i ].visible = value;
+					pathHelper.visible = value;
 
 				}
 
@@ -319,10 +330,17 @@ class World {
 			const folderEnemy = gui.addFolder( 'Enemy' );
 			folderEnemy.open();
 
+			folderEnemy.add( params, 'showUUIDHelpers', 1, 30 ).name( 'show UUID helpers' ).onChange( ( value ) => {
+
+				for ( const uuidHelper of this.helpers.uuidHelpers ) {
+
+					uuidHelper.visible = value;
+
+				}
+
+			} );
+
 			folderEnemy.add( params, 'printMemoryRecords' ).name( 'print memory records' );
-
-			gui.open();
-
 
 			gui.open();
 
