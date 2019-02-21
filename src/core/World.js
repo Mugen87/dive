@@ -59,7 +59,8 @@ class World {
 			showRegions: true,
 			showAxes: true,
 			showPaths: true,
-			showGraph: true
+			showGraph: true,
+			enableSimulation: true
 		};
 
 	}
@@ -258,7 +259,7 @@ class World {
 
 		if ( this.debug ) {
 
-			const gui = new DAT.GUI();
+			const gui = new DAT.GUI( { width: 300 } );
 			const params = this.uiParameter;
 
 			// nav mesh folder
@@ -288,9 +289,9 @@ class World {
 
 			} );
 
-			// scene folder
+			// world folder
 
-			const folderScene = gui.addFolder( 'Scene' );
+			const folderScene = gui.addFolder( 'World' );
 			folderScene.open();
 
 			folderScene.add( params, 'showAxes' ).name( 'show axes helper' ).onChange( ( value ) => {
@@ -298,6 +299,8 @@ class World {
 				this.helpers.axesHelper.visible = value;
 
 			} );
+
+			folderScene.add( params, 'enableSimulation' ).name( 'enable simulation' );
 
 			gui.open();
 
@@ -332,9 +335,23 @@ function animate() {
 
 	const delta = this.time.getDelta();
 
-	this.entityManager.update( delta );
+	if ( this.debug ) {
 
-	this.pathPlanner.update();
+		if ( this.uiParameter.enableSimulation ) {
+
+			this.entityManager.update( delta );
+
+			this.pathPlanner.update();
+
+		}
+
+	} else {
+
+		this.entityManager.update( delta );
+
+		this.pathPlanner.update();
+
+	}
 
 	this.renderer.render( this.scene, this.camera );
 
