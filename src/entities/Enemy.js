@@ -34,9 +34,7 @@ class Enemy extends Vehicle {
 		this.brain = new Think( this );
 		this.brain.addEvaluator( new ExploreEvaluator() );
 
-		this.vision = new Vision( this );
-
-		this.goalArbitrationRegulator = new Regulator( CONFIG.BOT.GOAL.ARBITRATION_UPDATE_FREQUENCY );
+		this.goalArbitrationRegulator = new Regulator( CONFIG.BOT.GOAL.UPDATE_FREQUENCY );
 
 		// steering
 
@@ -45,6 +43,12 @@ class Enemy extends Vehicle {
 		followPathBehavior.nextWaypointDistance = CONFIG.BOT.NAVIGATION.NEXT_WAYPOINT_DISTANCE;
 		followPathBehavior._arrive.deceleration = CONFIG.BOT.NAVIGATION.ARRIVE_DECELERATION;
 		this.steering.add( followPathBehavior );
+
+		// vision
+
+		this.vision = new Vision( this );
+
+		this.visionRegulator = new Regulator( CONFIG.BOT.VISION.UPDATE_FREQUENCY );
 
 		// debug
 
@@ -71,6 +75,14 @@ class Enemy extends Vehicle {
 
 		this.currentTime += delta;
 
+		// update vision
+
+		if ( this.visionRegulator.ready() ) {
+
+			this.updateVision();
+
+		}
+
 		// update goals
 
 		this.brain.execute();
@@ -78,7 +90,6 @@ class Enemy extends Vehicle {
 		if ( this.goalArbitrationRegulator.ready() ) {
 
 			this.brain.arbitrate();
-			this.updateVision();
 
 		}
 
@@ -116,6 +127,7 @@ class Enemy extends Vehicle {
 
 			}
 			const enemy = enemies[ i ];
+
 			if ( vision.visible( enemy.position ) === true ) {
 
 				console.log( "Enemy " + index + " sees Enemy " + i );

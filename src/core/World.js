@@ -2,7 +2,7 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { EntityManager, Time } from '../lib/yuka.module.js';
+import { EntityManager, Time, MeshGeometry } from '../lib/yuka.module.js';
 import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer } from '../lib/three.module.js';
 import { HemisphereLight, DirectionalLight } from '../lib/three.module.js';
 import { AxesHelper } from '../lib/three.module.js';
@@ -17,7 +17,6 @@ import { Enemy } from '../entities/Enemy.js';
 import { PathPlanner } from '../etc/PathPlanner.js';
 
 import * as DAT from '../lib/dat.gui.module.js';
-import { MeshGeometry } from "../lib/yuka.module";
 
 class World {
 
@@ -62,7 +61,12 @@ class World {
 			showAxes: true,
 			showPaths: true,
 			showGraph: true,
-			enableSimulation: true
+			enableSimulation: true,
+			printMemoryRecords: () => {
+
+				SceneUtils.printMemoryRecords( this.enemies );
+
+			}
 		};
 
 	}
@@ -222,10 +226,12 @@ class World {
 
 		const renderComponent = this.assetManager.models.get( 'ground' );
 		const mesh = renderComponent.children[ 0 ];
+
 		const vertices = mesh.geometry.attributes.position.array;
 		const indices = mesh.geometry.index.array;
 
-		const level = new Level( new MeshGeometry( vertices, indices ) );
+		const geometry = new MeshGeometry( vertices, indices );
+		const level = new Level( geometry );
 		level.name = 'Level';
 		level.setRenderComponent( renderComponent, sync );
 
@@ -307,6 +313,16 @@ class World {
 			} );
 
 			folderScene.add( params, 'enableSimulation' ).name( 'enable simulation' );
+
+			// enemy folder
+
+			const folderEnemy = gui.addFolder( 'Enemy' );
+			folderEnemy.open();
+
+			folderEnemy.add( params, 'printMemoryRecords' ).name( 'print memory records' );
+
+			gui.open();
+
 
 			gui.open();
 

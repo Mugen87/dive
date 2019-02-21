@@ -2,6 +2,8 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
+import { MemoryRecord } from '../lib/yuka.module.js';
+
 class SceneUtils {
 
 	static cloneWithSkinning( source ) {
@@ -44,6 +46,25 @@ class SceneUtils {
 		} );
 
 		return clone;
+
+	}
+
+	static printMemoryRecords( enemies ) {
+
+		for ( const enemy of enemies ) {
+
+			const records = [];
+
+			// TODO: gathering memory records for an entity and produce an output at the console
+
+			records.push( new MemoryRecord() );
+			records.push( new MemoryRecord() );
+			records.push( new MemoryRecord() );
+
+			console.log( 'Memory records for enemy with ID: %s', enemy.uuid );
+			console.table( records );
+
+		}
 
 	}
 
