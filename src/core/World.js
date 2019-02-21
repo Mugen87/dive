@@ -203,8 +203,6 @@ class World {
 
 			if ( this.debug ) {
 
-				enemy.debug = true;
-
 				const pathHelper = NavMeshUtils.createPathHelper();
 				enemy.pathHelper = pathHelper;
 
