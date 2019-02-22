@@ -1477,6 +1477,26 @@ class Matrix3 {
 	}
 
 	/**
+	* Sets the elements of this matrix by extracting the upper-left 3x3 portion
+	* from a 4x4 matrix.
+	*
+	* @param {Matrix4} m - A 4x4 matrix.
+	* @return {Matrix3} A reference to this matrix.
+	*/
+	fromMatrix4( m ) {
+
+		const e = this.elements;
+		const me = m.elements;
+
+		e[ 0 ] = me[ 0 ]; e[ 1 ] = me[ 1 ]; e[ 2 ] = me[ 2 ];
+		e[ 3 ] = me[ 4 ]; e[ 4 ] = me[ 5 ]; e[ 5 ] = me[ 6 ];
+		e[ 6 ] = me[ 8 ]; e[ 7 ] = me[ 9 ]; e[ 8 ] = me[ 10 ];
+
+		return this;
+
+	}
+
+	/**
 	* Sets the elements of this matrix from an array.
 	*
 	* @param {Array} array - An array.
@@ -2551,6 +2571,8 @@ class Matrix4 {
 
 const targetRotation = new Quaternion();
 const targetDirection = new Vector3();
+const quaternionWorld = new Quaternion();
+const rotationMatrix = new Matrix3();
 
 /**
 * Base class for all game entities.
@@ -2808,6 +2830,36 @@ class GameEntity {
 		targetRotation.lookAt( this.forward, targetDirection, this.up );
 
 		return this.rotation.rotateTo( targetRotation, this.maxTurnRate * delta );
+
+	}
+
+	/**
+	* Computes the current direction (forward) vector of this game entity
+	* in world space and stores the result in the given vector.
+	*
+	* @param {Vector3} result - The direction vector of this game entity in world space.
+	* @return {Vector3} The direction vector of this game entity in world space.
+	*/
+	getWorldDirection( result ) {
+
+		quaternionWorld.fromMatrix3( rotationMatrix.fromMatrix4( this.worldMatrix ) );
+
+		return result.copy( this.forward ).applyRotation( quaternionWorld ).normalize();
+
+	}
+
+	/**
+	* Computes the current position of this game entity in world space and
+	* stores the result in the given vector.
+	*
+	* @param {Vector3} result - The position of this game entity in world space.
+	* @return {Vector3} The position of this game entity in world space.
+	*/
+	getWorldPosition( result ) {
+
+		console.log( this.worldMatrix );
+
+		return result.extractPositionFromMatrix( this.worldMatrix );
 
 	}
 
@@ -7927,7 +7979,7 @@ class MeshGeometry {
 	 *
 	 * @param {Ray} ray - The ray to test.
 	 * @param {Matrix4} worldMatrix - The matrix that transforms the geometry to world space.
-	 * @param {Boolean} closest - Whether the closest intersection should be computed or not.
+	 * @param {Boolean} closest - Whether the closest intersection point should be computed or not.
 	 * @param {Vector3} intersectionPoint - The intersection point.
 	 * @param {Vector3} normal - The normal vector of the respective triangle.
 	 * @return {Vector3} The result vector.
@@ -16081,7 +16133,7 @@ class Vision {
 		/**
 		 * The field of view in radians.
 		 * @type Number
-		 * @default π/2
+		 * @default π
 		 */
 		this.fieldOfView = Math.PI;
 
@@ -16142,7 +16194,7 @@ class Vision {
 		const owner = this.owner;
 		const obstacles = this.obstacles;
 
-		worldPosition.extractPositionFromMatrix( owner.worldMatrix );
+		owner.getWorldPosition( worldPosition );
 
 		// check if point lies within the game entity's visual range
 
@@ -16153,8 +16205,7 @@ class Vision {
 
 		// next, check if the point lies within the game entity's field of view
 
-		owner.getDirection( direction$1 );
-		direction$1.transformDirection( owner.worldMatrix );
+		owner.getWorldDirection( direction$1 );
 
 		const angle = direction$1.angleTo( toPoint );
 
