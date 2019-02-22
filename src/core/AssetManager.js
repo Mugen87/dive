@@ -89,9 +89,9 @@ class AssetManager {
 
 		} );
 
-		// ground
+		// level
 
-		gltfLoader.load( './models/ground.glb', ( gltf ) => {
+		gltfLoader.load( './models/level.glb', ( gltf ) => {
 
 			const renderComponent = gltf.scene;
 			renderComponent.updateMatrixWorld();
@@ -103,7 +103,7 @@ class AssetManager {
 
 			} );
 
-			models.set( 'ground', renderComponent );
+			models.set( 'level', renderComponent );
 
 		} );
 

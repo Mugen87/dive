@@ -6,6 +6,9 @@ import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemoryS
 import { ExploreEvaluator } from './Evaluators.js';
 import { CONFIG } from '../core/Config.js';
 
+const displacement = new Vector3();
+const targetPosition = new Vector3();
+
 class Enemy extends Vehicle {
 
 	constructor() {
@@ -69,7 +72,7 @@ class Enemy extends Vehicle {
 		const run = this.animations.get( 'run' );
 		run.enabled = true;
 
-		const level = this.manager.getEntityByName( 'Level' );
+		const level = this.manager.getEntityByName( 'level' );
 		this.vision.addObstacle( level );
 
 	}
@@ -144,7 +147,10 @@ class Enemy extends Vehicle {
 
 			// rotate back to default
 
-			this.rotateTo( this.forward, delta );
+			displacement.copy( this.velocity ).normalize();
+			targetPosition.copy( this.position ).add( displacement );
+
+			this.rotateTo( targetPosition, delta );
 
 		}
 

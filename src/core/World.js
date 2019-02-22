@@ -37,7 +37,7 @@ class World {
 
 		//
 
-		this.enemyCount = 3;
+		this.enemyCount = 2;
 		this.enemies = new Array();
 
 		//
@@ -235,15 +235,15 @@ class World {
 
 	_initLevel() {
 
-		const renderComponent = this.assetManager.models.get( 'ground' );
-		const mesh = renderComponent.children[ 0 ];
+		const renderComponent = this.assetManager.models.get( 'level' );
+		const mesh = renderComponent.getObjectByName( 'level' );
 
 		const vertices = mesh.geometry.attributes.position.array;
 		const indices = mesh.geometry.index.array;
 
 		const geometry = new MeshGeometry( vertices, indices );
 		const level = new Level( geometry );
-		level.name = 'Level';
+		level.name = 'level';
 		level.setRenderComponent( renderComponent, sync );
 
 		this.add( level );
