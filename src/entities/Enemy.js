@@ -162,13 +162,12 @@ class Enemy extends Vehicle {
 		const vision = this.vision;
 
 		const enemies = this.world.enemies;
-		const index = enemies.indexOf( this );
 
 		for ( let i = 0, l = enemies.length; i < l; i ++ ) {
 
-			if ( i === index ) continue;
-
 			const enemy = enemies[ i ];
+
+			if ( enemy === this ) continue;
 
 			if ( memorySystem.hasRecord( enemy ) === false ) {
 
