@@ -2,7 +2,7 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision } from '../lib/yuka.module.js';
+import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemorySystem } from '../lib/yuka.module.js';
 import { ExploreEvaluator } from './Evaluators.js';
 import { CONFIG } from '../core/Config.js';
 
@@ -14,6 +14,7 @@ class Enemy extends Vehicle {
 
 		this.currentTime = 0;
 		this.maxSpeed = 3;
+		this.updateOrientation = false;
 
 		this.world = null;
 
@@ -36,6 +37,11 @@ class Enemy extends Vehicle {
 
 		this.goalArbitrationRegulator = new Regulator( CONFIG.BOT.GOAL.UPDATE_FREQUENCY );
 
+		//memory
+		this.memorySystem = new MemorySystem();
+		this.memorySystem.memorySpan = CONFIG.BOT.MEMORY.SPAN;
+		this.memoryRecords = new Array();
+
 		// steering
 
 		const followPathBehavior = new FollowPathBehavior();
@@ -47,7 +53,6 @@ class Enemy extends Vehicle {
 		// vision
 
 		this.vision = new Vision( this );
-
 		this.visionRegulator = new Regulator( CONFIG.BOT.VISION.UPDATE_FREQUENCY );
 
 		// debug
@@ -83,6 +88,8 @@ class Enemy extends Vehicle {
 
 		}
 
+		this.updateHeading( delta );
+
 		// update goals
 
 		this.brain.execute();
@@ -102,44 +109,78 @@ class Enemy extends Vehicle {
 
 	}
 
-	updateVision() {
+	updateHeading( delta ) {
 
-		//const memorySystem = this.memorySystem;
-		const vision = this.vision;
-		const target = this.target;
+		this.memorySystem.getValidMemoryRecords( this.currentTime, this.memoryRecords );
 
-		/*if ( memorySystem.hasRecord( target ) === false ) {
+		if ( this.memoryRecords.length > 0 ) {
 
-			memorySystem.createRecord( target );
+			// Pick the first one. It's highly application specific what record is chosen
+			// for further processing.
+
+			const record = this.memoryRecords[ 0 ];
+			const entity = record.entity;
+
+			// if the game entity is visible, directly rotate towards it. Otherwise, focus
+			// the last known position
+
+			if ( record.visible === true ) {
+
+				this.rotateTo( entity.position, delta );
+
+			} else {
+
+				// only rotate to the last sensed position if the entity was seen at least once
+
+				if ( record.timeLastSensed !== - 1 ) {
+
+					this.rotateTo( record.lastSensedPosition, delta );
+
+				}
+
+			}
+
+		} else {
+
+			// rotate back to default
+
+			this.rotateTo( this.forward, delta );
 
 		}
 
-		const record = memorySystem.getRecord( target );*/
+	}
+
+	updateVision() {
+
+		const memorySystem = this.memorySystem;
+		const vision = this.vision;
 
 		const enemies = this.world.enemies;
 		const index = enemies.indexOf( this );
 
 		for ( let i = 0, l = enemies.length; i < l; i ++ ) {
 
-			if ( i === index ) {
+			if ( i === index ) continue;
 
-				continue;
+			const enemy = enemies[ i ];
+
+			if ( memorySystem.hasRecord( enemy ) === false ) {
+
+				memorySystem.createRecord( enemy );
 
 			}
-			const enemy = enemies[ i ];
+
+			const record = memorySystem.getRecord( enemy );
 
 			if ( vision.visible( enemy.position ) === true ) {
 
-				console.log( "Enemy " + index + " sees Enemy " + i );
-				/*
 				record.timeLastSensed = this.currentTime;
-				record.lastSensedPosition.copy( target.position );
+				record.lastSensedPosition.copy( enemy.position );
 				record.visible = true;
-	*/
 
 			} else {
 
-				//record.visible = false;
+				record.visible = false;
 
 			}
 
