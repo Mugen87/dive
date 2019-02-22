@@ -61,7 +61,7 @@ class World {
 			showRegions: true,
 			showAxes: true,
 			showPaths: true,
-			showGraph: true,
+			showGraph: false,
 			showUUIDHelpers: false,
 			enableSimulation: true,
 			printMemoryRecords: () => {
@@ -262,6 +262,7 @@ class World {
 			//
 
 			this.helpers.graphHelper = NavMeshUtils.createGraphHelper( navMesh.graph, 0.2 );
+			this.helpers.graphHelper.visible = false;
 			this.scene.add( this.helpers.graphHelper );
 
 		}
