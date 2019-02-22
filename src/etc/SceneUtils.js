@@ -2,7 +2,6 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { MemoryRecord } from '../lib/yuka.module.js';
 import { Sprite, SpriteMaterial, CanvasTexture } from '../lib/three.module.js';
 
 class SceneUtils {
@@ -82,16 +81,8 @@ class SceneUtils {
 
 		for ( const enemy of enemies ) {
 
-			const records = [];
-
-			// TODO: gathering memory records for an entity and produce an output at the console
-
-			records.push( new MemoryRecord() );
-			records.push( new MemoryRecord() );
-			records.push( new MemoryRecord() );
-
-			console.log( 'Memory records for enemy with ID: %s', enemy.uuid );
-			console.table( records );
+			console.log( 'Current memory records for enemy with ID: %s', enemy.uuid );
+			console.table( enemy.memoryRecords );
 
 		}
 

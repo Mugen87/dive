@@ -98,6 +98,12 @@ class Enemy extends Vehicle {
 
 		}
 
+		// update memory records
+
+		this.memorySystem.getValidMemoryRecords( this.currentTime, this.memoryRecords );
+
+		//
+
 		this.updateHeading( delta );
 
 		// update goals
@@ -121,12 +127,10 @@ class Enemy extends Vehicle {
 
 	updateHeading( delta ) {
 
-		this.memorySystem.getValidMemoryRecords( this.currentTime, this.memoryRecords );
-
 		if ( this.memoryRecords.length > 0 ) {
 
-			// Pick the first one. It's highly application specific what record is chosen
-			// for further processing.
+			// TODO: We should pick the target on criterias like distance or health
+			// For now, let's use the first entry
 
 			const record = this.memoryRecords[ 0 ];
 			const entity = record.entity;
