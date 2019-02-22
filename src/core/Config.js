@@ -4,6 +4,12 @@
 
 const CONFIG = {
 	BOT: {
+		MOVEMENT: {
+			MAXSPEED: 3
+		},
+		HEAD: {
+			HEIGHT: 1.8
+		},
 		GOAL: {
 			UPDATE_FREQUENCY: 5
 		},

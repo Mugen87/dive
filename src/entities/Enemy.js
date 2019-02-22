@@ -2,12 +2,13 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemorySystem } from '../lib/yuka.module.js';
+import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemorySystem, GameEntity } from '../lib/yuka.module.js';
 import { ExploreEvaluator } from './Evaluators.js';
 import { CONFIG } from '../core/Config.js';
 
 const displacement = new Vector3();
 const targetPosition = new Vector3();
+const worldPosition = new Vector3();
 
 class Enemy extends Vehicle {
 
@@ -16,10 +17,16 @@ class Enemy extends Vehicle {
 		super();
 
 		this.currentTime = 0;
-		this.maxSpeed = 3;
+		this.maxSpeed = CONFIG.BOT.MOVEMENT.MAXSPEED;
 		this.updateOrientation = false;
 
 		this.world = null;
+
+		// head
+
+		this.head = new GameEntity();
+		this.head.position.y = CONFIG.BOT.HEAD.HEIGHT;
+		this.add( this.head );
 
 		// animation
 
@@ -55,7 +62,7 @@ class Enemy extends Vehicle {
 
 		// vision
 
-		this.vision = new Vision( this );
+		this.vision = new Vision( this.head );
 		this.visionRegulator = new Regulator( CONFIG.BOT.VISION.UPDATE_FREQUENCY );
 
 		// debug
@@ -177,10 +184,12 @@ class Enemy extends Vehicle {
 
 			const record = memorySystem.getRecord( enemy );
 
-			if ( vision.visible( enemy.position ) === true ) {
+			worldPosition.extractPositionFromMatrix( enemy.head.worldMatrix );
+
+			if ( vision.visible( worldPosition ) === true ) {
 
 				record.timeLastSensed = this.currentTime;
-				record.lastSensedPosition.copy( enemy.position );
+				record.lastSensedPosition.copy( enemy.position ); // it's intended to use the body's position here
 				record.visible = true;
 
 			} else {
