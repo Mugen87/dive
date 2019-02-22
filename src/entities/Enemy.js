@@ -184,7 +184,7 @@ class Enemy extends Vehicle {
 
 			const record = memorySystem.getRecord( enemy );
 
-			worldPosition.extractPositionFromMatrix( enemy.head.worldMatrix );
+			enemy.head.getWorldPosition( worldPosition );
 
 			if ( vision.visible( worldPosition ) === true ) {
 
