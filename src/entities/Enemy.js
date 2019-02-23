@@ -2,13 +2,26 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemorySystem, GameEntity } from '../lib/yuka.module.js';
+import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion } from '../lib/yuka.module.js';
 import { ExploreEvaluator } from './Evaluators.js';
 import { CONFIG } from '../core/Config.js';
 
 const displacement = new Vector3();
 const targetPosition = new Vector3();
 const worldPosition = new Vector3();
+
+const positiveWeightings = new Array();
+const weightings = [ 0, 0, 0, 0 ];
+const directions = [
+	{ direction: new Vector3( 0, 0, 1 ), name: "soldier_forward" },
+	{ direction: new Vector3( 0, 0, - 1 ), name: "soldier_backward" },
+	{ direction: new Vector3( - 1, 0, 0 ), name: "soldier_left" },
+	{ direction: new Vector3( 1, 0, 0 ), name: "soldier_right" }
+];
+const lookDirection = new Vector3();
+const moveDirection = new Vector3();
+const quaternion = new Quaternion();
+const vector = new Vector3();
 
 class Enemy extends Vehicle {
 
@@ -102,6 +115,8 @@ class Enemy extends Vehicle {
 		//
 
 		this.updateHeading( delta );
+
+		this.updateAnimations();
 
 		// update goals
 
@@ -217,6 +232,60 @@ class Enemy extends Vehicle {
 			action.name = clip.name;
 
 			this.animations.set( action.name, action );
+
+		}
+
+	}
+
+	updateAnimations() {
+
+		//directions
+		this.getDirection( lookDirection );
+		moveDirection.copy( this.velocity ).normalize();
+
+		//rotation
+		const localForward = this.forward;
+		const localUp = this.up;
+		quaternion.lookAt( localForward, moveDirection, localUp );
+
+		// calculate animation weighting for forward
+		// at most there can be 2 grater than 0
+
+		positiveWeightings.length = 0;
+
+		for ( let i = 0, l = directions.length; i < l; i ++ ) {
+
+			vector.copy( directions[ i ].direction ).applyRotation( quaternion );
+			const dot = vector.dot( lookDirection );
+			weightings[ i ] = ( dot < 0 ) ? 0 : dot;
+			const animation = this.animations.get( directions[ i ].name );
+			if ( weightings[ i ] > 0 ) {
+
+				animation.enabled = true;
+				positiveWeightings.push( i );
+
+			} else {
+
+				animation.enabled = false;
+
+			}
+
+
+		}
+
+		let sum = 0;
+		const l = positiveWeightings.length;
+		for ( let i = 0; i < l; i ++ ) {
+
+			sum += weightings[ positiveWeightings[ i ] ];
+
+		}
+
+		for ( let i = 0; i < l; i ++ ) {
+
+			const index = positiveWeightings[ i ];
+			const animation = this.animations.get( directions[ index ].name );
+			animation.weight = weightings[ index ] / sum;
 
 		}
 
