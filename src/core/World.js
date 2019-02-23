@@ -185,23 +185,17 @@ class World {
 
 			// idle
 
-			enemy.mixer = new AnimationMixer( renderComponent );
+			const mixer = new AnimationMixer( renderComponent );
 
 			const idleClip = this.assetManager.animations.get( 'soldier_idle' );
-			const idleAction = enemy.mixer.clipAction( idleClip );
-			idleAction.play();
-			idleAction.enabled = false;
+			const runForwardClip = this.assetManager.animations.get( 'soldier_forward' );
+			const runBackwardClip = this.assetManager.animations.get( 'soldier_backward' );
+			const strafeLeftClip = this.assetManager.animations.get( 'soldier_left' );
+			const strafeRightClip = this.assetManager.animations.get( 'soldier_right' );
 
-			enemy.animations.set( 'idle', idleAction );
+			const clips = [ idleClip, runForwardClip, runBackwardClip, strafeLeftClip, strafeRightClip ];
 
-			// run
-
-			const runClip = this.assetManager.animations.get( 'soldier_run' );
-			const runAction = enemy.mixer.clipAction( runClip );
-			runAction.play();
-			runAction.enabled = false;
-
-			enemy.animations.set( 'run', runAction );
+			enemy.setupAnimations( mixer, clips );
 
 			//
 

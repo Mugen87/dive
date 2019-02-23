@@ -73,10 +73,7 @@ class Enemy extends Vehicle {
 
 	start() {
 
-		// const idle = this.animations.get( 'idle' );
-		// idle.enabled = true;
-
-		const run = this.animations.get( 'run' );
+		const run = this.animations.get( 'soldier_forward' );
 		run.enabled = true;
 
 		const level = this.manager.getEntityByName( 'level' );
@@ -118,7 +115,7 @@ class Enemy extends Vehicle {
 
 		// update animations
 
-		const run = this.animations.get( 'run' );
+		const run = this.animations.get( 'soldier_forward' );
 		run.timeScale = Math.min( 0.75, this.getSpeed() / this.maxSpeed );
 
 		this.mixer.update( delta );
@@ -204,6 +201,24 @@ class Enemy extends Vehicle {
 
 		}
 
+	}
+
+	setupAnimations( mixer, clips ) {
+
+		this.mixer = mixer;
+
+		// actions
+
+		for ( const clip of clips ) {
+
+			const action = mixer.clipAction( clip );
+			action.play();
+			action.enabled = false;
+			action.name = clip.name;
+
+			this.animations.set( action.name, action );
+
+		}
 
 	}
 
