@@ -203,7 +203,7 @@ class Enemy extends Vehicle {
 
 	}
 
-	setupAnimations( mixer, clips ) {
+	setAnimations( mixer, clips ) {
 
 		this.mixer = mixer;
 

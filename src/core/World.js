@@ -181,9 +181,7 @@ class World {
 			enemy.navMesh = navMesh;
 			enemy.world = this;
 
-			// setup animations
-
-			// idle
+			// set animations
 
 			const mixer = new AnimationMixer( renderComponent );
 
@@ -195,7 +193,7 @@ class World {
 
 			const clips = [ idleClip, runForwardClip, runBackwardClip, strafeLeftClip, strafeRightClip ];
 
-			enemy.setupAnimations( mixer, clips );
+			enemy.setAnimations( mixer, clips );
 
 			//
 
