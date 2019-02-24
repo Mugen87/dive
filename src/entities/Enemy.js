@@ -239,19 +239,19 @@ class Enemy extends Vehicle {
 
 	updateAnimations() {
 
-		//directions
+		// directions
+
 		this.getDirection( lookDirection );
 		moveDirection.copy( this.velocity ).normalize();
 
-		//rotation
-		const localForward = this.forward;
-		const localUp = this.up;
-		quaternion.lookAt( localForward, moveDirection, localUp );
+		// rotation
 
-		// calculate animation weighting for forward
-		// at most there can be 2 grater than 0
+		quaternion.lookAt( this.forward, moveDirection, this.up );
+
+		// calculate weightings for movement animations
 
 		positiveWeightings.length = 0;
+		let sum = 0;
 
 		for ( let i = 0, l = directions.length; i < l; i ++ ) {
 
@@ -259,29 +259,26 @@ class Enemy extends Vehicle {
 			const dot = vector.dot( lookDirection );
 			weightings[ i ] = ( dot < 0 ) ? 0 : dot;
 			const animation = this.animations.get( directions[ i ].name );
-			if ( weightings[ i ] > 0 ) {
+
+			if ( weightings[ i ] > 0.001 ) {
 
 				animation.enabled = true;
 				positiveWeightings.push( i );
+				sum += weightings[ i ];
 
 			} else {
 
 				animation.enabled = false;
+				animation.weight = 0;
 
 			}
 
-
 		}
 
-		let sum = 0;
-		const l = positiveWeightings.length;
-		for ( let i = 0; i < l; i ++ ) {
+		// the weightings for enabled animations have to be calculated in an additional
+		// loop since the sum of weightings of all enabled animations have to be 1
 
-			sum += weightings[ positiveWeightings[ i ] ];
-
-		}
-
-		for ( let i = 0; i < l; i ++ ) {
+		for ( let i = 0, l = positiveWeightings.length; i < l; i ++ ) {
 
 			const index = positiveWeightings[ i ];
 			const animation = this.animations.get( directions[ index ].name );
