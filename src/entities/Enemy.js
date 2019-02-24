@@ -4,11 +4,8 @@
 
 import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion } from '../lib/yuka.module.js';
 import { ExploreEvaluator } from './Evaluators.js';
+import { WeaponSystem } from './WeaponSystem.js';
 import { CONFIG } from '../core/Config.js';
-
-const displacement = new Vector3();
-const targetPosition = new Vector3();
-const worldPosition = new Vector3();
 
 const positiveWeightings = new Array();
 const weightings = [ 0, 0, 0, 0 ];
@@ -21,7 +18,8 @@ const directions = [
 const lookDirection = new Vector3();
 const moveDirection = new Vector3();
 const quaternion = new Quaternion();
-const vector = new Vector3();
+const transformedDirection = new Vector3();
+const worldPosition = new Vector3();
 
 class Enemy extends Vehicle {
 
@@ -60,7 +58,8 @@ class Enemy extends Vehicle {
 
 		this.goalArbitrationRegulator = new Regulator( CONFIG.BOT.GOAL.UPDATE_FREQUENCY );
 
-		//memory
+		// memory
+
 		this.memorySystem = new MemorySystem();
 		this.memorySystem.memorySpan = CONFIG.BOT.MEMORY.SPAN;
 		this.memoryRecords = new Array();
@@ -77,6 +76,11 @@ class Enemy extends Vehicle {
 
 		this.vision = new Vision( this.head );
 		this.visionRegulator = new Regulator( CONFIG.BOT.VISION.UPDATE_FREQUENCY );
+
+		// weapon system
+
+		this.weaponSystem = new WeaponSystem( this );
+		this.weaponSelectionRegulator = new Regulator( CONFIG.BOT.WEAPON.UPDATE_FREQUENCY );
 
 		// debug
 
@@ -112,12 +116,6 @@ class Enemy extends Vehicle {
 
 		this.memorySystem.getValidMemoryRecords( this.currentTime, this.memoryRecords );
 
-		//
-
-		this.updateHeading( delta );
-
-		this.updateAnimations();
-
 		// update goals
 
 		this.brain.execute();
@@ -128,54 +126,21 @@ class Enemy extends Vehicle {
 
 		}
 
-		// update animations
+		// update weapon system
 
-		const run = this.animations.get( 'soldier_forward' );
-		run.timeScale = Math.min( 0.75, this.getSpeed() / this.maxSpeed );
+		if ( this.weaponSelectionRegulator.ready() ) {
 
-		this.mixer.update( delta );
-
-	}
-
-	updateHeading( delta ) {
-
-		if ( this.memoryRecords.length > 0 ) {
-
-			// TODO: We should pick the target on criterias like distance or health
-			// For now, let's use the first entry
-
-			const record = this.memoryRecords[ 0 ];
-			const entity = record.entity;
-
-			// if the game entity is visible, directly rotate towards it. Otherwise, focus
-			// the last known position
-
-			if ( record.visible === true ) {
-
-				this.rotateTo( entity.position, delta );
-
-			} else {
-
-				// only rotate to the last sensed position if the entity was seen at least once
-
-				if ( record.timeLastSensed !== - 1 ) {
-
-					this.rotateTo( record.lastSensedPosition, delta );
-
-				}
-
-			}
-
-		} else {
-
-			// rotate back to default
-
-			displacement.copy( this.velocity ).normalize();
-			targetPosition.copy( this.position ).add( displacement );
-
-			this.rotateTo( targetPosition, delta );
+			// this.weaponSystem.selectBestWeapon();
 
 		}
+
+		// try to aim and shoot at a target
+
+		this.weaponSystem.aimAndShoot( delta );
+
+		// update animations
+
+		this.updateAnimations( delta );
 
 	}
 
@@ -237,7 +202,7 @@ class Enemy extends Vehicle {
 
 	}
 
-	updateAnimations() {
+	updateAnimations( delta ) {
 
 		// directions
 
@@ -255,8 +220,8 @@ class Enemy extends Vehicle {
 
 		for ( let i = 0, l = directions.length; i < l; i ++ ) {
 
-			vector.copy( directions[ i ].direction ).applyRotation( quaternion );
-			const dot = vector.dot( lookDirection );
+			transformedDirection.copy( directions[ i ].direction ).applyRotation( quaternion );
+			const dot = transformedDirection.dot( lookDirection );
 			weightings[ i ] = ( dot < 0 ) ? 0 : dot;
 			const animation = this.animations.get( directions[ i ].name );
 
@@ -284,7 +249,13 @@ class Enemy extends Vehicle {
 			const animation = this.animations.get( directions[ index ].name );
 			animation.weight = weightings[ index ] / sum;
 
+			// scale the animtion based on the actual velocity
+
+			animation.timeScale = this.getSpeed() / this.maxSpeed;
+
 		}
+
+		this.mixer.update( delta );
 
 	}
 

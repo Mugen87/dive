@@ -24,6 +24,12 @@ const CONFIG = {
 		VISION: {
 			UPDATE_FREQUENCY: 5
 		},
+		WEAPON: {
+			UPDATE_FREQUENCY: 4,
+			REACTION_TIME: 0.2,
+			AIM_ACCURACY: 0.1,
+			AIM_PERSISTANCE: 2
+		}
 	}
 };
 
