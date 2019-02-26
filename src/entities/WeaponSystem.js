@@ -2,6 +2,7 @@ import { Vector3 } from '../lib/yuka.module.js';
 
 import { CONFIG } from '../core/Config.js';
 import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
+import { WEAPON_STATUS_EMPTY, WEAPON_STATUS_READY } from '../core/Constants.js';
 import { Blaster } from '../weapons/Blaster.js';
 
 const displacement = new Vector3();
@@ -286,12 +287,11 @@ class WeaponSystem {
 			if ( targetSystem.isTargetShootable() ) {
 
 				const targeted = owner.rotateTo( target.position, delta, 0.05 );
+				const timeBecameVisible = targetSystem.getTimeBecameVisible();
 
 				// "targeted" is true if the entity is faced to the target
 
-				if ( targeted ) {
-
-					// TODO: Use this.reactionTime here
+				if ( targeted === true && timeBecameVisible >= this.reactionTime ) {
 
 					target.currentHitbox.getCenter( targetPosition );
 
@@ -328,7 +328,23 @@ class WeaponSystem {
 	*/
 	shoot( targetPosition ) {
 
-		this.currentWeapon.shoot( targetPosition );
+		const currentWeapon = this.currentWeapon;
+		const status = currentWeapon.status;
+
+		switch ( status ) {
+
+			case WEAPON_STATUS_EMPTY:
+				this.currentWeapon.reload();
+				break;
+
+			case WEAPON_STATUS_READY:
+				this.currentWeapon.shoot( targetPosition );
+				break;
+
+			default:
+				break;
+
+		}
 
 		return this;
 
@@ -368,12 +384,19 @@ class WeaponSystem {
 		// add positional audio
 
 		const shot = assetManager.cloneAudio( assetManager.audios.get( 'blaster_shot' ) );
+		shot.setRolloffFactor( 3 );
+		shot.setVolume( 0.4 );
 		blasterMesh.add( shot );
+		const reload = assetManager.cloneAudio( assetManager.audios.get( 'reload' ) );
+		reload.setRolloffFactor( 3 );
+		reload.setVolume( 0.1 );
+		blasterMesh.add( reload );
 
 		// store this configuration
 
 		this.renderComponents.blaster.mesh = blasterMesh;
 		this.renderComponents.blaster.audios.set( 'shot', shot );
+		this.renderComponents.blaster.audios.set( 'reload', reload );
 		this.renderComponents.muzzle = muzzleSprite;
 
 		return this;

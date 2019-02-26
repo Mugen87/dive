@@ -35,12 +35,12 @@ const CONFIG = {
 		},
 	},
 	BLASTER: {
-		ROUNDS_LEFT: Infinity, // number
-		ROUNDS_PER_CLIP: 12, // number
+		ROUNDS_LEFT: 4, // number
+		ROUNDS_PER_CLIP: 4, // number
 		AMMO: 48, // number
 		MAX_AMMO: 96, // number
 		SHOT_TIME: 0.4, // seconds
-		RELOAD_TIME: 1.5, // seconds
+		RELOAD_TIME: 1.6, // seconds
 		MUZZLE_TIME: 0.03 // seconds
 
 	},

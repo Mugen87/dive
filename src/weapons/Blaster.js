@@ -116,6 +116,10 @@ class Blaster extends Weapon {
 
 			this.status = WEAPON_STATUS_RELOAD;
 
+			const audio = this.audios.get( 'reload' );
+			if ( audio.isPlaying === true ) audio.stop();
+			audio.play();
+
 			this.endTimeReload = this.currentTime + this.reloadTime;
 
 		}

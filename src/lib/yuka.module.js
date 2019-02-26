@@ -1818,7 +1818,8 @@ class Quaternion {
 	*
 	* @param {Quaternion} q - The target rotation.
 	* @param {Number} step - The maximum step in radians.
-	* @param {Number} tolerance - The tolerance value.
+	* @param {Number} tolerance - A tolerance value in radians to tweak the result
+	* when both rotations are considered to be equal.
 	* @return {Boolean} Whether the given quaternion already represents the target rotation.
 	*/
 	rotateTo( q, step, tolerance = 0.0001 ) {
@@ -2823,7 +2824,8 @@ class GameEntity {
 	*
 	* @param {Vector3} target - The target position.
 	* @param {Number} delta - The time delta.
-	* @param {Number} tolerance - The tolerance value.
+	* @param {Number} tolerance - A tolerance value in radians to tweak the result
+	* when a game entity is considered to face a target.
 	* @return {Boolean} Whether the entity is faced to the target or not.
 	*/
 	rotateTo( target, delta, tolerance = 0.0001 ) {
@@ -9313,7 +9315,7 @@ class FuzzySet extends FuzzyTerm {
 * Class for representing a fuzzy set that has a s-shape membership function with
 * values from highest to lowest.
 *
-* @author robp94 / https://github.com/robp94
+* @author {@link https://github.com/robp94|robp94}
 * @augments FuzzySet
 */
 class LeftSCurveFuzzySet extends FuzzySet {
@@ -9551,7 +9553,7 @@ class LeftShoulderFuzzySet extends FuzzySet {
 * Class for representing a fuzzy set that has a normal distribution shape. It can be defined
 * by the mean and standard deviation.
 *
-* @author robp94 / https://github.com/robp94
+* @author {@link https://github.com/robp94|robp94}
 * @augments FuzzySet
 */
 class NormalDistFuzzySet extends FuzzySet {
@@ -9691,7 +9693,7 @@ function probabilityDensity( x, mean, variance ) {
 * Class for representing a fuzzy set that has a s-shape membership function with
 * values from lowest to highest.
 *
-* @author robp94 / https://github.com/robp94
+* @author {@link https://github.com/robp94|robp94}
 * @augments FuzzySet
 */
 class RightSCurveFuzzySet extends FuzzySet {
@@ -15800,6 +15802,14 @@ class MemoryRecord {
 		* @type GameEntity
 		*/
 		this.entity = entity;
+
+		/**
+		* Records the time the entity became visible. Useful in combination with a reaction time
+		* in order to prevent immediate actions.
+		* @type Number
+		* @default - 1
+		*/
+		this.timeBecameVisible = - 1;
 
 		/**
 		* Records the time the entity was last sensed (e.g. seen or heard). Used to determine

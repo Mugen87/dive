@@ -91,12 +91,16 @@ class AssetManager {
 		const listener = this.listener;
 
 		const blasterShot = new PositionalAudio( listener );
-		blasterShot.setRolloffFactor( 4 );
-		blasterShot.setVolume( 0.3 );
+		blasterShot.matrixAutoUpdate = false;
+
+		const reload = new PositionalAudio( listener );
+		reload.matrixAutoUpdate = false;
 
 		audioLoader.load( './audios/blaster_shot.ogg', buffer => blasterShot.setBuffer( buffer ) );
+		audioLoader.load( './audios/reload.ogg', buffer => reload.setBuffer( buffer ) );
 
 		audios.set( 'blaster_shot', blasterShot );
+		audios.set( 'reload', reload );
 
 		return this;
 

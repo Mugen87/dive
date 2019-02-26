@@ -85,14 +85,27 @@ class TargetSystem {
 	}
 
 	/**
-	* Returns the time when the target was last sensed or -1 if there is none,
+	* Returns the time when the target was last sensed or -1 if there is none.
 	*
 	* @return {Number} The time when the target was last sensed.
-	*
 	*/
 	getTimeLastSensed() {
 
 		return ( this._currentRecord !== null ) ? this._currentRecord.timeLastSensed : - 1;
+
+	}
+
+	/**
+	* Returns the time when the target became visible or -1 if there is none.
+	*
+	* @return {Number} The time when the target became visible.
+	*/
+	getTimeBecameVisible() {
+
+		const time = this.owner.world.time;
+		const elapsedTime = time.getElapsed();
+
+		return ( this._currentRecord !== null ) ? ( elapsedTime - this._currentRecord.timeBecameVisible ) : - 1;
 
 	}
 

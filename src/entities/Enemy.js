@@ -228,6 +228,7 @@ class Enemy extends Vehicle {
 
 				record.timeLastSensed = this.currentTime;
 				record.lastSensedPosition.copy( enemy.position ); // it's intended to use the body's position here
+				if ( record.visible === false ) record.timeBecameVisible = this.currentTime;
 				record.visible = true;
 
 			} else {
