@@ -189,6 +189,25 @@ class AssetManager {
 
 		} );
 
+		// shotgun
+
+		gltfLoader.load( './models/shotgun.glb', ( gltf ) => {
+
+			const renderComponent = gltf.scene;
+			renderComponent.matrixAutoUpdate = false;
+			renderComponent.updateMatrix();
+
+			renderComponent.traverse( ( object ) => {
+
+				object.matrixAutoUpdate = false;
+				object.updateMatrix();
+
+			} );
+
+			models.set( 'shotgun', renderComponent );
+
+		} );
+
 		// muzzle sprite
 
 		const muzzleTexture = textureLoader.load( './textures/muzzle.png' );
