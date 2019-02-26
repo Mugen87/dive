@@ -2,7 +2,7 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { Sprite, SpriteMaterial, CanvasTexture } from '../lib/three.module.js';
+import { LineSegments, Sprite, SpriteMaterial, LineBasicMaterial, CanvasTexture, BufferGeometry, Float32BufferAttribute } from '../lib/three.module.js';
 
 class SceneUtils {
 
@@ -85,6 +85,28 @@ class SceneUtils {
 			console.table( enemy.memoryRecords );
 
 		}
+
+	}
+
+	static createHitboxHelper( hitbox ) {
+
+		var indices = [ 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 ];
+		var positions = [ 1, 1, 1, - 1, 1, 1, - 1, - 1, 1, 1, - 1, 1, 1, 1, - 1, - 1, 1, - 1, - 1, - 1, - 1, 1, - 1, - 1 ];
+
+		var geometry = new BufferGeometry();
+
+		geometry.setIndex( indices );
+		geometry.addAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
+
+		const lines = new LineSegments( geometry, new LineBasicMaterial( { color: 0xffffff } ) );
+		lines.matrixAutoUpdate = false;
+
+		hitbox.getCenter( lines.position );
+		hitbox.getSize( lines.scale );
+		lines.scale.multiplyScalar( 0.5 );
+		lines.updateMatrix();
+
+		return lines;
 
 	}
 

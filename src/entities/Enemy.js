@@ -2,18 +2,19 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion } from '../lib/yuka.module.js';
+import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, AABB } from '../lib/yuka.module.js';
 import { ExploreEvaluator } from './Evaluators.js';
 import { WeaponSystem } from './WeaponSystem.js';
+import { TargetSystem } from './TargetSystem.js';
 import { CONFIG } from '../core/Config.js';
 
 const positiveWeightings = new Array();
 const weightings = [ 0, 0, 0, 0 ];
 const directions = [
-	{ direction: new Vector3( 0, 0, 1 ), name: "soldier_forward" },
-	{ direction: new Vector3( 0, 0, - 1 ), name: "soldier_backward" },
-	{ direction: new Vector3( - 1, 0, 0 ), name: "soldier_left" },
-	{ direction: new Vector3( 1, 0, 0 ), name: "soldier_right" }
+	{ direction: new Vector3( 0, 0, 1 ), name: 'soldier_forward' },
+	{ direction: new Vector3( 0, 0, - 1 ), name: 'soldier_backward' },
+	{ direction: new Vector3( - 1, 0, 0 ), name: 'soldier_left' },
+	{ direction: new Vector3( 1, 0, 0 ), name: 'soldier_right' }
 ];
 const lookDirection = new Vector3();
 const moveDirection = new Vector3();
@@ -38,6 +39,11 @@ class Enemy extends Vehicle {
 		this.head = new GameEntity();
 		this.head.position.y = CONFIG.BOT.HEAD.HEIGHT;
 		this.add( this.head );
+
+		// hitbox
+
+		this.defaultHitbox = new AABB( new Vector3( - 0.4, 0, - 0.4 ), new Vector3( 0.4, 1.8, 0.4 ) );
+		this.currentHitbox = new AABB();
 
 		// animation
 
@@ -77,6 +83,11 @@ class Enemy extends Vehicle {
 		this.vision = new Vision( this.head );
 		this.visionRegulator = new Regulator( CONFIG.BOT.VISION.UPDATE_FREQUENCY );
 
+		// target system
+
+		this.targetSystem = new TargetSystem( this );
+		this.targetSystemRegulator = new Regulator( CONFIG.BOT.TARGET_SYSTEM.UPDATE_FREQUENCY );
+
 		// weapon system
 
 		this.weaponSystem = new WeaponSystem( this );
@@ -85,6 +96,7 @@ class Enemy extends Vehicle {
 		// debug
 
 		this.pathHelper = null;
+		this.hitboxHelper = null;
 
 	}
 
@@ -96,6 +108,8 @@ class Enemy extends Vehicle {
 		const level = this.manager.getEntityByName( 'level' );
 		this.vision.addObstacle( level );
 
+		this.weaponSystem.init();
+
 	}
 
 	update( delta ) {
@@ -104,7 +118,11 @@ class Enemy extends Vehicle {
 
 		this.currentTime += delta;
 
-		// update vision
+		// update hitbox
+
+		this.currentHitbox.copy( this.defaultHitbox ).applyMatrix4( this.worldMatrix );
+
+		// update perception
 
 		if ( this.visionRegulator.ready() ) {
 
@@ -112,9 +130,17 @@ class Enemy extends Vehicle {
 
 		}
 
-		// update memory records
+		// update memory system
 
 		this.memorySystem.getValidMemoryRecords( this.currentTime, this.memoryRecords );
+
+		// update target system
+
+		if ( this.targetSystemRegulator.ready() ) {
+
+			this.targetSystem.update();
+
+		}
 
 		// update goals
 
@@ -130,7 +156,7 @@ class Enemy extends Vehicle {
 
 		if ( this.weaponSelectionRegulator.ready() ) {
 
-			// this.weaponSystem.selectBestWeapon();
+			this.weaponSystem.selectBestWeapon();
 
 		}
 
@@ -183,25 +209,6 @@ class Enemy extends Vehicle {
 
 	}
 
-	setAnimations( mixer, clips ) {
-
-		this.mixer = mixer;
-
-		// actions
-
-		for ( const clip of clips ) {
-
-			const action = mixer.clipAction( clip );
-			action.play();
-			action.enabled = false;
-			action.name = clip.name;
-
-			this.animations.set( action.name, action );
-
-		}
-
-	}
-
 	updateAnimations( delta ) {
 
 		// directions
@@ -241,7 +248,7 @@ class Enemy extends Vehicle {
 		}
 
 		// the weightings for enabled animations have to be calculated in an additional
-		// loop since the sum of weightings of all enabled animations have to be 1
+		// loop since the sum of weightings of all enabled animations has to be 1
 
 		for ( let i = 0, l = positiveWeightings.length; i < l; i ++ ) {
 
@@ -256,6 +263,43 @@ class Enemy extends Vehicle {
 		}
 
 		this.mixer.update( delta );
+
+	}
+
+	setAnimations( mixer, clips ) {
+
+		this.mixer = mixer;
+
+		// actions
+
+		for ( const clip of clips ) {
+
+			const action = mixer.clipAction( clip );
+			action.play();
+			action.enabled = false;
+			action.name = clip.name;
+
+			this.animations.set( action.name, action );
+
+		}
+
+	}
+
+	checkProjectileIntersection( ray, intersectionPoint ) {
+
+		return ray.intersectAABB( this.currentHitbox, intersectionPoint );
+
+	}
+
+	handleMessage( telegram ) {
+
+		if ( this.world.debug === true ) {
+
+			console.log( 'DIVE.Enemy: Enemy with ID %s hit by Game Entity with ID %s receiving %i damage.', this.uuid, telegram.sender.uuid, telegram.data.damage );
+
+		}
+
+		return true;
 
 	}
 

@@ -1818,13 +1818,14 @@ class Quaternion {
 	*
 	* @param {Quaternion} q - The target rotation.
 	* @param {Number} step - The maximum step in radians.
+	* @param {Number} tolerance - The tolerance value.
 	* @return {Boolean} Whether the given quaternion already represents the target rotation.
 	*/
-	rotateTo( q, step ) {
+	rotateTo( q, step, tolerance = 0.0001 ) {
 
 		const angle = this.angleTo( q );
 
-		if ( angle < 0.0001 ) return true;
+		if ( angle < tolerance ) return true;
 
 		const t = Math.min( 1, step / angle );
 
@@ -2822,14 +2823,15 @@ class GameEntity {
 	*
 	* @param {Vector3} target - The target position.
 	* @param {Number} delta - The time delta.
+	* @param {Number} tolerance - The tolerance value.
 	* @return {Boolean} Whether the entity is faced to the target or not.
 	*/
-	rotateTo( target, delta ) {
+	rotateTo( target, delta, tolerance = 0.0001 ) {
 
 		targetDirection.subVectors( target, this.position ).normalize();
 		targetRotation.lookAt( this.forward, targetDirection, this.up );
 
-		return this.rotation.rotateTo( targetRotation, this.maxTurnRate * delta );
+		return this.rotation.rotateTo( targetRotation, this.maxTurnRate * delta, tolerance );
 
 	}
 

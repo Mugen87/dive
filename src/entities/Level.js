@@ -21,6 +21,12 @@ class Level extends GameEntity {
 
 	}
 
+	checkProjectileIntersection( ray, intersectionPoint ) {
+
+		this.geometry.intersectRay( ray, this.worldMatrix, true, intersectionPoint );
+
+	}
+
 	lineOfSightTest( ray, intersectionPoint ) {
 
 		return this.geometry.intersectRay( ray, this.worldMatrix, true, intersectionPoint );

@@ -2,8 +2,8 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { EntityManager, Time, MeshGeometry } from '../lib/yuka.module.js';
-import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer } from '../lib/three.module.js';
+import { EntityManager, Time, MeshGeometry, Vector3 } from '../lib/yuka.module.js';
+import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer, AudioContext } from '../lib/three.module.js';
 import { HemisphereLight, DirectionalLight } from '../lib/three.module.js';
 import { AxesHelper } from '../lib/three.module.js';
 import { OrbitControls } from '../lib/OrbitControls.module.js';
@@ -12,11 +12,14 @@ import { AssetManager } from './AssetManager.js';
 import { NavMeshUtils } from '../etc/NavMeshUtils.js';
 import { SceneUtils } from '../etc/SceneUtils.js';
 import { Level } from '../entities/Level.js';
-
 import { Enemy } from '../entities/Enemy.js';
+
+import { Bullet } from '../weapons/Bullet.js';
 import { PathPlanner } from '../etc/PathPlanner.js';
 
 import * as DAT from '../lib/dat.gui.module.js';
+
+const currentIntersectionPoint = new Vector3();
 
 class World {
 
@@ -54,7 +57,8 @@ class World {
 			axesHelper: null,
 			graphHelper: null,
 			pathHelpers: new Array(),
-			uuidHelpers: new Array()
+			uuidHelpers: new Array(),
+			hitboxHelpers: new Array()
 		};
 
 		this.uiParameter = {
@@ -63,7 +67,14 @@ class World {
 			showPaths: true,
 			showGraph: false,
 			showUUIDHelpers: false,
+			showHitboxes: false,
 			enableSimulation: true,
+			resumeAudioContext: () => {
+
+				const context = AudioContext.getContext();
+				context.resume();
+
+			},
 			printMemoryRecords: () => {
 
 				SceneUtils.printMemoryRecords( this.enemies );
@@ -111,6 +122,55 @@ class World {
 			this.scene.remove( entity._renderComponent );
 
 		}
+
+	}
+
+	addBullet( owner, ray ) {
+
+		const bulletLine = this.assetManager.models.get( 'bulletLine' ).clone();
+
+		const bullet = new Bullet( owner, ray );
+		bullet.setRenderComponent( bulletLine, sync );
+
+		this.add( bullet );
+
+	}
+
+	checkProjectileIntersection( ray, intersectionPoint ) {
+
+		const entities = this.entityManager.entities;
+		let minDistance = Infinity;
+		let hittedEntitiy = null;
+
+		for ( let i = 0, l = entities.length; i < l; i ++ ) {
+
+			const entity = entities[ i ];
+
+			// only process entities with the correct interface
+
+			if ( entity.checkProjectileIntersection ) {
+
+				if ( entity.checkProjectileIntersection( ray, currentIntersectionPoint ) !== null ) {
+
+					const squaredDistance = currentIntersectionPoint.squaredDistanceTo( ray.origin );
+
+					if ( squaredDistance < minDistance ) {
+
+						minDistance = squaredDistance;
+						hittedEntitiy = entity;
+
+						intersectionPoint.copy( currentIntersectionPoint );
+
+					}
+
+				}
+
+
+			}
+
+		}
+
+		return hittedEntitiy;
 
 	}
 
@@ -219,6 +279,14 @@ class World {
 				renderComponent.add( uuidHelper );
 				this.helpers.uuidHelpers.push( uuidHelper );
 
+				//
+
+				const hitboxHelper = SceneUtils.createHitboxHelper( enemy.defaultHitbox );
+				hitboxHelper.visible = false;
+
+				renderComponent.add( hitboxHelper );
+				this.helpers.hitboxHelpers.push( hitboxHelper );
+
 			}
 
 		}
@@ -317,6 +385,7 @@ class World {
 			} );
 
 			folderScene.add( params, 'enableSimulation' ).name( 'enable simulation' );
+			folderScene.add( params, 'resumeAudioContext' ).name( 'resume audio context ' );
 
 			// enemy folder
 
@@ -328,6 +397,16 @@ class World {
 				for ( const uuidHelper of this.helpers.uuidHelpers ) {
 
 					uuidHelper.visible = value;
+
+				}
+
+			} );
+
+			folderEnemy.add( params, 'showHitboxes', 1, 30 ).name( 'show hitboxes' ).onChange( ( value ) => {
+
+				for ( const hitboxHelper of this.helpers.hitboxHelpers ) {
+
+					hitboxHelper.visible = value;
 
 				}
 

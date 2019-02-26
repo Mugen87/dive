@@ -1,10 +1,11 @@
 import { Vector3 } from '../lib/yuka.module.js';
 
 import { CONFIG } from '../core/Config.js';
+import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
 import { Blaster } from '../weapons/Blaster.js';
 
 const displacement = new Vector3();
-const target = new Vector3();
+const targetPosition = new Vector3();
 
 /**
 * Class to manage all operations specific to weapons and their deployment.
@@ -37,13 +38,23 @@ class WeaponSystem {
 
 		this.weaponsMap = new Map();
 
+		this.weaponsMap.set( WEAPON_TYPES_BLASTER, null );
+		this.weaponsMap.set( WEAPON_TYPES_SHOTGUN, null );
+		this.weaponsMap.set( WEAPON_TYPES_ASSAULT_RIFLE, null );
+
 		// represents the current hold weapon
 
 		this.currentWeapon = null;
 
-		//
+		// manages the render components for the weapons
 
-		this.init();
+		this.renderComponents = {
+			blaster: {
+				mesh: null,
+				audios: new Map()
+			},
+			muzzle: null
+		};
 
 	}
 
@@ -54,16 +65,23 @@ class WeaponSystem {
 	*/
 	init() {
 
-		this.weapons.length = 0;
-		this.weaponsMap.clear();
+		// init render components
 
-		this.weaponsMap.set( WEAPON_TYPES.BLASTER, null );
-		this.weaponsMap.set( WEAPON_TYPES.SHOTGUN, null );
-		this.weaponsMap.set( WEAPON_TYPES.ASSAULT_RIFLE, null );
+		this._initRenderComponents();
 
-		this.addWeapon( WEAPON_TYPES.BLASTER );
+		// remove existing weapons if necessary
 
-		this.currentWeapon = this.weaponsMap.get( WEAPON_TYPES.BLASTER );
+		for ( let i = 0, l = this.weapons.length; i < l; i ++ ) {
+
+			this.removeWeapon( this.weapons[ i ] );
+
+		}
+
+		// configure initial setup
+
+		this.addWeapon( WEAPON_TYPES_BLASTER );
+
+		this.currentWeapon = this.weaponsMap.get( WEAPON_TYPES_BLASTER );
 
 		return this;
 
@@ -77,14 +95,14 @@ class WeaponSystem {
 	selectBestWeapon() {
 
 		const owner = this.owner;
+		const target = owner.targetSystem.getTarget();
 
-		if ( owner.targetSystem.hasTarget() ) {
+		if ( target ) {
 
 			let highestDesirability = 0;
 
 			// calculate the distance to the target
 
-			const target = owner.targetSystem.getTarget();
 			const distanceToTarget = this.owner.position.distanceTo( target.position );
 
 			// for each weapon in the inventory calculate its desirability given the
@@ -116,8 +134,8 @@ class WeaponSystem {
 	/**
 	* Changes the current weapon to one of the specified type.
 	*
-    * @param {WEAPON_TYPES} type - The weapon type.
-    * @return {WeaponSystem} A reference to this weapon system.
+	* @param {WEAPON_TYPES} type - The weapon type.
+	* @return {WeaponSystem} A reference to this weapon system.
 	*/
 	changeWeapon( type ) {
 
@@ -130,11 +148,11 @@ class WeaponSystem {
 	}
 
 	/**
-    * Adds a weapon of the specified type to the bot's inventory.
-    * If the bot already has a weapon of this type only the ammo is added.
+	* Adds a weapon of the specified type to the bot's inventory.
+	* If the bot already has a weapon of this type only the ammo is added.
 	*
-    * @param {WEAPON_TYPES} type - The weapon type.
-    * @return {WeaponSystem} A reference to this weapon system.
+	* @param {WEAPON_TYPES} type - The weapon type.
+	* @return {WeaponSystem} A reference to this weapon system.
 	*/
 	addWeapon( type ) {
 
@@ -144,15 +162,18 @@ class WeaponSystem {
 
 		switch ( type ) {
 
-			case WEAPON_TYPES.BLASTER:
+			case WEAPON_TYPES_BLASTER:
 				weapon = new Blaster( owner );
+				weapon.position.set( - 0.15, 1.30, 0.5 ); // relative position to the enenmy's body
+				weapon.muzzle = this.renderComponents.muzzle;
+				weapon.audios = this.renderComponents.blaster.audios;
 				break;
 
-			case WEAPON_TYPES.SHOTGUN:
+			case WEAPON_TYPES_SHOTGUN:
 				// weapon = new Shotgun( owner );
 				break;
 
-			case WEAPON_TYPES.ASSAULT_RIFLE:
+			case WEAPON_TYPES_ASSAULT_RIFLE:
 				// weapon = new AssaultRifle( owner );
 				break;
 
@@ -179,6 +200,11 @@ class WeaponSystem {
 			this.weaponsMap.set( type, weapon );
 			this.weapons.push( weapon );
 
+			// also add it to owner entity so the weapon is correctly updated by
+			// the entity manager
+
+			owner.add( weapon );
+
 		}
 
 		return this;
@@ -186,9 +212,32 @@ class WeaponSystem {
 	}
 
 	/**
+	* Removes the specified weapon type from the bot's inventory.
+	*
+	* @param {WEAPON_TYPES} type - The weapon type.
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	removeWeapon( type ) {
+
+		const weapon = this.weaponsMap.get( type );
+
+		if ( weapon ) {
+
+			this.weaponsMap.set( type, null );
+
+			const index = this.weapons.indexOf( weapon );
+			this.weapons.splice( index, 1 );
+
+			this.owner.remove( weapon );
+
+		}
+
+	}
+
+	/**
 	* Returns the amount of ammo remaining for the specified weapon
 	*
-    * @param {WEAPON_TYPES} type - The weapon type.
+	* @param {WEAPON_TYPES} type - The weapon type.
 	* @return {Number} The amount of ammo.
 	*/
 	getRemainingAmmoForWeapon( type ) {
@@ -200,8 +249,8 @@ class WeaponSystem {
 	}
 
 	/**
-    * Aims the enemy's current weapon at the target (if there is a target)
-    * and, if aimed correctly, fires a round.
+	* Aims the enemy's current weapon at the target (if there is a target)
+	* and, if aimed correctly, fires a round.
 	*
 	* @param {Number} delta - The time delta value.
 	* @return {WeaponSystem} A reference to this weapon system.
@@ -209,20 +258,17 @@ class WeaponSystem {
 	aimAndShoot( delta ) {
 
 		const owner = this.owner;
+		const targetSystem = owner.targetSystem;
+		const target = targetSystem.getTarget();
 
-		// TODO: Use targeting system here
-
-		if ( owner.memoryRecords.length > 0 ) {
-
-			const record = owner.memoryRecords[ 0 ];
-			const entity = record.entity;
+		if ( target ) {
 
 			// if the game entity is visible, directly rotate towards it. Otherwise, focus
 			// the last known position
 
-			if ( record.visible === true ) {
+			if ( targetSystem.isTargetShootable() ) {
 
-				const targeted = owner.rotateTo( entity.position, delta );
+				const targeted = owner.rotateTo( target.position, delta, 0.05 );
 
 				// "targeted" is true if the entity is faced to the target
 
@@ -230,19 +276,15 @@ class WeaponSystem {
 
 					// TODO: Use this.reactionTime here
 
-					this.shootAt( entity.position );
+					target.currentHitbox.getCenter( targetPosition );
+
+					this.shoot( targetPosition );
 
 				}
 
 			} else {
 
-				// only rotate to the last sensed position if the entity was seen at least once
-
-				if ( record.timeLastSensed !== - 1 ) {
-
-					owner.rotateTo( record.lastSensedPosition, delta );
-
-				}
+				owner.rotateTo( targetSystem.getLastSensedPosition(), delta );
 
 			}
 
@@ -251,10 +293,9 @@ class WeaponSystem {
 			// no target so rotate towards the movement direction
 
 			displacement.copy( owner.velocity ).normalize();
-			target.copy( owner.position ).add( displacement );
+			targetPosition.copy( owner.position ).add( displacement );
 
-			owner.rotateTo( target, delta );
-
+			owner.rotateTo( targetPosition, delta );
 
 		}
 
@@ -268,24 +309,60 @@ class WeaponSystem {
 	* @param {Vector3} targetPosition - The target position.
 	* @return {WeaponSystem} A reference to this weapon system.
 	*/
-	shootAt( targetPosition ) {
+	shoot( targetPosition ) {
 
-		this.currentWeapon.shootAt( targetPosition );
+		this.currentWeapon.shoot( targetPosition );
+
+		return this;
+
+	}
+
+	/**
+	* Inits the render components of all weapons. Each enemy and the player
+	* need a set of individual render components.
+	*
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	_initRenderComponents() {
+
+		const assetManager = this.owner.world.assetManager;
+
+		// setup copy of blaster mesh
+
+		const blasterMesh = assetManager.models.get( 'blaster' ).clone();
+		blasterMesh.scale.set( 100, 100, 100 );
+		blasterMesh.rotation.set( Math.PI * 0.5, Math.PI, 0 );
+		blasterMesh.position.set( 0, 15, 5 );
+		blasterMesh.updateMatrix();
+
+		// add the mesh to the right hand of the enemy
+
+		const rightHand = this.owner._renderComponent.getObjectByName( 'Armature_mixamorigRightHand' );
+		rightHand.add( blasterMesh );
+
+		// add muzzle sprite to the blaster mesh
+
+		const muzzleSprite = assetManager.models.get( 'muzzle' ).clone();
+		muzzleSprite.position.set( 0, 0.05, 0.2 );
+		muzzleSprite.scale.set( 0.3, 0.3, 0.3 );
+		muzzleSprite.updateMatrix();
+		blasterMesh.add( muzzleSprite );
+
+		// add positional audio
+
+		const shot = assetManager.cloneAudio( assetManager.audios.get( 'blaster_shot' ) );
+		blasterMesh.add( shot );
+
+		// store this configuration
+
+		this.renderComponents.blaster.mesh = blasterMesh;
+		this.renderComponents.blaster.audios.set( 'shot', shot );
+		this.renderComponents.muzzle = muzzleSprite;
 
 		return this;
 
 	}
 
 }
-
-//
-
-const WEAPON_TYPES = Object.freeze( {
-	BLASTER: 0,
-	SHOTGUN: 1,
-	ASSAULT_RIFLE: 2
-} );
-
-WeaponSystem.WEAPON_TYPES = WEAPON_TYPES;
 
 export { WeaponSystem };
