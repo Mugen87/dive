@@ -22,8 +22,18 @@ const quaternion = new Quaternion();
 const transformedDirection = new Vector3();
 const worldPosition = new Vector3();
 
+/**
+* Class for representing the opponent bots in this game.
+*
+* @author {@link https://github.com/Mugen87|Mugen87}
+*/
 class Enemy extends Vehicle {
 
+	/**
+	* Constructs a new enemy with the given values.
+	*
+	* @param {GameEntity} owner - The owner of this weapon system.
+	*/
 	constructor() {
 
 		super();
@@ -100,6 +110,11 @@ class Enemy extends Vehicle {
 
 	}
 
+	/**
+	* Executed when this game entity is updated for the first time by its entity manager.
+	*
+	* @return {Enemy} A reference to this game entity.
+	*/
 	start() {
 
 		const run = this.animations.get( 'soldier_forward' );
@@ -110,8 +125,16 @@ class Enemy extends Vehicle {
 
 		this.weaponSystem.init();
 
+		return this;
+
 	}
 
+	/**
+	* Updates the internal state of this game entity.
+	*
+	* @param {Number} delta - The time delta.
+	* @return {Enemy} A reference to this game entity.
+	*/
 	update( delta ) {
 
 		super.update( delta );
@@ -168,8 +191,16 @@ class Enemy extends Vehicle {
 
 		this.updateAnimations( delta );
 
+		return this;
+
 	}
 
+	/**
+	* Updates the vision component of this game entity and stores
+	* the result in the respective memory system.
+	*
+	* @return {Enemy} A reference to this game entity.
+	*/
 	updateVision() {
 
 		const memorySystem = this.memorySystem;
@@ -207,8 +238,16 @@ class Enemy extends Vehicle {
 
 		}
 
+		return this;
+
 	}
 
+	/**
+	* Updates the animations of this game entity.
+	*
+	* @param {Number} delta - The time delta.
+	* @return {Enemy} A reference to this game entity.
+	*/
 	updateAnimations( delta ) {
 
 		// directions
@@ -264,8 +303,18 @@ class Enemy extends Vehicle {
 
 		this.mixer.update( delta );
 
+		return this;
+
 	}
 
+	/**
+	* Sets the animations of this game entity by creating a
+	* series of animation actions.
+	*
+	* @param {AnimationMixer} mixer - The animation mixer.
+	* @param {Array} clips - An array of animation clips.
+	* @return {Enemy} A reference to this game entity.
+	*/
 	setAnimations( mixer, clips ) {
 
 		this.mixer = mixer;
@@ -283,14 +332,30 @@ class Enemy extends Vehicle {
 
 		}
 
+		return this;
+
 	}
 
+	/**
+	* Returns the intesection point if a projectile intersects with this entity.
+	* If no intersection is detected, null is returned.
+	*
+	* @param {Ray} ray - The ray that defines the trajectory of this bullet.
+	* @param {Vector3} intersectionPoint - The intersection point.
+	* @return {Vector3} The intersection point.
+	*/
 	checkProjectileIntersection( ray, intersectionPoint ) {
 
 		return ray.intersectAABB( this.currentHitbox, intersectionPoint );
 
 	}
 
+	/**
+	* Holds the implementation for the message handling of this game entity.
+	*
+	* @param {Telegram} telegram - The telegram with the message data.
+	* @return {Boolean} Whether the message was processed or not.
+	*/
 	handleMessage( telegram ) {
 
 		if ( this.world.debug === true ) {

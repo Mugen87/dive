@@ -1,15 +1,21 @@
-/**
- * @author Mugen87 / https://github.com/Mugen87
- */
-
 import { LoadingManager, AudioLoader, TextureLoader } from '../lib/three.module.js';
 import { Sprite, SpriteMaterial, DoubleSide, AudioListener, PositionalAudio } from '../lib/three.module.js';
 import { LineSegments, LineBasicMaterial, BufferGeometry, Vector3 } from '../lib/three.module.js';
 import { GLTFLoader } from '../lib/GLTFLoader.module.js';
 import { NavMeshLoader } from '../lib/yuka.module.js';
 
+/**
+* Class for representing the global asset manager. It is responsible
+* for loading and parsing all assets from the backend and provide
+* the result in a series of maps.
+*
+* @author {@link https://github.com/Mugen87|Mugen87}
+*/
 class AssetManager {
 
+	/**
+	* Constructs a new asset manager with the given values.
+	*/
 	constructor() {
 
 		this.loadingManager = new LoadingManager();
@@ -29,6 +35,12 @@ class AssetManager {
 
 	}
 
+	/**
+	* Initializes the asset manager. All assets are prepared so they
+	* can be used by the game.
+	*
+	* @return {Promise} Resolves when all assets are ready.
+	*/
 	init() {
 
 		this._loadAudios();
@@ -49,6 +61,13 @@ class AssetManager {
 
 	}
 
+	/**
+	* Clones the given audio source. This method should be ideally part
+	* of three.js.
+	*
+	* @param {PositionalAudio} source - A positional audio.
+	* @return {PositionalAudio} A clone of the given audio.
+	*/
 	cloneAudio( source ) {
 
 		const audio = new source.constructor( source.listener );
@@ -60,6 +79,11 @@ class AssetManager {
 
 	}
 
+	/**
+	* Loads all audios from the backend.
+	*
+	* @return {AssetManager} A reference to this asset manager.
+	*/
 	_loadAudios() {
 
 		const audioLoader = this.audioLoader;
@@ -74,8 +98,15 @@ class AssetManager {
 
 		audios.set( 'blaster_shot', blasterShot );
 
+		return this;
+
 	}
 
+	/**
+	* Loads all models from the backend.
+	*
+	* @return {AssetManager} A reference to this asset manager.
+	*/
 	_loadModels() {
 
 		const gltfLoader = this.gltfLoader;
@@ -177,8 +208,15 @@ class AssetManager {
 
 		models.set( 'bulletLine', bulletLine );
 
+		return this;
+
 	}
 
+	/**
+	* Loads the navigation mesh from the backend.
+	*
+	* @return {AssetManager} A reference to this asset manager.
+	*/
 	_loadNavMesh() {
 
 		const navMeshLoader = this.navMeshLoader;
@@ -193,6 +231,8 @@ class AssetManager {
 			loadingManager.itemEnd( 'navmesh' );
 
 		} );
+
+		return this;
 
 	}
 

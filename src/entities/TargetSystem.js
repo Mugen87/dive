@@ -5,6 +5,11 @@
 */
 class TargetSystem {
 
+	/**
+	* Constructs a new target system with the given values.
+	*
+	* @param {GameEntity} owner - The owner of this weapon system.
+	*/
 	constructor( owner ) {
 
 		this.owner = owner; // enemy
@@ -38,6 +43,20 @@ class TargetSystem {
 			}
 
 		}
+
+		return this;
+
+	}
+
+
+	/**
+	* Resets the internal data structures.
+	*
+	* @return {TargetSystem} A reference to this target system.
+	*/
+	reset() {
+
+		this._currentRecord = null;
 
 		return this;
 

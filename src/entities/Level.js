@@ -1,10 +1,17 @@
-/**
- * @author robp94 / https://github.com/robp94
- */
 import { GameEntity } from '../lib/yuka.module.js';
 
+/**
+* Class for representing the level of this game.
+*
+* @author {@link https://github.com/robp94|robp94}
+*/
 class Level extends GameEntity {
 
+	/**
+	* Constructs a new level entity with the given values.
+	*
+	* @param {MeshGeometry} geometry - The geometry of this level.
+	*/
 	constructor( geometry ) {
 
 		super();
@@ -13,6 +20,12 @@ class Level extends GameEntity {
 
 	}
 
+	/**
+	* Holds the implementation for the message handling of this game entity.
+	*
+	* @param {Telegram} telegram - The telegram with the message data.
+	* @return {Boolean} Whether the message was processed or not.
+	*/
 	handleMessage() {
 
 		// do nothing
@@ -21,12 +34,28 @@ class Level extends GameEntity {
 
 	}
 
+	/**
+	* Returns the intesection point if a projectile intersects with this entity.
+	* If no intersection is detected, null is returned.
+	*
+	* @param {Ray} ray - The ray that defines the trajectory of this bullet.
+	* @param {Vector3} intersectionPoint - The intersection point.
+	* @return {Vector3} The intersection point.
+	*/
 	checkProjectileIntersection( ray, intersectionPoint ) {
 
-		this.geometry.intersectRay( ray, this.worldMatrix, true, intersectionPoint );
+		return this.geometry.intersectRay( ray, this.worldMatrix, true, intersectionPoint );
 
 	}
 
+	/**
+	* Returns the intesection point if this entity lies within the given line of sight.
+	* If no intersection is detected, null is returned.
+	*
+	* @param {Ray} ray - The ray that defines the line of sight.
+	* @param {Vector3} intersectionPoint - The intersection point.
+	* @return {Vector3} The intersection point.
+	*/
 	lineOfSightTest( ray, intersectionPoint ) {
 
 		return this.geometry.intersectRay( ray, this.worldMatrix, true, intersectionPoint );

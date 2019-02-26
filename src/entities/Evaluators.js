@@ -1,27 +1,40 @@
-/**
- * @author Mugen87 / https://github.com/Mugen87
- */
-
 import { GoalEvaluator } from '../lib/yuka.module.js';
 import { ExploreGoal } from './Goals.js';
 
+/**
+* Class for representing the explore goal.
+*
+* @author {@link https://github.com/Mugen87|Mugen87}
+*/
 class ExploreEvaluator extends GoalEvaluator {
 
-	calculateDesirability() {
+	/**
+	* Calculates the desirability. It's a score between 0 and 1 representing the desirability
+	* of a goal.
+	*
+	* @param {GameEntity} owner - The owner of this goal evaluator.
+	* @return {Number} The desirability.
+	*/
+	calculateDesirability( /* owner */ ) {
 
 		return 0.5;
 
 	}
 
-	setGoal( enemy ) {
+	/**
+	* Executed if this goal evaluator produces the highest desirability.
+	*
+	* @param {GameEntity} owner - The owner of this goal evaluator.
+	*/
+	setGoal( owner ) {
 
-		const currentSubgoal = enemy.brain.currentSubgoal();
+		const currentSubgoal = owner.brain.currentSubgoal();
 
 		if ( ( currentSubgoal instanceof ExploreGoal ) === false ) {
 
-			enemy.brain.clearSubgoals();
+			owner.brain.clearSubgoals();
 
-			enemy.brain.addSubgoal( new ExploreGoal( enemy ) );
+			owner.brain.addSubgoal( new ExploreGoal( owner ) );
 
 		}
 

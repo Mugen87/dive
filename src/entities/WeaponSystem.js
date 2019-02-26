@@ -59,7 +59,8 @@ class WeaponSystem {
 	}
 
 	/**
-	* Inits the internal data structures and sets an initial weapon.
+	* Inits the weapon system. Should be called once during the creation
+	* or startup process of an entity.
 	*
 	* @return {WeaponSystem} A reference to this weapon system.
 	*/
@@ -68,6 +69,22 @@ class WeaponSystem {
 		// init render components
 
 		this._initRenderComponents();
+
+		// reset the system to its inital state
+
+		this.reset();
+
+		return this;
+
+	}
+
+
+	/**
+	* Resets the internal data structures and sets an initial weapon.
+	*
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	reset() {
 
 		// remove existing weapons if necessary
 
