@@ -1,7 +1,3 @@
-/**
- * @author Mugen87 / https://github.com/Mugen87
- */
-
 import { Goal, CompositeGoal } from '../lib/yuka.module.js';
 import { BufferGeometry } from '../lib/three.module.js';
 import { CONFIG } from '../core/Config.js';

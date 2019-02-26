@@ -1,11 +1,15 @@
-/**
- * @author robp94 / https://github.com/robp94
- */
-
 import { Task } from '../lib/yuka.module.js';
 
+/**
+* TODO
+*
+* @author {@link https://github.com/robp94|robp94}
+*/
 class PathPlannerTask extends Task {
 
+	/**
+	* TODO
+	*/
 	constructor( planner, vehicle, from, to, callback ) {
 
 		super();
@@ -18,6 +22,9 @@ class PathPlannerTask extends Task {
 
 	}
 
+	/**
+	* TODO
+	*/
 	execute() {
 
 		const path = this.planner.navMesh.findPath( this.from, this.to );

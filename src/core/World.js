@@ -1,4 +1,4 @@
-import { EntityManager, Time, MeshGeometry, Vector3, GameEntity } from '../lib/yuka.module.js';
+import { EntityManager, Time, MeshGeometry, Vector3 } from '../lib/yuka.module.js';
 import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer, AudioContext } from '../lib/three.module.js';
 import { HemisphereLight, DirectionalLight } from '../lib/three.module.js';
 import { AxesHelper } from '../lib/three.module.js';

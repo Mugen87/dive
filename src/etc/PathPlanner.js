@@ -1,12 +1,16 @@
-/**
- * @author robp94 / https://github.com/robp94
- */
-
 import { TaskQueue } from '../lib/yuka.module.js';
 import { PathPlannerTask } from './PathPlannerTask.js';
 
+/**
+* TODO
+*
+* @author {@link https://github.com/robp94|robp94}
+*/
 class PathPlanner {
 
+	/**
+	* TODO
+	*/
 	constructor( navMesh ) {
 
 		this.navMesh = navMesh;
@@ -15,6 +19,9 @@ class PathPlanner {
 
 	}
 
+	/**
+	* TODO
+	*/
 	findPath( vehicle, from, to, callback ) {
 
 		const task = new PathPlannerTask( this, vehicle, from, to, callback );
@@ -23,6 +30,9 @@ class PathPlanner {
 
 	}
 
+	/**
+	* TODO
+	*/
 	update() {
 
 		this.taskQueue.update();
