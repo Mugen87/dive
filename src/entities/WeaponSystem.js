@@ -2,7 +2,7 @@ import { Vector3 } from '../lib/yuka.module.js';
 
 import { CONFIG } from '../core/Config.js';
 import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
-import { WEAPON_STATUS_EMPTY, WEAPON_STATUS_READY } from '../core/Constants.js';
+import { WEAPON_STATUS_EMPTY, WEAPON_STATUS_READY, WEAPON_STATUS_OUT_OF_AMMO } from '../core/Constants.js';
 import { Blaster } from '../weapons/Blaster.js';
 
 const displacement = new Vector3();
@@ -339,6 +339,11 @@ class WeaponSystem {
 
 			case WEAPON_STATUS_READY:
 				this.currentWeapon.shoot( targetPosition );
+				break;
+
+			case WEAPON_STATUS_OUT_OF_AMMO:
+
+				// TODO: consider to use another weapon
 				break;
 
 			default:

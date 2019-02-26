@@ -5,4 +5,5 @@ export const WEAPON_STATUS_READY = 3;
 export const WEAPON_STATUS_SHOT = 4;
 export const WEAPON_STATUS_RELOAD = 5;
 export const WEAPON_STATUS_EMPTY = 6;
+export const WEAPON_STATUS_OUT_OF_AMMO = 7;
 export const MESSAGE_HIT = 'HIT';
