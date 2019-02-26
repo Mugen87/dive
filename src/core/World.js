@@ -1,8 +1,4 @@
-/**
- * @author Mugen87 / https://github.com/Mugen87
- */
-
-import { EntityManager, Time, MeshGeometry, Vector3 } from '../lib/yuka.module.js';
+import { EntityManager, Time, MeshGeometry, Vector3, GameEntity } from '../lib/yuka.module.js';
 import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer, AudioContext } from '../lib/three.module.js';
 import { HemisphereLight, DirectionalLight } from '../lib/three.module.js';
 import { AxesHelper } from '../lib/three.module.js';
@@ -21,8 +17,17 @@ import * as DAT from '../lib/dat.gui.module.js';
 
 const currentIntersectionPoint = new Vector3();
 
+/**
+* Class for representing the game world. It's the key point where
+* the scene and all game entities are created and managed.
+*
+* @author {@link https://github.com/Mugen87|Mugen87}
+*/
 class World {
 
+	/**
+	* Constructs a new world object.
+	*/
 	constructor() {
 
 		this.entityManager = new EntityManager();
@@ -74,16 +79,17 @@ class World {
 				const context = AudioContext.getContext();
 				context.resume();
 
-			},
-			printMemoryRecords: () => {
-
-				SceneUtils.printMemoryRecords( this.enemies );
-
 			}
 		};
 
 	}
 
+	/**
+	* Entry point for the game. It initializes the asset manager and then
+	* starts to build the game environment.
+	*
+	* @return {World} A reference to this world object.
+	*/
 	init() {
 
 		this.assetManager.init().then( () => {
@@ -99,8 +105,17 @@ class World {
 
 		} );
 
+		return this;
+
 	}
 
+	/**
+	* Adds the given game entity to the game world. This means it is
+	* added to the entity manager and to the scene if it has a render component.
+	*
+	* @param {GameEntity} entity - The game entity to add.
+	* @return {World} A reference to this world object.
+	*/
 	add( entity ) {
 
 		this.entityManager.add( entity );
@@ -111,8 +126,17 @@ class World {
 
 		}
 
+		return this;
+
 	}
 
+	/**
+	* Removes the given game entity from the game world. This means it is
+	* removed from the entity manager and from the scene if it has a render component.
+	*
+	* @param {GameEntity} entity - The game entity to remove.
+	* @return {World} A reference to this world object.
+	*/
 	remove( entity ) {
 
 		this.entityManager.remove( entity );
@@ -123,8 +147,18 @@ class World {
 
 		}
 
+		return this;
+
 	}
 
+	/**
+	* Adds a bullet to the game world. The bullet is defined by the given
+	* parameters and created by the method.
+	*
+	* @param {GameEntity} owner - The owner of the bullet.
+	* @param {Ray} ray - The ray that defines the trajectory of this bullet.
+	* @return {World} A reference to this world object.
+	*/
 	addBullet( owner, ray ) {
 
 		const bulletLine = this.assetManager.models.get( 'bulletLine' ).clone();
@@ -134,8 +168,20 @@ class World {
 
 		this.add( bullet );
 
+		return this;
+
 	}
 
+	/**
+	* The method checks if compatible game entities intersect by a projectile
+	* represented via a ray. The closest hitted game entity is returned. If no
+	* intersection is detected, null is returned. A possible intersection point
+	* is stored into the second parameter.
+	*
+	* @param {Ray} ray - The ray that defines the trajectory of this bullet.
+	* @param {Vector3} intersectionPoint - The intersection point.
+	* @return {GameEntity} The hitted game entity.
+	*/
 	checkProjectileIntersection( ray, intersectionPoint ) {
 
 		const entities = this.entityManager.entities;
@@ -174,6 +220,12 @@ class World {
 
 	}
 
+	/**
+	* Inits all basic objects of the scene like the scene graph itself, the camera, lights
+	* or the renderer.
+	*
+	* @return {World} A reference to this world object.
+	*/
 	_initScene() {
 
 		// scene
@@ -220,8 +272,15 @@ class World {
 
 		window.addEventListener( 'resize', this._onWindowResize, false );
 
+		return this;
+
 	}
 
+	/**
+	* Creates a specific amount of enemies.
+	*
+	* @return {World} A reference to this world object.
+	*/
 	_initEnemies() {
 
 		const enemyCount = this.enemyCount;
@@ -291,8 +350,15 @@ class World {
 
 		}
 
+		return this;
+
 	}
 
+	/**
+	* Creates the actual level.
+	*
+	* @return {World} A reference to this world object.
+	*/
 	_initLevel() {
 
 		const renderComponent = this.assetManager.models.get( 'level' );
@@ -308,8 +374,15 @@ class World {
 
 		this.add( level );
 
+		return this;
+
 	}
 
+	/**
+	* Inits the navigation mesh.
+	*
+	* @return {World} A reference to this world object.
+	*/
 	_initNavMesh() {
 
 		const navMesh = this.assetManager.navMesh;
@@ -327,8 +400,15 @@ class World {
 
 		}
 
+		return this;
+
 	}
 
+	/**
+	* Inits the controls used by the player.
+	*
+	* @return {World} A reference to this world object.
+	*/
 	_initControls() {
 
 		if ( this.debug ) {
@@ -337,8 +417,15 @@ class World {
 
 		}
 
+		return this;
+
 	}
 
+	/**
+	* Inits the user interface.
+	*
+	* @return {World} A reference to this world object.
+	*/
 	_initUI() {
 
 		if ( this.debug ) {
@@ -412,8 +499,6 @@ class World {
 
 			} );
 
-			folderEnemy.add( params, 'printMemoryRecords' ).name( 'print memory records' );
-
 			gui.open();
 
 		}
@@ -422,13 +507,15 @@ class World {
 
 }
 
-//
+// used to sync Yuka Game Entities with three.js objects
 
 function sync( entity, renderComponent ) {
 
 	renderComponent.matrix.copy( entity.worldMatrix );
 
 }
+
+// used when the browser window is resized
 
 function onWindowResize() {
 
@@ -438,6 +525,8 @@ function onWindowResize() {
 	this.renderer.setSize( window.innerWidth, window.innerHeight );
 
 }
+
+// game loop
 
 function animate() {
 

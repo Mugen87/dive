@@ -1,14 +1,22 @@
-/**
- * @author Mugen87 / https://github.com/Mugen87
- */
-
 import { LineSegments, Line, Mesh, Group } from '../lib/three.module.js';
 import { MeshBasicMaterial, LineBasicMaterial } from '../lib/three.module.js';
 import { BufferGeometry, Float32BufferAttribute, IcosahedronBufferGeometry } from '../lib/three.module.js';
 import { Color, VertexColors } from '../lib/three.module.js';
 
+/**
+* Class with various helpers in context of navigation meshes.
+*
+* @author {@link https://github.com/Mugen87|Mugen87}
+*/
 class NavMeshUtils {
 
+	/**
+	* Creates a helper that visualizes the convex regions of
+	* a navigation mesh.
+	*
+	* @param {NavMesh} navMesh - The nav mesh.
+	* @return {Mesh} The helper.
+	*/
 	static createConvexRegionHelper( navMesh ) {
 
 		const regions = navMesh.regions;
@@ -73,7 +81,14 @@ class NavMeshUtils {
 
 	}
 
-	static createPathHelper( ) {
+	/**
+	* Creates a helper that visualizes the navigation path of a game entity.
+	* Note that the actual geometry is created at a later point since this
+	* helper is reused for all paths of a game entity.
+	*
+	* @return {Line} The helper.
+	*/
+	static createPathHelper() {
 
 		const pathHelper = new Line( new BufferGeometry(), new LineBasicMaterial( { color: 0xff0000 } ) );
 		pathHelper.matrixAutoUpdate = false;
@@ -83,6 +98,15 @@ class NavMeshUtils {
 
 	}
 
+	/**
+	* Creates a helper that visualizes the navigation graph of a navigation mesh.
+	*
+	* @param {Graph} graph - The navigation graph.
+	* @param {Number} nodeSize - The size of the visualized nodes.
+	* @param {Number} nodeColor - The color of the visualized nodes.
+	* @param {Number} edgeColor - The color of the visualized edges.
+	* @return {Group} The helper.
+	*/
 	static createGraphHelper( graph, nodeSize = 1, nodeColor = 0x4e84c4, edgeColor = 0xffffff ) {
 
 		const group = new Group();

@@ -6,6 +6,13 @@ import { Goal, CompositeGoal } from '../lib/yuka.module.js';
 import { BufferGeometry } from '../lib/three.module.js';
 import { CONFIG } from '../core/Config.js';
 
+/**
+* Top-Level goal that is used to manage the map exploration
+* of the enemy.
+*
+* @author {@link https://github.com/Mugen87|Mugen87}
+* @author {@link https://github.com/robp94|robp94}
+*/
 class ExploreGoal extends CompositeGoal {
 
 	constructor( owner ) {
@@ -33,8 +40,13 @@ class ExploreGoal extends CompositeGoal {
 
 }
 
-//
-
+/**
+* Sub-goal for finding the next random destintation
+* on the map that the enemy is going to seek.
+*
+* @author {@link https://github.com/Mugen87|Mugen87}
+* @author {@link https://github.com/robp94|robp94}
+*/
 class FindNextDestinationGoal extends Goal {
 
 	constructor( owner ) {
@@ -69,8 +81,12 @@ class FindNextDestinationGoal extends Goal {
 
 }
 
-//
-
+/**
+* Sub-goal for seeking the defined destination point.
+*
+* @author {@link https://github.com/Mugen87|Mugen87}
+* @author {@link https://github.com/robp94|robp94}
+*/
 class SeekToDestinationGoal extends Goal {
 
 	constructor( owner ) {
@@ -87,8 +103,9 @@ class SeekToDestinationGoal extends Goal {
 
 		if ( owner.path !== null ) {
 
-			// update path helper
 			if ( owner.world.debug ) {
+
+				// update path helper
 
 				const pathHelper = owner.pathHelper;
 
@@ -146,6 +163,8 @@ class SeekToDestinationGoal extends Goal {
 	}
 
 }
+
+//
 
 function onPathFound( owner, path ) {
 

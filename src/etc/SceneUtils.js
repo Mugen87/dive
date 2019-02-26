@@ -1,11 +1,19 @@
-/**
- * @author Mugen87 / https://github.com/Mugen87
- */
-
 import { LineSegments, Sprite, SpriteMaterial, LineBasicMaterial, CanvasTexture, BufferGeometry, Float32BufferAttribute } from '../lib/three.module.js';
 
+/**
+* Class with various helper methods.
+*
+* @author {@link https://github.com/Mugen87|Mugen87}
+*/
 class SceneUtils {
 
+	/**
+	* Clones a skinned mesh. This method is necessary since three.js
+	* does not yet support cloning of skinned meshes in the core.
+	*
+	* @param {SkinnedMesh} source - The skinned mesh to clone.
+	* @return {SkinnedMesh} The cloned skinned mesh.
+	*/
 	static cloneWithSkinning( source ) {
 
 		// see https://github.com/mrdoob/three.js/pull/14494
@@ -49,6 +57,12 @@ class SceneUtils {
 
 	}
 
+	/**
+	* Creates a label that visualizes the UUID of a game entity.
+	*
+	* @param {String} uuid - The UUID to visualize.
+	* @return {Sprite} The label.
+	*/
 	static createUUIDLabel( uuid ) {
 
 		const canvas = document.createElement( 'canvas' );
@@ -77,17 +91,12 @@ class SceneUtils {
 
 	}
 
-	static printMemoryRecords( enemies ) {
-
-		for ( const enemy of enemies ) {
-
-			console.log( 'Current memory records for enemy with ID: %s', enemy.uuid );
-			console.table( enemy.memoryRecords );
-
-		}
-
-	}
-
+	/**
+	* Creates a helper that visualizes the hitbox of an enemy.
+	*
+	* @param {AABB} hitbox - The hitbox to visualize.
+	* @return {LineSegments} The helper.
+	*/
 	static createHitboxHelper( hitbox ) {
 
 		var indices = [ 0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7 ];
@@ -111,6 +120,8 @@ class SceneUtils {
 	}
 
 }
+
+//
 
 function parallelTraverse( a, b, callback ) {
 
