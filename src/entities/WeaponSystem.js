@@ -210,7 +210,7 @@ class WeaponSystem {
 
 		const owner = this.owner;
 
-		// TODO: Use trageting system here
+		// TODO: Use targeting system here
 
 		if ( owner.memoryRecords.length > 0 ) {
 
