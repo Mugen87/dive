@@ -3,6 +3,8 @@ import { ExploreEvaluator } from './Evaluators.js';
 import { WeaponSystem } from './WeaponSystem.js';
 import { TargetSystem } from './TargetSystem.js';
 import { CONFIG } from '../core/Config.js';
+import { MESSAGE_HIT, SPAWN_HEALTH, ENTITY_STATUS_ALIVE, ENTITY_STATUS_DIEING, ENTITY_STATUS_DEAD } from '../core/Constants.js';
+i;
 
 const positiveWeightings = new Array();
 const weightings = [ 0, 0, 0, 0 ];
@@ -39,6 +41,9 @@ class Enemy extends Vehicle {
 		this.updateOrientation = false;
 
 		this.world = null;
+
+		this.health = SPAWN_HEALTH;
+		this.status = ENTITY_STATUS_ALIVE;
 
 		// head
 
@@ -99,6 +104,8 @@ class Enemy extends Vehicle {
 		this.weaponSystem = new WeaponSystem( this );
 		this.weaponSelectionRegulator = new Regulator( CONFIG.BOT.WEAPON.UPDATE_FREQUENCY );
 
+		this.spwanManager = null;
+
 		// debug
 
 		this.pathHelper = null;
@@ -125,6 +132,31 @@ class Enemy extends Vehicle {
 
 	}
 
+	reset() {
+
+		this.status = ENTITY_STATUS_ALIVE;
+		this.health = SPAWN_HEALTH;
+
+		this.velocity.set( 0, 0, 0 );
+
+		this.brain.terminate();
+		this.brain.addEvaluator( new ExploreEvaluator() ); //add reset Method
+
+		this.memoryRecords.length = 0;
+		this.memorySystem.records.forEach( r=>r.visible = false ); //it still knows the last position of the target => reset method in memorySystem
+		this.targetSystem.reset();
+
+
+		this.weaponSystem.reset();
+
+		this.steering.behaviors.forEach( b=>b.active = false );
+		this.animations.forEach( a=>a.enabled = false );
+
+		const run = this.animations.get( 'soldier_forward' );
+		run.enabled = true;
+
+	}
+
 	/**
 	* Updates the internal state of this game entity.
 	*
@@ -139,49 +171,63 @@ class Enemy extends Vehicle {
 
 		// update hitbox
 
-		this.currentHitbox.copy( this.defaultHitbox ).applyMatrix4( this.worldMatrix );
+		if ( this.status === ENTITY_STATUS_ALIVE ) {
 
-		// update perception
+			this.currentHitbox.copy( this.defaultHitbox ).applyMatrix4( this.worldMatrix );
 
-		if ( this.visionRegulator.ready() ) {
+			// update perception
 
-			this.updateVision();
+			if ( this.visionRegulator.ready() ) {
+
+				this.updateVision();
+
+			}
+
+			// update memory system
+
+			this.memorySystem.getValidMemoryRecords( this.currentTime, this.memoryRecords );
+
+			// update target system
+
+			if ( this.targetSystemRegulator.ready() ) {
+
+				this.targetSystem.update();
+
+			}
+
+			// update goals
+
+			this.brain.execute();
+
+			if ( this.goalArbitrationRegulator.ready() ) {
+
+				this.brain.arbitrate();
+
+			}
+
+			// update weapon system
+
+			if ( this.weaponSelectionRegulator.ready() ) {
+
+				this.weaponSystem.selectBestWeapon();
+
+			}
+
+			// try to aim and shoot at a target
+
+			this.weaponSystem.aimAndShoot( delta );
 
 		}
 
-		// update memory system
+		if ( this.status === ENTITY_STATUS_DEAD ) {
 
-		this.memorySystem.getValidMemoryRecords( this.currentTime, this.memoryRecords );
+			console.log( this.uuid + "dead" );
 
-		// update target system
+			this.spwanManager.respawnEnemy( this );
+			this.reset();
 
-		if ( this.targetSystemRegulator.ready() ) {
-
-			this.targetSystem.update();
 
 		}
-
-		// update goals
-
-		this.brain.execute();
-
-		if ( this.goalArbitrationRegulator.ready() ) {
-
-			this.brain.arbitrate();
-
-		}
-
-		// update weapon system
-
-		if ( this.weaponSelectionRegulator.ready() ) {
-
-			this.weaponSystem.selectBestWeapon();
-
-		}
-
-		// try to aim and shoot at a target
-
-		this.weaponSystem.aimAndShoot( delta );
 
 		// update animations
 
@@ -355,9 +401,15 @@ class Enemy extends Vehicle {
 	*/
 	handleMessage( telegram ) {
 
-		if ( this.world.debug === true ) {
+		switch ( telegram.message ) {
 
-			console.log( 'DIVE.Enemy: Enemy with ID %s hit by Game Entity with ID %s receiving %i damage.', this.uuid, telegram.sender.uuid, telegram.data.damage );
+			case MESSAGE_HIT: this.health -= telegram.data.damage;
+				if ( this.health < 0 && this.status === ENTITY_STATUS_ALIVE ) {
+
+					this.status = ENTITY_STATUS_DEAD;
+
+				}
+				break;
 
 		}
 

@@ -1,9 +1,14 @@
 export const WEAPON_TYPES_BLASTER = 0;
 export const WEAPON_TYPES_SHOTGUN = 1;
 export const WEAPON_TYPES_ASSAULT_RIFLE = 2;
-export const WEAPON_STATUS_READY = 3;
-export const WEAPON_STATUS_SHOT = 4;
-export const WEAPON_STATUS_RELOAD = 5;
-export const WEAPON_STATUS_EMPTY = 6;
-export const WEAPON_STATUS_OUT_OF_AMMO = 7;
+export const WEAPON_STATUS_READY = 0;
+export const WEAPON_STATUS_SHOT = 1;
+export const WEAPON_STATUS_RELOAD = 2;
+export const WEAPON_STATUS_EMPTY = 3;
+export const WEAPON_STATUS_OUT_OF_AMMO = 4;
 export const MESSAGE_HIT = 'HIT';
+export const SPAWN_HEALTH = 100;
+export const ENTITY_STATUS_ALIVE = 0;
+export const ENTITY_STATUS_DIEING = 1;
+export const ENTITY_STATUS_DEAD = 2;
+

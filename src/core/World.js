@@ -14,6 +14,7 @@ import { Bullet } from '../weapons/Bullet.js';
 import { PathPlanner } from '../etc/PathPlanner.js';
 
 import * as DAT from '../lib/dat.gui.module.js';
+import { SpawningManager } from './SpawningManager.js';
 
 const currentIntersectionPoint = new Vector3();
 
@@ -285,6 +286,7 @@ class World {
 
 		const enemyCount = this.enemyCount;
 		const navMesh = this.assetManager.navMesh;
+		const spawnManager = new SpawningManager();
 
 		this.pathPlanner = new PathPlanner( navMesh );
 
@@ -299,6 +301,7 @@ class World {
 
 			enemy.navMesh = navMesh;
 			enemy.world = this;
+			enemy.spwanManager = spawnManager;
 
 			// set animations
 
