@@ -36,6 +36,7 @@ class World {
 
 		this.assetManager = new AssetManager();
 		this.pathPlanner = null;
+		this.spawningManager = new SpawningManager();
 
 		//
 
@@ -286,7 +287,6 @@ class World {
 
 		const enemyCount = this.enemyCount;
 		const navMesh = this.assetManager.navMesh;
-		const spawnManager = new SpawningManager();
 
 		this.pathPlanner = new PathPlanner( navMesh );
 
@@ -301,7 +301,6 @@ class World {
 
 			enemy.navMesh = navMesh;
 			enemy.world = this;
-			enemy.spwanManager = spawnManager;
 
 			// set animations
 

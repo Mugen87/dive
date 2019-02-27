@@ -4,7 +4,6 @@ import { WeaponSystem } from './WeaponSystem.js';
 import { TargetSystem } from './TargetSystem.js';
 import { CONFIG } from '../core/Config.js';
 import { MESSAGE_HIT, SPAWN_HEALTH, ENTITY_STATUS_ALIVE, ENTITY_STATUS_DIEING, ENTITY_STATUS_DEAD } from '../core/Constants.js';
-i;
 
 const positiveWeightings = new Array();
 const weightings = [ 0, 0, 0, 0 ];
@@ -104,8 +103,6 @@ class Enemy extends Vehicle {
 		this.weaponSystem = new WeaponSystem( this );
 		this.weaponSelectionRegulator = new Regulator( CONFIG.BOT.WEAPON.UPDATE_FREQUENCY );
 
-		this.spwanManager = null;
-
 		// debug
 
 		this.pathHelper = null;
@@ -139,18 +136,32 @@ class Enemy extends Vehicle {
 
 		this.velocity.set( 0, 0, 0 );
 
-		this.brain.terminate();
-		this.brain.addEvaluator( new ExploreEvaluator() ); //add reset Method
+		this.brain.clearSubgoals();
 
 		this.memoryRecords.length = 0;
-		this.memorySystem.records.forEach( r=>r.visible = false ); //it still knows the last position of the target => reset method in memorySystem
+
+		for ( let record of this.memorySystem.records ) {
+
+			record.visible = false;
+
+		}
+
 		this.targetSystem.reset();
 
 
 		this.weaponSystem.reset();
 
-		this.steering.behaviors.forEach( b=>b.active = false );
-		this.animations.forEach( a=>a.enabled = false );
+		for ( let behavior of this.steering.behaviors ) {
+
+			behavior.active = false;
+
+		}
+
+		for ( let animation of this.animations ) {
+
+			animation.enabled = true;
+
+		}
 
 		const run = this.animations.get( 'soldier_forward' );
 		run.enabled = true;
@@ -219,11 +230,15 @@ class Enemy extends Vehicle {
 
 		}
 
+		if ( this.status === ENTITY_STATUS_DIEING ) {
+
+		}
+
 		if ( this.status === ENTITY_STATUS_DEAD ) {
 
 			console.log( this.uuid + "dead" );
 
-			this.spwanManager.respawnEnemy( this );
+			this.world.spawningManager.respawnEnemy( this );
 			this.reset();
 
 
