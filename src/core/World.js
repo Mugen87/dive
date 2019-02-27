@@ -311,8 +311,10 @@ class World {
 			const runBackwardClip = this.assetManager.animations.get( 'soldier_backward' );
 			const strafeLeftClip = this.assetManager.animations.get( 'soldier_left' );
 			const strafeRightClip = this.assetManager.animations.get( 'soldier_right' );
+			const death1Clip = this.assetManager.animations.get( 'soldier_death1' );
+			const death2Clip = this.assetManager.animations.get( 'soldier_death2' );
 
-			const clips = [ idleClip, runForwardClip, runBackwardClip, strafeLeftClip, strafeRightClip ];
+			const clips = [ idleClip, runForwardClip, runBackwardClip, strafeLeftClip, strafeRightClip, death1Clip, death2Clip ];
 
 			enemy.setAnimations( mixer, clips );
 

@@ -3,7 +3,7 @@ import { ExploreEvaluator } from './Evaluators.js';
 import { WeaponSystem } from './WeaponSystem.js';
 import { TargetSystem } from './TargetSystem.js';
 import { CONFIG } from '../core/Config.js';
-import { MESSAGE_HIT, SPAWN_HEALTH, ENTITY_STATUS_ALIVE, ENTITY_STATUS_DIEING, ENTITY_STATUS_DEAD } from '../core/Constants.js';
+import { MESSAGE_HIT, ENEMY_HEALTH, ENEMY_STATUS_ALIVE, ENEMY_STATUS_DYING, ENEMY_STATUS_DEAD } from '../core/Constants.js';
 
 const positiveWeightings = new Array();
 const weightings = [ 0, 0, 0, 0 ];
@@ -41,8 +41,8 @@ class Enemy extends Vehicle {
 
 		this.world = null;
 
-		this.health = SPAWN_HEALTH;
-		this.status = ENTITY_STATUS_ALIVE;
+		this.health = ENEMY_HEALTH;
+		this.status = ENEMY_STATUS_ALIVE;
 
 		// head
 
@@ -129,27 +129,29 @@ class Enemy extends Vehicle {
 
 	}
 
+	/**
+	* Resets the enemy after a death.
+	*
+	* @return {Enemy} A reference to this game entity.
+	*/
 	reset() {
 
-		this.status = ENTITY_STATUS_ALIVE;
-		this.health = SPAWN_HEALTH;
-
+		this.health = ENEMY_HEALTH;
+		this.status = ENEMY_STATUS_ALIVE;
 		this.velocity.set( 0, 0, 0 );
+
+		// clear brain and memory
 
 		this.brain.clearSubgoals();
 
 		this.memoryRecords.length = 0;
 
-		for ( let record of this.memorySystem.records ) {
-
-			record.visible = false;
-
-		}
+		// reset target and weapon system
 
 		this.targetSystem.reset();
-
-
 		this.weaponSystem.reset();
+
+		// disable all steering behaviors
 
 		for ( let behavior of this.steering.behaviors ) {
 
@@ -157,14 +159,20 @@ class Enemy extends Vehicle {
 
 		}
 
+		// disable all animations
+
 		for ( let animation of this.animations ) {
 
-			animation.enabled = true;
+			animation.enabled = false;
 
 		}
 
+		// set default animation
+
 		const run = this.animations.get( 'soldier_forward' );
 		run.enabled = true;
+
+		return this;
 
 	}
 
@@ -180,9 +188,11 @@ class Enemy extends Vehicle {
 
 		this.currentTime += delta;
 
-		// update hitbox
+		// only update the core logic of the enemy if it is alive
 
-		if ( this.status === ENTITY_STATUS_ALIVE ) {
+		if ( this.status === ENEMY_STATUS_ALIVE ) {
+
+			// update hitbox
 
 			this.currentHitbox.copy( this.defaultHitbox ).applyMatrix4( this.worldMatrix );
 
@@ -230,21 +240,29 @@ class Enemy extends Vehicle {
 
 		}
 
-		if ( this.status === ENTITY_STATUS_DIEING ) {
+		// handle dying
+
+		if ( this.status === ENEMY_STATUS_DYING ) {
 
 		}
 
-		if ( this.status === ENTITY_STATUS_DEAD ) {
+		// handle death
 
-			console.log( this.uuid + "dead" );
+		if ( this.status === ENEMY_STATUS_DEAD ) {
+
+			if ( this.world.debug ) {
+
+				console.log( 'DIVE.Enemy: Enemy with ID %s died.', this.uuid );
+
+			}
 
 			this.world.spawningManager.respawnEnemy( this );
-			this.reset();
 
+			this.reset();
 
 		}
 
-		// update animations
+		// always update animations
 
 		this.updateAnimations( delta );
 
@@ -418,12 +436,22 @@ class Enemy extends Vehicle {
 
 		switch ( telegram.message ) {
 
-			case MESSAGE_HIT: this.health -= telegram.data.damage;
-				if ( this.health < 0 && this.status === ENTITY_STATUS_ALIVE ) {
+			case MESSAGE_HIT:
 
-					this.status = ENTITY_STATUS_DEAD;
+				this.health -= telegram.data.damage;
+
+				if ( this.world.debug ) {
+
+					console.log( 'DIVE.Enemy: Enemy with ID %s hit by Game Entity with ID %s receiving %i damage.', this.uuid, telegram.sender.uuid, telegram.data.damage );
 
 				}
+
+				if ( this.health < 0 && this.status === ENEMY_STATUS_ALIVE ) {
+
+					this.status = ENEMY_STATUS_DEAD;
+
+				}
+
 				break;
 
 		}
