@@ -93,14 +93,24 @@ class AssetManager {
 		const blasterShot = new PositionalAudio( listener );
 		blasterShot.matrixAutoUpdate = false;
 
+		const shotgunShot = new PositionalAudio( listener );
+		shotgunShot.matrixAutoUpdate = false;
+
 		const reload = new PositionalAudio( listener );
 		reload.matrixAutoUpdate = false;
 
+		const shotgunShotReload = new PositionalAudio( listener );
+		shotgunShotReload.matrixAutoUpdate = false;
+
 		audioLoader.load( './audios/blaster_shot.ogg', buffer => blasterShot.setBuffer( buffer ) );
+		audioLoader.load( './audios/shotgun_shot.ogg', buffer => shotgunShot.setBuffer( buffer ) );
 		audioLoader.load( './audios/reload.ogg', buffer => reload.setBuffer( buffer ) );
+		audioLoader.load( './audios/shotgun_shot_reload.ogg', buffer => shotgunShotReload.setBuffer( buffer ) );
 
 		audios.set( 'blaster_shot', blasterShot );
+		audios.set( 'shotgun_shot', shotgunShot );
 		audios.set( 'reload', reload );
+		audios.set( 'shotgun_shot_reload', shotgunShotReload );
 
 		return this;
 

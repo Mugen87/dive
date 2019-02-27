@@ -1,11 +1,13 @@
-import { Vector3 } from '../lib/yuka.module.js';
+import { Vector3, MathUtils } from '../lib/yuka.module.js';
 import { CONFIG } from '../core/Config.js';
 import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
 import { WEAPON_STATUS_EMPTY, WEAPON_STATUS_READY, WEAPON_STATUS_OUT_OF_AMMO } from '../core/Constants.js';
 import { Blaster } from '../weapons/Blaster.js';
+import { Shotgun } from '../weapons/Shotgun.js';
 
 const displacement = new Vector3();
 const targetPosition = new Vector3();
+const offset = new Vector3();
 
 /**
 * Class to manage all operations specific to weapons and their deployment.
@@ -29,6 +31,13 @@ class WeaponSystem {
 
 		this.reactionTime = CONFIG.BOT.WEAPON.REACTION_TIME;
 
+		// each time the current weapon is fired a certain amount of random noise is
+		// added to the target poisition. The lower this value the more accurate
+		// a bot's aim will be. The value represents the maximum amount of offset in
+		// world units.
+
+		this.aimAccuracy = CONFIG.BOT.WEAPON.AIM_ACCURACY;
+
 		// an array with all weapons the bot has in its inventory
 
 		this.weapons = new Array();
@@ -51,9 +60,14 @@ class WeaponSystem {
 		this.renderComponents = {
 			blaster: {
 				mesh: null,
-				audios: new Map()
+				audios: new Map(),
+				muzzle: null
 			},
-			muzzle: null
+			shotgun: {
+				mesh: null,
+				audios: new Map(),
+				muzzle: null
+			}
 		};
 
 	}
@@ -182,12 +196,15 @@ class WeaponSystem {
 			case WEAPON_TYPES_BLASTER:
 				weapon = new Blaster( owner );
 				weapon.position.set( - 0.15, 1.30, 0.5 ); // relative position to the enenmy's body
-				weapon.muzzle = this.renderComponents.muzzle;
+				weapon.muzzle = this.renderComponents.blaster.muzzle;
 				weapon.audios = this.renderComponents.blaster.audios;
 				break;
 
 			case WEAPON_TYPES_SHOTGUN:
-				// weapon = new Shotgun( owner );
+				weapon = new Shotgun( owner );
+				weapon.position.set( - 0.15, 1.30, 0.5 ); // relative position to the enenmy's body
+				weapon.muzzle = this.renderComponents.shotgun.muzzle;
+				weapon.audios = this.renderComponents.shotgun.audios;
 				break;
 
 			case WEAPON_TYPES_ASSAULT_RIFLE:
@@ -294,6 +311,8 @@ class WeaponSystem {
 
 					target.currentHitbox.getCenter( targetPosition );
 
+					this.addNoiseToAim( targetPosition );
+
 					this.shoot( targetPosition );
 
 				}
@@ -316,6 +335,30 @@ class WeaponSystem {
 		}
 
 		return this;
+
+	}
+
+	/**
+	* Ensures the enemy does not perfectly aim at the given target position. It
+	* alters the target position by a certain offset. The offset proportionally
+	* increases with the distance between the owner of the weapon and its target.
+	*
+	* @param {Vector3} targetPosition - The target position.
+	* @return {Vector3} The target position.
+	*/
+	addNoiseToAim( targetPosition ) {
+
+		const distance = this.owner.position.distanceTo( targetPosition );
+
+		offset.x = MathUtils.randFloat( - this.aimAccuracy, this.aimAccuracy );
+		offset.y = MathUtils.randFloat( - this.aimAccuracy, this.aimAccuracy );
+		offset.z = MathUtils.randFloat( - this.aimAccuracy, this.aimAccuracy );
+
+		const f = Math.min( distance, 100 ) / 100; // 100 world units produces the maximum amount of offset
+
+		targetPosition.add( offset.multiplyScalar( f ) );
+
+		return targetPosition;
 
 	}
 
@@ -362,6 +405,21 @@ class WeaponSystem {
 	*/
 	_initRenderComponents() {
 
+		this._initBlasterRenderComponent();
+
+		this._initShotgunRenderComponent();
+
+		return this;
+
+	}
+
+	/**
+	* Inits the render components for the blaster.
+	*
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	_initBlasterRenderComponent() {
+
 		const assetManager = this.owner.world.assetManager;
 
 		// setup copy of blaster mesh
@@ -401,9 +459,63 @@ class WeaponSystem {
 		this.renderComponents.blaster.mesh = blasterMesh;
 		this.renderComponents.blaster.audios.set( 'shot', shot );
 		this.renderComponents.blaster.audios.set( 'reload', reload );
-		this.renderComponents.muzzle = muzzleSprite;
+		this.renderComponents.blaster.muzzle = muzzleSprite;
 
-		return this;
+	}
+
+	/**
+	* Inits the render components for the shotgun.
+	*
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	_initShotgunRenderComponent() {
+
+		const assetManager = this.owner.world.assetManager;
+
+		// setup copy of shotgun mesh
+
+		const shotgunMesh = assetManager.models.get( 'shotgun' ).clone();
+		shotgunMesh.scale.set( 100, 100, 100 );
+		shotgunMesh.rotation.set( Math.PI * 0.5, Math.PI * 1.05, 0 );
+		shotgunMesh.position.set( - 5, 30, 2 );
+		shotgunMesh.updateMatrix();
+		shotgunMesh.visible = false; // the shotgun is not visible by default
+
+		// add the mesh to the right hand of the enemy
+
+		const rightHand = this.owner._renderComponent.getObjectByName( 'Armature_mixamorigRightHand' );
+		rightHand.add( shotgunMesh );
+
+		// add muzzle sprite to the blaster mesh
+
+		const muzzleSprite = assetManager.models.get( 'muzzle' ).clone();
+		muzzleSprite.position.set( 0, 0.05, 0.3 );
+		muzzleSprite.scale.set( 0.4, 0.4, 0.4 );
+		muzzleSprite.updateMatrix();
+		shotgunMesh.add( muzzleSprite );
+
+		// add positional audio
+
+		const shot = assetManager.cloneAudio( assetManager.audios.get( 'shotgun_shot' ) );
+		shot.setRolloffFactor( 3 );
+		shot.setVolume( 0.4 );
+		shotgunMesh.add( shot );
+		const reload = assetManager.cloneAudio( assetManager.audios.get( 'reload' ) );
+		reload.setRolloffFactor( 3 );
+		reload.setVolume( 0.1 );
+		shotgunMesh.add( reload );
+		const shotReload = assetManager.cloneAudio( assetManager.audios.get( 'shotgun_shot_reload' ) );
+		shotReload.setRolloffFactor( 3 );
+		shotReload.setVolume( 0.1 );
+		shotgunMesh.add( shotReload );
+
+		// store this configuration
+
+		this.renderComponents.shotgun.mesh = shotgunMesh;
+		this.renderComponents.shotgun.audios.set( 'shot', shot );
+		this.renderComponents.shotgun.audios.set( 'reload', reload );
+		this.renderComponents.shotgun.audios.set( 'shot_reload', shotReload );
+		this.renderComponents.shotgun.muzzle = muzzleSprite;
 
 	}
 

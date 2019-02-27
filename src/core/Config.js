@@ -31,7 +31,8 @@ const CONFIG = {
 		},
 		WEAPON: {
 			UPDATE_FREQUENCY: 4, // number per seconds
-			REACTION_TIME: 0.2 // seconds
+			REACTION_TIME: 0.2, // seconds
+			AIM_ACCURACY: 3 // world units
 		},
 	},
 	BLASTER: {
@@ -42,6 +43,19 @@ const CONFIG = {
 		SHOT_TIME: 0.4, // seconds
 		RELOAD_TIME: 1.6, // seconds
 		MUZZLE_TIME: 0.03 // seconds
+
+	},
+	SHOTGUN: {
+		ROUNDS_LEFT: 6, // number
+		ROUNDS_PER_CLIP: 6, // number
+		AMMO: 24, // number
+		MAX_AMMO: 48, // number
+		SHOT_TIME: 1.2, // seconds
+		RELOAD_TIME: 1.6, // seconds
+		SHOT_RELOAD_TIME: 0.5, // seconds
+		MUZZLE_TIME: 0.03, // seconds
+		SPREAD: 0.04,
+		BULLETS_PER_SHOT: 6 // number
 
 	},
 	BULLET: {
