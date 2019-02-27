@@ -4,6 +4,7 @@ import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE 
 import { WEAPON_STATUS_EMPTY, WEAPON_STATUS_READY, WEAPON_STATUS_OUT_OF_AMMO } from '../core/Constants.js';
 import { Blaster } from '../weapons/Blaster.js';
 import { Shotgun } from '../weapons/Shotgun.js';
+import { AssaultRifle } from '../weapons/AssaultRifle.js';
 
 const displacement = new Vector3();
 const targetPosition = new Vector3();
@@ -64,6 +65,11 @@ class WeaponSystem {
 				muzzle: null
 			},
 			shotgun: {
+				mesh: null,
+				audios: new Map(),
+				muzzle: null
+			},
+			assaultRifle: {
 				mesh: null,
 				audios: new Map(),
 				muzzle: null
@@ -202,13 +208,16 @@ class WeaponSystem {
 
 			case WEAPON_TYPES_SHOTGUN:
 				weapon = new Shotgun( owner );
-				weapon.position.set( - 0.15, 1.30, 0.5 ); // relative position to the enenmy's body
+				weapon.position.set( - 0.15, 1.30, 0.5 );
 				weapon.muzzle = this.renderComponents.shotgun.muzzle;
 				weapon.audios = this.renderComponents.shotgun.audios;
 				break;
 
 			case WEAPON_TYPES_ASSAULT_RIFLE:
-				// weapon = new AssaultRifle( owner );
+				weapon = new AssaultRifle( owner );
+				weapon.position.set( - 0.15, 1.30, 0.5 );
+				weapon.muzzle = this.renderComponents.assaultRifle.muzzle;
+				weapon.audios = this.renderComponents.assaultRifle.audios;
 				break;
 
 			default:
@@ -384,7 +393,6 @@ class WeaponSystem {
 				break;
 
 			case WEAPON_STATUS_OUT_OF_AMMO:
-
 				// TODO: consider to use another weapon
 				break;
 
@@ -408,6 +416,8 @@ class WeaponSystem {
 		this._initBlasterRenderComponent();
 
 		this._initShotgunRenderComponent();
+
+		this._initAssaultRifleRenderComponent();
 
 		return this;
 
@@ -443,7 +453,7 @@ class WeaponSystem {
 		muzzleSprite.updateMatrix();
 		blasterMesh.add( muzzleSprite );
 
-		// add positional audio
+		// add positional audios
 
 		const shot = assetManager.cloneAudio( assetManager.audios.get( 'blaster_shot' ) );
 		shot.setRolloffFactor( 3 );
@@ -460,6 +470,8 @@ class WeaponSystem {
 		this.renderComponents.blaster.audios.set( 'shot', shot );
 		this.renderComponents.blaster.audios.set( 'reload', reload );
 		this.renderComponents.blaster.muzzle = muzzleSprite;
+
+		return this;
 
 	}
 
@@ -479,7 +491,7 @@ class WeaponSystem {
 		shotgunMesh.rotation.set( Math.PI * 0.5, Math.PI * 1.05, 0 );
 		shotgunMesh.position.set( - 5, 30, 2 );
 		shotgunMesh.updateMatrix();
-		shotgunMesh.visible = false; // the shotgun is not visible by default
+		shotgunMesh.visible = false; // this weapon is not visible by default
 
 		// add the mesh to the right hand of the enemy
 
@@ -494,7 +506,7 @@ class WeaponSystem {
 		muzzleSprite.updateMatrix();
 		shotgunMesh.add( muzzleSprite );
 
-		// add positional audio
+		// add positional audios
 
 		const shot = assetManager.cloneAudio( assetManager.audios.get( 'shotgun_shot' ) );
 		shot.setRolloffFactor( 3 );
@@ -516,6 +528,61 @@ class WeaponSystem {
 		this.renderComponents.shotgun.audios.set( 'reload', reload );
 		this.renderComponents.shotgun.audios.set( 'shot_reload', shotReload );
 		this.renderComponents.shotgun.muzzle = muzzleSprite;
+
+		return this;
+
+	}
+
+	/**
+	* Inits the render components for the assault rifle.
+	*
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	_initAssaultRifleRenderComponent() {
+
+		const assetManager = this.owner.world.assetManager;
+
+		// setup copy of assault rifle mesh
+
+		const assaultRifleMesh = assetManager.models.get( 'assault-rifle' ).clone();
+		assaultRifleMesh.scale.set( 100, 100, 100 );
+		assaultRifleMesh.rotation.set( Math.PI * 0.5, Math.PI * 1, 0 );
+		assaultRifleMesh.position.set( - 5, 20, 7 );
+		assaultRifleMesh.updateMatrix();
+		assaultRifleMesh.visible = false; // this weapon is not visible by default
+
+		// add the mesh to the right hand of the enemy
+
+		const rightHand = this.owner._renderComponent.getObjectByName( 'Armature_mixamorigRightHand' );
+		rightHand.add( assaultRifleMesh );
+
+		// add muzzle sprite to the blaster mesh
+
+		const muzzleSprite = assetManager.models.get( 'muzzle' ).clone();
+		muzzleSprite.position.set( 0, 0, 0.5 );
+		muzzleSprite.scale.set( 0.4, 0.4, 0.4 );
+		muzzleSprite.updateMatrix();
+		assaultRifleMesh.add( muzzleSprite );
+
+		// add positional audios
+
+		const shot = assetManager.cloneAudio( assetManager.audios.get( 'assault_rifle_shot' ) );
+		shot.setRolloffFactor( 3 );
+		shot.setVolume( 0.8 );
+		assaultRifleMesh.add( shot );
+		const reload = assetManager.cloneAudio( assetManager.audios.get( 'reload' ) );
+		reload.setRolloffFactor( 3 );
+		reload.setVolume( 0.1 );
+		assaultRifleMesh.add( reload );
+
+		// store this configuration
+
+		this.renderComponents.assaultRifle.mesh = assaultRifleMesh;
+		this.renderComponents.assaultRifle.audios.set( 'shot', shot );
+		this.renderComponents.assaultRifle.audios.set( 'reload', reload );
+		this.renderComponents.assaultRifle.muzzle = muzzleSprite;
+
+		return this;
 
 	}
 

@@ -56,12 +56,21 @@ const CONFIG = {
 		MUZZLE_TIME: 0.03, // seconds
 		SPREAD: 0.04,
 		BULLETS_PER_SHOT: 6 // number
+	},
+	ASSAULT_RIFLE: {
+		ROUNDS_LEFT: 30, // number
+		ROUNDS_PER_CLIP: 30, // number
+		AMMO: 60, // number
+		MAX_AMMO: 120, // number
+		SHOT_TIME: 0.2, // seconds
+		RELOAD_TIME: 1.6, // seconds
+		MUZZLE_TIME: 0.03 // seconds
 
 	},
 	BULLET: {
 		MAXSPEED: 400, // meter/seconds
 		LIFETIME: 1, // seconds,
-		DAMAGE: 25 // health points
+		DAMAGE: 20 // health points
 	}
 };
 

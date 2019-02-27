@@ -57,6 +57,17 @@ class Weapon extends GameEntity {
 	}
 
 	/**
+	* Returns the remaining rounds/ammo of this weapon.
+	*
+	* @return {Number} The reamining rounds/ammo for this weapon.
+	*/
+	getRemainingRounds() {
+
+		return this.roundsLeft + this.ammo;
+
+	}
+
+	/**
 	* Returns a value representing the desirability of using the weapon.
 	*
 	* @param {Number} distance - The distance to the target.
