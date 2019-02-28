@@ -36,7 +36,7 @@ class World {
 
 		this.assetManager = new AssetManager();
 		this.pathPlanner = null;
-		this.spawningManager = new SpawningManager();
+		this.spawningManager = new SpawningManager( this );
 
 		//
 
@@ -64,6 +64,7 @@ class World {
 			axesHelper: null,
 			graphHelper: null,
 			pathHelpers: new Array(),
+			spawnHelpers: new Array(),
 			uuidHelpers: new Array(),
 			hitboxHelpers: new Array()
 		};
@@ -73,6 +74,7 @@ class World {
 			showAxes: true,
 			showPaths: true,
 			showGraph: false,
+			showSpawnPoints: false,
 			showUUIDHelpers: false,
 			showHitboxes: false,
 			enableSimulation: true,
@@ -400,6 +402,9 @@ class World {
 			this.helpers.graphHelper.visible = false;
 			this.scene.add( this.helpers.graphHelper );
 
+			this.helpers.spawnHelpers = NavMeshUtils.createSpawnPointHelper( this.spawningManager.spawningPoints );
+			this.scene.add( this.helpers.spawnHelpers );
+
 		}
 
 		return this;
@@ -470,6 +475,12 @@ class World {
 			folderScene.add( params, 'showAxes' ).name( 'show axes helper' ).onChange( ( value ) => {
 
 				this.helpers.axesHelper.visible = value;
+
+			} );
+
+			folderScene.add( params, 'showSpawnPoints' ).name( 'show spawn points' ).onChange( ( value ) => {
+
+				this.helpers.spawnHelpers.visible = value;
 
 			} );
 

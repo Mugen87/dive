@@ -238,7 +238,7 @@ class Enemy extends Vehicle {
 
 			console.log( this.uuid + "dead" );
 
-			this.world.spawningManager.respawnEnemy( this );
+			this.world.spawningManager.reSpawnEnemy( this );
 			this.reset();
 
 
