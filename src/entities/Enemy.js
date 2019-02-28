@@ -3,7 +3,7 @@ import { ExploreEvaluator } from './Evaluators.js';
 import { WeaponSystem } from './WeaponSystem.js';
 import { TargetSystem } from './TargetSystem.js';
 import { CONFIG } from '../core/Config.js';
-import { MESSAGE_HIT, ENEMY_HEALTH, ENEMY_STATUS_ALIVE, ENEMY_STATUS_DYING, ENEMY_STATUS_DEAD } from '../core/Constants.js';
+import { MESSAGE_HIT, MESSAGE_DEAD, ENEMY_HEALTH, ENEMY_STATUS_ALIVE, ENEMY_STATUS_DYING, ENEMY_STATUS_DEAD } from '../core/Constants.js';
 
 const positiveWeightings = new Array();
 const weightings = [ 0, 0, 0, 0 ];
@@ -450,6 +450,30 @@ class Enemy extends Vehicle {
 				if ( this.health < 0 && this.status === ENEMY_STATUS_ALIVE ) {
 
 					this.status = ENEMY_STATUS_DEAD;
+
+					// inform all other enemies about its death
+
+					const enemies = this.world.enemies;
+
+					for ( let i = 0, l = enemies.length; i < l; i ++ ) {
+
+						const enemy = enemies[ i ];
+
+						if ( this !== enemy ) this.sendMessage( enemies[ i ], MESSAGE_DEAD );
+
+					}
+
+				}
+
+				break;
+
+			case MESSAGE_DEAD:
+
+				// delete the dead enemy from the memory system when it was the current target
+
+				if ( this.targetSystem.getTarget() === telegram.sender ) {
+
+					this.memorySystem.deleteRecord( telegram.sender );
 
 				}
 
