@@ -82,6 +82,38 @@ class NavMeshUtils {
 	}
 
 	/**
+	 * Creates helper points to visualize the spawn points of the SpawningManager.
+	 * @param {Array} spawnPoints - An array of spawn points to visualize
+	 * @return {Group}
+	 */
+	static createSpawnPointHelper( spawnPoints ) {
+
+		const group = new Group();
+		group.renderOrder = 2;
+
+		const nodeColor = 0xff0000;
+		const nodeMaterial = new MeshBasicMaterial( { color: nodeColor } );
+		const nodeGeometry = new IcosahedronBufferGeometry( 0.2, 2 );
+
+		for ( let i = 0, l = spawnPoints.length; i < l; i ++ ) {
+
+			const nodeMesh = new Mesh( nodeGeometry, nodeMaterial );
+			nodeMesh.renderOrder = 2;
+			nodeMesh.position.copy( spawnPoints[ i ] );
+
+			nodeMesh.matrixAutoUpdate = false;
+			nodeMesh.updateMatrix();
+
+			group.add( nodeMesh );
+
+		}
+		group.visible = false;
+
+		return group;
+
+	}
+
+	/**
 	* Creates a helper that visualizes the navigation path of a game entity.
 	* Note that the actual geometry is created at a later point since this
 	* helper is reused for all paths of a game entity.

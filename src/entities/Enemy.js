@@ -256,8 +256,7 @@ class Enemy extends Vehicle {
 
 			}
 
-			this.world.spawningManager.respawnEnemy( this );
-
+			this.world.spawningManager.reSpawnEnemy( this );
 			this.reset();
 
 		}
