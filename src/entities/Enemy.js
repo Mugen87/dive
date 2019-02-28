@@ -289,7 +289,9 @@ class Enemy extends Vehicle {
 
 			const enemy = enemies[ i ];
 
-			if ( enemy === this ) continue;
+			// ignore own entity and consider only living enemies
+
+			if ( enemy === this || enemy.status !== ENEMY_STATUS_ALIVE ) continue;
 
 			if ( memorySystem.hasRecord( enemy ) === false ) {
 
