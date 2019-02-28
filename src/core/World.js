@@ -177,10 +177,9 @@ class World {
 	}
 
 	/**
-	* The method checks if compatible game entities intersect by a projectile
-	* represented via a ray. The closest hitted game entity is returned. If no
-	* intersection is detected, null is returned. A possible intersection point
-	* is stored into the second parameter.
+	* The method checks if compatible game entities intersect with a projectile.
+	* The closest hitted game entity is returned. If no intersection is detected,
+	* null is returned. A possible intersection point is stored into the second parameter.
 	*
 	* @param {Projectile} projectile - The projectile.
 	* @param {Vector3} intersectionPoint - The intersection point.
@@ -199,7 +198,7 @@ class World {
 
 			const entity = entities[ i ];
 
-			// only process entities with the correct interface
+			// do not test with the owner entity and only process entities with the correct interface
 
 			if ( entity !== owner && entity.checkProjectileIntersection ) {
 
