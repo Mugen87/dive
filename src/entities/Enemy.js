@@ -470,11 +470,14 @@ class Enemy extends Vehicle {
 
 			case MESSAGE_DEAD:
 
-				// delete the dead enemy from the memory system when it was the current target
+				// delete the dead enemy from the memory system when it was visible
 
-				if ( this.targetSystem.getTarget() === telegram.sender ) {
+				const sender = telegram.sender;
+				const memoryRecord = this.memorySystem.getRecord( sender );
 
-					this.memorySystem.deleteRecord( telegram.sender );
+				if ( memoryRecord && memoryRecord.visible ) {
+
+					this.memorySystem.deleteRecord( sender );
 
 				}
 
