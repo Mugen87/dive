@@ -1,9 +1,9 @@
 import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, AABB, MathUtils } from '../lib/yuka.module.js';
+import { MESSAGE_HIT, MESSAGE_DEAD, ENEMY_HEALTH, ENEMY_STATUS_ALIVE, ENEMY_STATUS_DYING, ENEMY_STATUS_DEAD } from '../core/Constants.js';
 import { ExploreEvaluator } from './Evaluators.js';
 import { WeaponSystem } from './WeaponSystem.js';
 import { TargetSystem } from './TargetSystem.js';
 import { CONFIG } from '../core/Config.js';
-import { MESSAGE_HIT, MESSAGE_DEAD, ENEMY_HEALTH, ENEMY_STATUS_ALIVE, ENEMY_STATUS_DYING, ENEMY_STATUS_DEAD } from '../core/Constants.js';
 
 const positiveWeightings = new Array();
 const weightings = [ 0, 0, 0, 0 ];
@@ -159,14 +159,9 @@ class Enemy extends Vehicle {
 		this.targetSystem.reset();
 		this.weaponSystem.reset();
 
-		// disable all animations
+		// reset all animations
 
-		for ( let animation of this.animations.values() ) {
-
-			animation.enabled = false;
-			animation.time = 0;
-
-		}
+		this.resetAnimations();
 
 		// set default animation
 
@@ -177,14 +172,19 @@ class Enemy extends Vehicle {
 
 	}
 
-	dying() {
+	/**
+	* Inits the death of an entity.
+	*
+	* @return {Enemy} A reference to this game entity.
+	*/
+	initDeath() {
 
 		this.status = ENEMY_STATUS_DYING;
 		this.endTimeDying = this.currentTime + this.dyingTime;
 
 		this.velocity.set( 0, 0, 0 );
 
-		// disable all steering behaviors
+		// reset all steering behaviors
 
 		for ( let behavior of this.steering.behaviors ) {
 
@@ -192,18 +192,17 @@ class Enemy extends Vehicle {
 
 		}
 
-		// disable all animations
+		// reset all animations
 
-		for ( let animation of this.animations.values() ) {
+		this.resetAnimations();
 
-			animation.enabled = false;
-			animation.time = 0;
+		// start death animation
 
-		}
-		//star animation
-		const number = MathUtils.randInt( 1, 2 );
-		const dying = this.animations.get( 'soldier_death' + number );
+		const index = MathUtils.randInt( 1, 2 );
+		const dying = this.animations.get( 'soldier_death' + index );
 		dying.enabled = true;
+
+		return this;
 
 	}
 
@@ -274,7 +273,6 @@ class Enemy extends Vehicle {
 		// handle dying
 
 		if ( this.status === ENEMY_STATUS_DYING && this.currentTime >= this.endTimeDying ) {
-
 
 			this.status = ENEMY_STATUS_DEAD;
 
@@ -452,6 +450,25 @@ class Enemy extends Vehicle {
 	}
 
 	/**
+	* Resets all animations.
+	*
+	* @return {Enemy} A reference to this game entity.
+	*/
+	resetAnimations() {
+
+		for ( let animation of this.animations.values() ) {
+
+			animation.enabled = false;
+			animation.time = 0;
+			animation.timeScale = 1;
+
+		}
+
+		return this;
+
+	}
+
+	/**
 	* Returns the intesection point if a projectile intersects with this entity.
 	* If no intersection is detected, null is returned.
 	*
@@ -487,7 +504,7 @@ class Enemy extends Vehicle {
 
 				if ( this.health <= 0 && this.status === ENEMY_STATUS_ALIVE ) {
 
-					this.dying();
+					this.initDeath();
 
 					// inform all other enemies about its death
 
