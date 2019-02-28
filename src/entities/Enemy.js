@@ -1,4 +1,4 @@
-import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, AABB } from '../lib/yuka.module.js';
+import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, AABB, MathUtils } from '../lib/yuka.module.js';
 import { ExploreEvaluator } from './Evaluators.js';
 import { WeaponSystem } from './WeaponSystem.js';
 import { TargetSystem } from './TargetSystem.js';
@@ -44,6 +44,11 @@ class Enemy extends Vehicle {
 
 		this.health = ENEMY_HEALTH;
 		this.status = ENEMY_STATUS_ALIVE;
+
+		//
+
+		this.endTimeDying = Infinity;
+		this.dyingTime = CONFIG.BOT.DYING_TIME;
 
 		// head
 
@@ -139,7 +144,7 @@ class Enemy extends Vehicle {
 
 		this.health = ENEMY_HEALTH;
 		this.status = ENEMY_STATUS_ALIVE;
-		this.velocity.set( 0, 0, 0 );
+
 		this.rotation.set( 0, 0, 0, 1 );
 
 		// clear brain and memory
@@ -154,6 +159,31 @@ class Enemy extends Vehicle {
 		this.targetSystem.reset();
 		this.weaponSystem.reset();
 
+		// disable all animations
+
+		for ( let animation of this.animations.values() ) {
+
+			animation.enabled = false;
+			animation.time = 0;
+
+		}
+
+		// set default animation
+
+		const run = this.animations.get( 'soldier_forward' );
+		run.enabled = true;
+
+		return this;
+
+	}
+
+	dying() {
+
+		this.status = ENEMY_STATUS_DYING;
+		this.endTimeDying = this.currentTime + this.dyingTime;
+
+		this.velocity.set( 0, 0, 0 );
+
 		// disable all steering behaviors
 
 		for ( let behavior of this.steering.behaviors ) {
@@ -164,18 +194,16 @@ class Enemy extends Vehicle {
 
 		// disable all animations
 
-		for ( let animation of this.animations ) {
+		for ( let animation of this.animations.values() ) {
 
 			animation.enabled = false;
+			animation.time = 0;
 
 		}
-
-		// set default animation
-
-		const run = this.animations.get( 'soldier_forward' );
-		run.enabled = true;
-
-		return this;
+		//star animation
+		const number = MathUtils.randInt( 1, 2 );
+		const dying = this.animations.get( 'soldier_death' + number );
+		dying.enabled = true;
 
 	}
 
@@ -245,7 +273,10 @@ class Enemy extends Vehicle {
 
 		// handle dying
 
-		if ( this.status === ENEMY_STATUS_DYING ) {
+		if ( this.status === ENEMY_STATUS_DYING && this.currentTime >= this.endTimeDying ) {
+
+
+			this.status = ENEMY_STATUS_DEAD;
 
 		}
 
@@ -330,54 +361,58 @@ class Enemy extends Vehicle {
 	*/
 	updateAnimations( delta ) {
 
-		// directions
+		if ( this.status === ENEMY_STATUS_ALIVE ) {
 
-		this.getDirection( lookDirection );
-		moveDirection.copy( this.velocity ).normalize();
+			// directions
 
-		// rotation
+			this.getDirection( lookDirection );
+			moveDirection.copy( this.velocity ).normalize();
 
-		quaternion.lookAt( this.forward, moveDirection, this.up );
+			// rotation
 
-		// calculate weightings for movement animations
+			quaternion.lookAt( this.forward, moveDirection, this.up );
 
-		positiveWeightings.length = 0;
-		let sum = 0;
+			// calculate weightings for movement animations
 
-		for ( let i = 0, l = directions.length; i < l; i ++ ) {
+			positiveWeightings.length = 0;
+			let sum = 0;
 
-			transformedDirection.copy( directions[ i ].direction ).applyRotation( quaternion );
-			const dot = transformedDirection.dot( lookDirection );
-			weightings[ i ] = ( dot < 0 ) ? 0 : dot;
-			const animation = this.animations.get( directions[ i ].name );
+			for ( let i = 0, l = directions.length; i < l; i ++ ) {
 
-			if ( weightings[ i ] > 0.001 ) {
+				transformedDirection.copy( directions[ i ].direction ).applyRotation( quaternion );
+				const dot = transformedDirection.dot( lookDirection );
+				weightings[ i ] = ( dot < 0 ) ? 0 : dot;
+				const animation = this.animations.get( directions[ i ].name );
 
-				animation.enabled = true;
-				positiveWeightings.push( i );
-				sum += weightings[ i ];
+				if ( weightings[ i ] > 0.001 ) {
 
-			} else {
+					animation.enabled = true;
+					positiveWeightings.push( i );
+					sum += weightings[ i ];
 
-				animation.enabled = false;
-				animation.weight = 0;
+				} else {
+
+					animation.enabled = false;
+					animation.weight = 0;
+
+				}
 
 			}
 
-		}
+			// the weightings for enabled animations have to be calculated in an additional
+			// loop since the sum of weightings of all enabled animations has to be 1
 
-		// the weightings for enabled animations have to be calculated in an additional
-		// loop since the sum of weightings of all enabled animations has to be 1
+			for ( let i = 0, l = positiveWeightings.length; i < l; i ++ ) {
 
-		for ( let i = 0, l = positiveWeightings.length; i < l; i ++ ) {
+				const index = positiveWeightings[ i ];
+				const animation = this.animations.get( directions[ index ].name );
+				animation.weight = weightings[ index ] / sum;
 
-			const index = positiveWeightings[ i ];
-			const animation = this.animations.get( directions[ index ].name );
-			animation.weight = weightings[ index ] / sum;
+				// scale the animtion based on the actual velocity
 
-			// scale the animtion based on the actual velocity
+				animation.timeScale = this.getSpeed() / this.maxSpeed;
 
-			animation.timeScale = this.getSpeed() / this.maxSpeed;
+			}
 
 		}
 
@@ -450,9 +485,9 @@ class Enemy extends Vehicle {
 
 				}
 
-				if ( this.health < 0 && this.status === ENEMY_STATUS_ALIVE ) {
+				if ( this.health <= 0 && this.status === ENEMY_STATUS_ALIVE ) {
 
-					this.status = ENEMY_STATUS_DEAD;
+					this.dying();
 
 					// inform all other enemies about its death
 

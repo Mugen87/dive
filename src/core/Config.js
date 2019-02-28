@@ -34,6 +34,7 @@ const CONFIG = {
 			REACTION_TIME: 0.2, // seconds
 			AIM_ACCURACY: 3 // world units
 		},
+		DYING_TIME: 3 // seconds
 	},
 	BLASTER: {
 		ROUNDS_LEFT: 12, // number
