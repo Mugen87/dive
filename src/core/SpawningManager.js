@@ -46,19 +46,28 @@ class SpawningManager {
 
 		let maxDistance = - Infinity;
 
-		const spawnPoint = new Vector3().copy( this.spawningPoints[ 0 ] );
+		let bestSpawningPoint = this.spawningPoints[ 0 ];
 
 		const entities = this.world.entityManager.entities;
+		const spawningPoints = this.spawningPoints;
 
-		for ( let point of this.spawningPoints ) {
+		// searching for the spawning point furthest away from an enemy
+
+		for ( let i = 0, il = spawningPoints.length; i < il; i ++ ) {
+
+			const spawningPoint = spawningPoints[ i ];
 
 			let closestDistance = Infinity;
 
-			for ( let entity of entities ) {
+			for ( let j = 0, jl = entities.length; j < jl; j ++ ) {
 
-				if ( entity !== enemy ) {
+				const entity = entities[ j ];
 
-					const distance = point.squaredDistanceTo( enemy.position );
+				// only consider game entites of type "Enemy"
+
+				if ( entity.isEnemy && entity !== enemy ) {
+
+					const distance = spawningPoint.squaredDistanceTo( enemy.position );
 
 					if ( distance < closestDistance ) {
 
@@ -73,13 +82,13 @@ class SpawningManager {
 			if ( closestDistance > maxDistance ) {
 
 				maxDistance = closestDistance;
-				spawnPoint.copy( point );
+				bestSpawningPoint = spawningPoint;
 
 			}
 
 		}
 
-		return spawnPoint;
+		return bestSpawningPoint;
 
 	}
 

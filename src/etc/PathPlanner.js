@@ -2,7 +2,7 @@ import { TaskQueue } from '../lib/yuka.module.js';
 import { PathPlannerTask } from './PathPlannerTask.js';
 
 /**
-* Class for asynchronous path finding. Therefore a task queue is used.
+* Class for asynchronous path finding using Yuka's task features.
 *
 * @author {@link https://github.com/robp94|robp94}
 */
@@ -10,6 +10,7 @@ class PathPlanner {
 
 	/**
 	* Construct a new PathPlanner with the given arguments.
+	*
 	* @param {NavMesh} navMesh - The navmesh used for path finding.
 	*/
 	constructor( navMesh ) {
@@ -21,7 +22,7 @@ class PathPlanner {
 	}
 
 	/**
-	* Creates a new Task for to find a path and adds the task to the queue.
+	* Creates a new task for pathfinding and adds the task to the queue.
 	*
 	* @param {Vehicle} vehicle - The vehicle for which the path is to be found.
 	* @param {Vector3} from - The start point of the path.
@@ -37,7 +38,7 @@ class PathPlanner {
 	}
 
 	/**
-	* Update Method which calls the update method of the task queue.
+	* Update method of the path planenr.
 	*/
 	update() {
 

@@ -38,6 +38,7 @@ class Enemy extends Vehicle {
 		this.currentTime = 0;
 		this.maxSpeed = CONFIG.BOT.MOVEMENT.MAXSPEED;
 		this.updateOrientation = false;
+		this.isEnemy = true;
 
 		this.world = null;
 
