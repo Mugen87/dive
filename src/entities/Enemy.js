@@ -159,7 +159,7 @@ class Enemy extends Vehicle {
 
 		for ( let animation of this.animations ) {
 
-			animation.enabled = true;
+			animation.enabled = false;
 
 		}
 
