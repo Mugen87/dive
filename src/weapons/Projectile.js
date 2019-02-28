@@ -54,7 +54,7 @@ class Projectile extends MovingEntity {
 
 			super.update( delta );
 
-			const entity = world.checkProjectileIntersection( ray, intersectionPoint );
+			const entity = world.checkProjectileIntersection( this, intersectionPoint );
 
 			if ( entity !== null ) {
 

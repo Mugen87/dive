@@ -182,15 +182,18 @@ class World {
 	* intersection is detected, null is returned. A possible intersection point
 	* is stored into the second parameter.
 	*
-	* @param {Ray} ray - The ray that defines the trajectory of this bullet.
+	* @param {Projectile} projectile - The projectile.
 	* @param {Vector3} intersectionPoint - The intersection point.
 	* @return {GameEntity} The hitted game entity.
 	*/
-	checkProjectileIntersection( ray, intersectionPoint ) {
+	checkProjectileIntersection( projectile, intersectionPoint ) {
 
 		const entities = this.entityManager.entities;
 		let minDistance = Infinity;
 		let hittedEntitiy = null;
+
+		const owner = projectile.owner;
+		const ray = projectile.ray;
 
 		for ( let i = 0, l = entities.length; i < l; i ++ ) {
 
@@ -198,7 +201,7 @@ class World {
 
 			// only process entities with the correct interface
 
-			if ( entity.checkProjectileIntersection ) {
+			if ( entity !== owner && entity.checkProjectileIntersection ) {
 
 				if ( entity.checkProjectileIntersection( ray, currentIntersectionPoint ) !== null ) {
 
