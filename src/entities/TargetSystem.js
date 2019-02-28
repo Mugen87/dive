@@ -126,5 +126,15 @@ class TargetSystem {
 
 	}
 
+	/** Returns true if the enemy has an active target.
+	*
+	* @returns {Boolean} Whether the enemy has an active target or not.
+	*/
+	hasTarget() {
+
+		return this._currentRecord !== null;
+
+	}
+
 }
 export { TargetSystem };

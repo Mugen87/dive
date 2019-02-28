@@ -1,5 +1,5 @@
 import { GoalEvaluator } from '../lib/yuka.module.js';
-import { ExploreGoal } from './Goals.js';
+import { ExploreGoal } from '../goals/ExploreGoal.js';
 
 /**
 * Class for representing the explore goal.
@@ -9,22 +9,39 @@ import { ExploreGoal } from './Goals.js';
 class ExploreEvaluator extends GoalEvaluator {
 
 	/**
+	* Constructs a new explore goal evaluator.
+	*
+	* @param {Number} characterBias - Can be used to adjust the preferences of the enemy.
+	*/
+	constructor( characterBias = 1 ) {
+
+		super( characterBias );
+
+	}
+
+	/**
 	* Calculates the desirability. It's a score between 0 and 1 representing the desirability
 	* of a goal.
 	*
-	* @param {GameEntity} owner - The owner of this goal evaluator.
+	* @param {Enemy} owner - The owner of this goal evaluator.
 	* @return {Number} The desirability.
 	*/
 	calculateDesirability( /* owner */ ) {
 
-		return 0.5;
+		let desirability = 0.5;
+
+		// bias the value according to the personality of the bot
+
+		desirability *= this.characterBias;
+
+		return desirability;
 
 	}
 
 	/**
 	* Executed if this goal evaluator produces the highest desirability.
 	*
-	* @param {GameEntity} owner - The owner of this goal evaluator.
+	* @param {Enemy} owner - The owner of this goal evaluator.
 	*/
 	setGoal( owner ) {
 

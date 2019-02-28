@@ -34,13 +34,14 @@ const CONFIG = {
 			REACTION_TIME: 0.2, // seconds
 			AIM_ACCURACY: 3 // world units
 		},
+		MAX_HEALTH: 100, // health points
 		DYING_TIME: 3 // seconds
 	},
 	BLASTER: {
 		ROUNDS_LEFT: 12, // number
 		ROUNDS_PER_CLIP: 12, // number
 		AMMO: 48, // number
-		MAX_AMMO: 96, // number
+		MAX_AMMO: 48, // number
 		SHOT_TIME: 0.4, // seconds
 		RELOAD_TIME: 1.6, // seconds
 		MUZZLE_TIME: 0.03 // seconds
@@ -50,7 +51,7 @@ const CONFIG = {
 		ROUNDS_LEFT: 6, // number
 		ROUNDS_PER_CLIP: 6, // number
 		AMMO: 24, // number
-		MAX_AMMO: 48, // number
+		MAX_AMMO: 24, // number
 		SHOT_TIME: 1.2, // seconds
 		RELOAD_TIME: 1.6, // seconds
 		SHOT_RELOAD_TIME: 0.5, // seconds
@@ -61,8 +62,8 @@ const CONFIG = {
 	ASSAULT_RIFLE: {
 		ROUNDS_LEFT: 30, // number
 		ROUNDS_PER_CLIP: 30, // number
-		AMMO: 60, // number
-		MAX_AMMO: 120, // number
+		AMMO: 90, // number
+		MAX_AMMO: 90, // number
 		SHOT_TIME: 0.2, // seconds
 		RELOAD_TIME: 1.6, // seconds
 		MUZZLE_TIME: 0.03 // seconds

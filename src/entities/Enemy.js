@@ -1,6 +1,7 @@
 import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, AABB, MathUtils } from '../lib/yuka.module.js';
-import { MESSAGE_HIT, MESSAGE_DEAD, ENEMY_HEALTH, ENEMY_STATUS_ALIVE, ENEMY_STATUS_DYING, ENEMY_STATUS_DEAD } from '../core/Constants.js';
-import { ExploreEvaluator } from './Evaluators.js';
+import { MESSAGE_HIT, MESSAGE_DEAD, ENEMY_STATUS_ALIVE, ENEMY_STATUS_DYING, ENEMY_STATUS_DEAD } from '../core/Constants.js';
+import { AttackEvaluator } from '../evaluators/AttackEvaluator.js';
+import { ExploreEvaluator } from '../evaluators/ExploreEvaluator.js';
 import { WeaponSystem } from './WeaponSystem.js';
 import { TargetSystem } from './TargetSystem.js';
 import { CONFIG } from '../core/Config.js';
@@ -42,7 +43,7 @@ class Enemy extends Vehicle {
 
 		this.world = null;
 
-		this.health = ENEMY_HEALTH;
+		this.health = CONFIG.BOT.MAX_HEALTH;
 		this.status = ENEMY_STATUS_ALIVE;
 
 		//
@@ -76,6 +77,7 @@ class Enemy extends Vehicle {
 		// goal-driven agent design
 
 		this.brain = new Think( this );
+		this.brain.addEvaluator( new AttackEvaluator() );
 		this.brain.addEvaluator( new ExploreEvaluator() );
 
 		this.goalArbitrationRegulator = new Regulator( CONFIG.BOT.GOAL.UPDATE_FREQUENCY );
@@ -142,7 +144,7 @@ class Enemy extends Vehicle {
 	*/
 	reset() {
 
-		this.health = ENEMY_HEALTH;
+		this.health = CONFIG.BOT.MAX_HEALTH;
 		this.status = ENEMY_STATUS_ALIVE;
 
 		this.rotation.set( 0, 0, 0, 1 );

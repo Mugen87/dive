@@ -63,7 +63,7 @@ class Weapon extends GameEntity {
 	*/
 	getRemainingRounds() {
 
-		return this.roundsLeft + this.ammo;
+		return this.ammo;
 
 	}
 
