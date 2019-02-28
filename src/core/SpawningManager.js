@@ -1,17 +1,17 @@
 import { Vector3 } from '../lib/yuka.module.js';
 
 /**
- * The SpawningManager spqans/respawns an entity for example after its death.
- * Therefore it has an array of span points.
- *
- * @author robp94 / https://github.com/robp94
- */
+* This class is responsible for (re)spawning enemies.
+*
+* @author {@link https://github.com/robp94|robp94}
+*/
 class SpawningManager {
 
 	/**
-	 * Constructor to create a new SpawningManager.
-	 * @param {World} world - A reference to the world.
-	 */
+	* Constructor to create a new SpawningManager.
+	*
+	* @param {World} world - A reference to the world.
+	*/
 	constructor( world ) {
 
 		this.spawningPoints = new Array();
@@ -21,54 +21,61 @@ class SpawningManager {
 
 	}
 
-
 	/**
-	 * Respawns the given enemy.
-	 *
-	 * @param {Enemy} enemy - The enemy to respawn.
-	 */
-	reSpawnEnemy( enemy ) {
+	* Respawns the given enemy.
+	*
+	* @param {Enemy} enemy - The enemy to respawn.
+	* @return {SpawningManager} A reference to this spawning manager.
+	*/
+	respawnEnemy( enemy ) {
 
 		const spawnPoint = this.getSpawnPoint( enemy );
 		enemy.position.copy( spawnPoint );
 
+		return this;
+
 	}
 
 	/**
-	 * Gets a suitable respawn point for the given entity.
+	 * Gets a suitable respawn point for the given enemy.
 	 *
-	 * @param {GameEntity} entity - The entity for which a suitable point is searched.
-	 * @returns {Vector3}
+	 * @param {Enemy} enemy - The enemy for which a suitable point is searched.
+	 * @returns {Vector3} The spawning point.
 	 */
-	getSpawnPoint( entity ) {
+	getSpawnPoint( enemy ) {
 
-		let largestDistance = 0;
+		let maxDistance = - Infinity;
+
 		const spawnPoint = new Vector3().copy( this.spawningPoints[ 0 ] );
-		const enemies = this.world.enemies.slice(); //todo entities with player
-		enemies.splice( enemies.indexOf( entity, 1 ) );
 
+		const entities = this.world.entityManager.entities;
 
 		for ( let point of this.spawningPoints ) {
 
 			let closestDistance = Infinity;
-			for ( let enemy of enemies ) {
 
-				const distance = point.squaredDistanceTo( enemy.position );
-				if ( distance < closestDistance ) {
+			for ( let entity of entities ) {
 
-					closestDistance = distance;
+				if ( entity !== enemy ) {
+
+					const distance = point.squaredDistanceTo( enemy.position );
+
+					if ( distance < closestDistance ) {
+
+						closestDistance = distance;
+
+					}
 
 				}
 
 			}
-			if ( closestDistance > largestDistance ) {
 
-				largestDistance = closestDistance;
+			if ( closestDistance > maxDistance ) {
+
+				maxDistance = closestDistance;
 				spawnPoint.copy( point );
 
 			}
-
-
 
 		}
 

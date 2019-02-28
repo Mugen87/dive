@@ -139,6 +139,7 @@ class Enemy extends Vehicle {
 		this.health = ENEMY_HEALTH;
 		this.status = ENEMY_STATUS_ALIVE;
 		this.velocity.set( 0, 0, 0 );
+		this.rotation.set( 0, 0, 0, 1 );
 
 		// clear brain and memory
 
@@ -256,7 +257,7 @@ class Enemy extends Vehicle {
 
 			}
 
-			this.world.spawningManager.reSpawnEnemy( this );
+			this.world.spawningManager.respawnEnemy( this );
 			this.reset();
 
 		}

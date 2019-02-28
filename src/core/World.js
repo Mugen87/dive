@@ -380,6 +380,15 @@ class World {
 
 		this.add( level );
 
+		if ( this.debug ) {
+
+			//
+
+			this.helpers.spawnHelpers = SceneUtils.createSpawnPointHelper( this.spawningManager.spawningPoints );
+			this.scene.add( this.helpers.spawnHelpers );
+
+		}
+
 		return this;
 
 	}
@@ -403,9 +412,6 @@ class World {
 			this.helpers.graphHelper = NavMeshUtils.createGraphHelper( navMesh.graph, 0.2 );
 			this.helpers.graphHelper.visible = false;
 			this.scene.add( this.helpers.graphHelper );
-
-			this.helpers.spawnHelpers = NavMeshUtils.createSpawnPointHelper( this.spawningManager.spawningPoints );
-			this.scene.add( this.helpers.spawnHelpers );
 
 		}
 

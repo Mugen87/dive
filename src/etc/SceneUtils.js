@@ -1,4 +1,5 @@
 import { LineSegments, Sprite, SpriteMaterial, LineBasicMaterial, CanvasTexture, BufferGeometry, Float32BufferAttribute } from '../lib/three.module.js';
+import { Mesh, Group, MeshBasicMaterial, CylinderBufferGeometry } from '../lib/three.module.js';
 
 /**
 * Class with various helper methods.
@@ -116,6 +117,40 @@ class SceneUtils {
 		lines.updateMatrix();
 
 		return lines;
+
+	}
+
+	/**
+	 * Creates helper points to visualize the spawning points of the game.
+	 *
+	 * @param {Array} spawnPoints - An array of spawn points to visualize.
+	 * @return {Group} The helper.
+	 */
+	static createSpawnPointHelper( spawnPoints ) {
+
+		const group = new Group();
+		group.matrixAutoUpdate = false;
+
+		const nodeColor = 0xff0000;
+		const nodeMaterial = new MeshBasicMaterial( { color: nodeColor } );
+		const nodeGeometry = new CylinderBufferGeometry( 0.2, 0.2, 0.5 );
+		nodeGeometry.translate( 0, 0.25, 0 );
+
+		for ( let i = 0, l = spawnPoints.length; i < l; i ++ ) {
+
+			const nodeMesh = new Mesh( nodeGeometry, nodeMaterial );
+			nodeMesh.position.copy( spawnPoints[ i ] );
+
+			nodeMesh.matrixAutoUpdate = false;
+			nodeMesh.updateMatrix();
+
+			group.add( nodeMesh );
+
+		}
+
+		group.visible = false;
+
+		return group;
 
 	}
 
