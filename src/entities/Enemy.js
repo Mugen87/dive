@@ -147,6 +147,7 @@ class Enemy extends Vehicle {
 		this.brain.clearSubgoals();
 
 		this.memoryRecords.length = 0;
+		this.memorySystem.clear();
 
 		// reset target and weapon system
 
