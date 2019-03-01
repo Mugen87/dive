@@ -23,7 +23,7 @@ class Shotgun extends Weapon {
 
 		this.type = WEAPON_TYPES_SHOTGUN;
 
-		//
+		// common weapon properties
 
 		this.roundsLeft = CONFIG.SHOTGUN.ROUNDS_LEFT;
 		this.roundsPerClip = CONFIG.SHOTGUN.ROUNDS_PER_CLIP;

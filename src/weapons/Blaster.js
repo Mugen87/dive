@@ -21,7 +21,7 @@ class Blaster extends Weapon {
 
 		this.type = WEAPON_TYPES_BLASTER;
 
-		//
+		// common weapon properties
 
 		this.roundsLeft = CONFIG.BLASTER.ROUNDS_LEFT;
 		this.roundsPerClip = CONFIG.BLASTER.ROUNDS_PER_CLIP;

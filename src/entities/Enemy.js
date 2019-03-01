@@ -67,7 +67,7 @@ class Enemy extends Vehicle {
 		this.mixer = null;
 		this.animations = new Map();
 
-		// current navigation path
+		// navigation path
 
 		this.path = null;
 

@@ -20,13 +20,11 @@ class ExploreGoal extends CompositeGoal {
 
 	activate() {
 
+		const owner = this.owner;
+
 		// if this goal is reactivated then there may be some existing subgoals that must be removed
 
 		this.clearSubgoals();
-
-		//
-
-		const owner = this.owner;
 
 		// compute random position on map
 
@@ -34,6 +32,8 @@ class ExploreGoal extends CompositeGoal {
 
 		const from = new Vector3().copy( owner.position );
 		const to = new Vector3().copy( region.centroid );
+
+		// setup subgoals
 
 		this.addSubgoal( new FindPathGoal( owner, from, to ) );
 		this.addSubgoal( new FollowPathGoal( owner ) );

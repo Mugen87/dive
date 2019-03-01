@@ -21,7 +21,7 @@ class AssaultRifle extends Weapon {
 
 		this.type = WEAPON_TYPES_ASSAULT_RIFLE;
 
-		//
+		// common weapon properties
 
 		this.roundsLeft = CONFIG.ASSAULT_RIFLE.ROUNDS_LEFT;
 		this.roundsPerClip = CONFIG.ASSAULT_RIFLE.ROUNDS_PER_CLIP;
