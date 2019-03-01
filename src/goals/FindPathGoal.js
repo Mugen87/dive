@@ -1,17 +1,20 @@
 import { Goal } from '../lib/yuka.module.js';
 
 /**
-* Sub-goal for finding the next random destintation
+* Sub-goal for finding the next random location
 * on the map that the enemy is going to seek.
 *
 * @author {@link https://github.com/Mugen87|Mugen87}
 * @author {@link https://github.com/robp94|robp94}
 */
-class FindNextDestinationGoal extends Goal {
+class FindPathGoal extends Goal {
 
-	constructor( owner ) {
+	constructor( owner, from, to ) {
 
 		super( owner );
+
+		this.from = from;
+		this.to = to;
 
 	}
 
@@ -20,14 +23,11 @@ class FindNextDestinationGoal extends Goal {
 		const owner = this.owner;
 		const pathPlanner = owner.world.pathPlanner;
 
-		// select closest collectible
+		owner.path = null; // reset previous path
 
-		owner.from.copy( owner.position );
-		owner.to.copy( owner.navMesh.getRandomRegion().centroid );
+		// perform async path finding
 
-		owner.path = null;
-
-		pathPlanner.findPath( owner, owner.from, owner.to, onPathFound );
+		pathPlanner.findPath( owner, this.from, this.to, onPathFound );
 
 	}
 
@@ -35,7 +35,14 @@ class FindNextDestinationGoal extends Goal {
 
 		const owner = this.owner;
 
-		if ( owner.path ) this.status = Goal.STATUS.COMPLETED;
+		if ( owner.path ) {
+
+			// when a path was found, mark this goal as completed
+
+			this.status = Goal.STATUS.COMPLETED;
+
+
+		}
 
 	}
 
@@ -49,4 +56,4 @@ function onPathFound( owner, path ) {
 
 }
 
-export { FindNextDestinationGoal };
+export { FindPathGoal };

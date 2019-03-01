@@ -67,7 +67,7 @@ class SpawningManager {
 
 				if ( entity.isEnemy && entity !== enemy ) {
 
-					const distance = spawningPoint.squaredDistanceTo( enemy.position );
+					const distance = spawningPoint.squaredDistanceTo( entity.position );
 
 					if ( distance < closestDistance ) {
 

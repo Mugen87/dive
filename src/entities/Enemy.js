@@ -1,4 +1,4 @@
-import { Vehicle, Regulator, Think, FollowPathBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, AABB, MathUtils } from '../lib/yuka.module.js';
+import { Vehicle, Regulator, Think, FollowPathBehavior, SeekBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, AABB, MathUtils } from '../lib/yuka.module.js';
 import { MESSAGE_HIT, MESSAGE_DEAD, ENEMY_STATUS_ALIVE, ENEMY_STATUS_DYING, ENEMY_STATUS_DEAD } from '../core/Constants.js';
 import { AttackEvaluator } from '../evaluators/AttackEvaluator.js';
 import { ExploreEvaluator } from '../evaluators/ExploreEvaluator.js';
@@ -67,12 +67,9 @@ class Enemy extends Vehicle {
 		this.mixer = null;
 		this.animations = new Map();
 
-		// navigation
+		// current navigation path
 
-		this.navMesh = null;
 		this.path = null;
-		this.from = new Vector3();
-		this.to = new Vector3();
 
 		// goal-driven agent design
 
@@ -95,6 +92,10 @@ class Enemy extends Vehicle {
 		followPathBehavior.nextWaypointDistance = CONFIG.BOT.NAVIGATION.NEXT_WAYPOINT_DISTANCE;
 		followPathBehavior._arrive.deceleration = CONFIG.BOT.NAVIGATION.ARRIVE_DECELERATION;
 		this.steering.add( followPathBehavior );
+
+		const seekBehavior = new SeekBehavior();
+		seekBehavior.active = false;
+		this.steering.add( seekBehavior );
 
 		// vision
 
@@ -481,6 +482,23 @@ class Enemy extends Vehicle {
 	checkProjectileIntersection( ray, intersectionPoint ) {
 
 		return ray.intersectAABB( this.currentHitbox, intersectionPoint );
+
+	}
+
+	/**
+	* Returns true if the enemy is at the given target position. The result of the test
+	* can be influenced with a configurable tolerance value.
+	*
+	* @param {Vector3} position - The target position.
+	* @return {Boolean} Whether the enemy is at the given target position or not.
+	*/
+	atPosition( position ) {
+
+		const tolerance = CONFIG.BOT.NAVIGATION.ARRIVE_TOLERANCE * CONFIG.BOT.NAVIGATION.ARRIVE_TOLERANCE;
+
+		const distance = this.position.squaredDistanceTo( position );
+
+		return distance <= tolerance;
 
 	}
 

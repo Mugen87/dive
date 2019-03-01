@@ -1,6 +1,6 @@
-import { CompositeGoal } from '../lib/yuka.module.js';
+import { CompositeGoal, Vector3 } from '../lib/yuka.module.js';
 import { FollowPathGoal } from './FollowPathGoal.js';
-import { FindNextDestinationGoal } from './FindNextDestintationGoal.js';
+import { FindPathGoal } from './FindPathGoal.js';
 
 
 /**
@@ -20,18 +20,31 @@ class ExploreGoal extends CompositeGoal {
 
 	activate() {
 
+		// if this goal is reactivated then there may be some existing subgoals that must be removed
+
+		this.clearSubgoals();
+
+		//
+
 		const owner = this.owner;
 
-		this.addSubgoal( new FindNextDestinationGoal( owner ) );
+		// compute random position on map
+
+		const region = owner.world.navMesh.getRandomRegion();
+
+		const from = new Vector3().copy( owner.position );
+		const to = new Vector3().copy( region.centroid );
+
+		this.addSubgoal( new FindPathGoal( owner, from, to ) );
 		this.addSubgoal( new FollowPathGoal( owner ) );
 
 	}
 
 	execute() {
 
-		this.activateIfInactive();
-
 		this.status = this.executeSubgoals();
+
+		this.replanIfFailed();
 
 	}
 

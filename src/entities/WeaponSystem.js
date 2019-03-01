@@ -110,7 +110,9 @@ class WeaponSystem {
 
 		for ( let i = 0, l = this.weapons.length; i < l; i ++ ) {
 
-			this.removeWeapon( this.weapons[ i ] );
+			const weapon = this.weapons[ i ];
+
+			this.removeWeapon( weapon.type );
 
 		}
 

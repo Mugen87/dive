@@ -1,7 +1,7 @@
 import { Ray, Vector3 } from '../lib/yuka.module.js';
 import { Weapon } from './Weapon.js';
 import { CONFIG } from '../core/Config.js';
-import { WEAPON_STATUS_READY, WEAPON_STATUS_SHOT, WEAPON_STATUS_RELOAD, WEAPON_STATUS_EMPTY, WEAPON_STATUS_OUT_OF_AMMO } from '../core/Constants.js';
+import { WEAPON_STATUS_READY, WEAPON_STATUS_SHOT, WEAPON_STATUS_RELOAD, WEAPON_STATUS_EMPTY, WEAPON_STATUS_OUT_OF_AMMO, WEAPON_TYPES_SHOTGUN } from '../core/Constants.js';
 
 const spread = new Vector3();
 
@@ -20,6 +20,10 @@ class Shotgun extends Weapon {
 	constructor( owner ) {
 
 		super( owner );
+
+		this.type = WEAPON_TYPES_SHOTGUN;
+
+		//
 
 		this.roundsLeft = CONFIG.SHOTGUN.ROUNDS_LEFT;
 		this.roundsPerClip = CONFIG.SHOTGUN.ROUNDS_PER_CLIP;

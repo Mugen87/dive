@@ -1,6 +1,6 @@
 import { Ray } from '../lib/yuka.module.js';
 import { Weapon } from './Weapon.js';
-import { WEAPON_STATUS_READY, WEAPON_STATUS_SHOT, WEAPON_STATUS_RELOAD, WEAPON_STATUS_EMPTY, WEAPON_STATUS_OUT_OF_AMMO } from '../core/Constants.js';
+import { WEAPON_STATUS_READY, WEAPON_STATUS_SHOT, WEAPON_STATUS_RELOAD, WEAPON_STATUS_EMPTY, WEAPON_STATUS_OUT_OF_AMMO, WEAPON_TYPES_BLASTER } from '../core/Constants.js';
 import { CONFIG } from '../core/Config.js';
 
 /**
@@ -18,6 +18,10 @@ class Blaster extends Weapon {
 	constructor( owner ) {
 
 		super( owner );
+
+		this.type = WEAPON_TYPES_BLASTER;
+
+		//
 
 		this.roundsLeft = CONFIG.BLASTER.ROUNDS_LEFT;
 		this.roundsPerClip = CONFIG.BLASTER.ROUNDS_PER_CLIP;

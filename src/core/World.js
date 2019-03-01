@@ -35,6 +35,7 @@ class World {
 		this.time = new Time();
 
 		this.assetManager = new AssetManager();
+		this.navMesh = null;
 		this.pathPlanner = null;
 		this.spawningManager = new SpawningManager( this );
 
@@ -303,7 +304,6 @@ class World {
 
 			// set references
 
-			enemy.navMesh = navMesh;
 			enemy.world = this;
 
 			// set animations
@@ -402,16 +402,16 @@ class World {
 	*/
 	_initNavMesh() {
 
-		const navMesh = this.assetManager.navMesh;
+		this.navMesh = this.assetManager.navMesh;
 
 		if ( this.debug ) {
 
-			this.helpers.convexRegionHelper = NavMeshUtils.createConvexRegionHelper( navMesh );
+			this.helpers.convexRegionHelper = NavMeshUtils.createConvexRegionHelper( this.navMesh );
 			this.scene.add( this.helpers.convexRegionHelper );
 
 			//
 
-			this.helpers.graphHelper = NavMeshUtils.createGraphHelper( navMesh.graph, 0.2 );
+			this.helpers.graphHelper = NavMeshUtils.createGraphHelper( this.navMesh.graph, 0.2 );
 			this.helpers.graphHelper.visible = false;
 			this.scene.add( this.helpers.graphHelper );
 
