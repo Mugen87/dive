@@ -146,83 +146,6 @@ class Enemy extends Vehicle {
 	}
 
 	/**
-	* Resets the enemy after a death.
-	*
-	* @return {Enemy} A reference to this game entity.
-	*/
-	reset() {
-
-		this.rotation.set( 0, 0, 0, 1 );
-
-		this.health = CONFIG.BOT.MAX_HEALTH;
-		this.status = ENEMY_STATUS_ALIVE;
-
-		// reset search for attacker
-
-		this.searchAttacker = false;
-		this.attackDirection.set( 0, 0, 0 );
-		this.endTimeSearch = Infinity;
-
-		// clear brain and memory
-
-		this.brain.clearSubgoals();
-
-		this.memoryRecords.length = 0;
-		this.memorySystem.clear();
-
-		// reset target and weapon system
-
-		this.targetSystem.reset();
-		this.weaponSystem.reset();
-
-		// reset all animations
-
-		this.resetAnimations();
-
-		// set default animation
-
-		const run = this.animations.get( 'soldier_forward' );
-		run.enabled = true;
-
-		return this;
-
-	}
-
-	/**
-	* Inits the death of an entity.
-	*
-	* @return {Enemy} A reference to this game entity.
-	*/
-	initDeath() {
-
-		this.status = ENEMY_STATUS_DYING;
-		this.endTimeDying = this.currentTime + this.dyingTime;
-
-		this.velocity.set( 0, 0, 0 );
-
-		// reset all steering behaviors
-
-		for ( let behavior of this.steering.behaviors ) {
-
-			behavior.active = false;
-
-		}
-
-		// reset all animations
-
-		this.resetAnimations();
-
-		// start death animation
-
-		const index = MathUtils.randInt( 1, 2 );
-		const dying = this.animations.get( 'soldier_death' + index );
-		dying.enabled = true;
-
-		return this;
-
-	}
-
-	/**
 	* Updates the internal state of this game entity.
 	*
 	* @param {Number} delta - The time delta.
@@ -284,8 +207,7 @@ class Enemy extends Vehicle {
 
 			if ( this.currentTime >= this.endTimeSearch ) {
 
-				this.searchAttacker = false;
-				this.endTimeSearch = Infinity;
+				this.resetSearch();
 
 			}
 
@@ -480,6 +402,47 @@ class Enemy extends Vehicle {
 	}
 
 	/**
+	* Resets the enemy after a death.
+	*
+	* @return {Enemy} A reference to this game entity.
+	*/
+	reset() {
+
+		this.rotation.set( 0, 0, 0, 1 );
+
+		this.health = CONFIG.BOT.MAX_HEALTH;
+		this.status = ENEMY_STATUS_ALIVE;
+
+		// reset search for attacker
+
+		this.resetSearch();
+
+		// clear brain and memory
+
+		this.brain.clearSubgoals();
+
+		this.memoryRecords.length = 0;
+		this.memorySystem.clear();
+
+		// reset target and weapon system
+
+		this.targetSystem.reset();
+		this.weaponSystem.reset();
+
+		// reset all animations
+
+		this.resetAnimations();
+
+		// set default animation
+
+		const run = this.animations.get( 'soldier_forward' );
+		run.enabled = true;
+
+		return this;
+
+	}
+
+	/**
 	* Resets all animations.
 	*
 	* @return {Enemy} A reference to this game entity.
@@ -493,6 +456,53 @@ class Enemy extends Vehicle {
 			animation.timeScale = 1;
 
 		}
+
+		return this;
+
+	}
+
+	/**
+	* Resets the search for an attacker.
+	*
+	* @return {Enemy} A reference to this game entity.
+	*/
+	resetSearch() {
+
+		this.searchAttacker = false;
+		this.attackDirection.set( 0, 0, 0 );
+		this.endTimeSearch = Infinity;
+
+	}
+
+	/**
+	* Inits the death of an entity.
+	*
+	* @return {Enemy} A reference to this game entity.
+	*/
+	initDeath() {
+
+		this.status = ENEMY_STATUS_DYING;
+		this.endTimeDying = this.currentTime + this.dyingTime;
+
+		this.velocity.set( 0, 0, 0 );
+
+		// reset all steering behaviors
+
+		for ( let behavior of this.steering.behaviors ) {
+
+			behavior.active = false;
+
+		}
+
+		// reset all animations
+
+		this.resetAnimations();
+
+		// start death animation
+
+		const index = MathUtils.randInt( 1, 2 );
+		const dying = this.animations.get( 'soldier_death' + index );
+		dying.enabled = true;
 
 		return this;
 

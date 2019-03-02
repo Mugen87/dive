@@ -310,8 +310,7 @@ class WeaponSystem {
 
 			// stop search for attacker if the enemy has a target
 
-			owner.searchAttacker = false;
-			owner.endTimeSearch = Infinity;
+			owner.resetSearch();
 
 			// if the game entity is visible, directly rotate towards it. Otherwise, focus
 			// the last known position
