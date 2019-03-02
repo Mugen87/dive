@@ -308,6 +308,11 @@ class WeaponSystem {
 
 		if ( target ) {
 
+			// stop search for attacker if the enemy has a target
+
+			owner.searchAttacker = false;
+			owner.endTimeSearch = Infinity;
+
 			// if the game entity is visible, directly rotate towards it. Otherwise, focus
 			// the last known position
 
@@ -336,12 +341,24 @@ class WeaponSystem {
 
 		} else {
 
-			// no target so rotate towards the movement direction
+			// of the enemy has no target, look for an attacker if necessary
 
-			displacement.copy( owner.velocity ).normalize();
-			targetPosition.copy( owner.position ).add( displacement );
+			if ( owner.searchAttacker ) {
 
-			owner.rotateTo( targetPosition, delta );
+				targetPosition.copy( owner.position ).add( owner.attackDirection );
+				owner.rotateTo( targetPosition, delta );
+
+			} else {
+
+				// if the enemy has no target and is not being attacked, just look along
+				// the movement direction
+
+				displacement.copy( owner.velocity ).normalize();
+				targetPosition.copy( owner.position ).add( displacement );
+
+				owner.rotateTo( targetPosition, delta );
+
+			}
 
 		}
 

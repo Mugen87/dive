@@ -35,7 +35,8 @@ const CONFIG = {
 			AIM_ACCURACY: 3 // world units
 		},
 		MAX_HEALTH: 100, // health points
-		DYING_TIME: 3 // seconds
+		DYING_TIME: 3, // seconds
+		SEARCH_FOR_ATTACKER_TIME: 3 // seconds
 	},
 	BLASTER: {
 		ROUNDS_LEFT: 12, // number

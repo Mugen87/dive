@@ -46,7 +46,14 @@ class Enemy extends Vehicle {
 		this.health = CONFIG.BOT.MAX_HEALTH;
 		this.status = ENEMY_STATUS_ALIVE;
 
-		//
+		// searching for attackers
+
+		this.searchAttacker = false;
+		this.attackDirection = new Vector3();
+		this.endTimeSearch = Infinity;
+		this.searchTime = CONFIG.BOT.SEARCH_FOR_ATTACKER_TIME;
+
+		// death animation
 
 		this.endTimeDying = Infinity;
 		this.dyingTime = CONFIG.BOT.DYING_TIME;
@@ -145,10 +152,16 @@ class Enemy extends Vehicle {
 	*/
 	reset() {
 
+		this.rotation.set( 0, 0, 0, 1 );
+
 		this.health = CONFIG.BOT.MAX_HEALTH;
 		this.status = ENEMY_STATUS_ALIVE;
 
-		this.rotation.set( 0, 0, 0, 1 );
+		// reset search for attacker
+
+		this.searchAttacker = false;
+		this.attackDirection.set( 0, 0, 0 );
+		this.endTimeSearch = Infinity;
 
 		// clear brain and memory
 
@@ -267,6 +280,15 @@ class Enemy extends Vehicle {
 
 			}
 
+			// stop search for attacker if necessary
+
+			if ( this.currentTime >= this.endTimeSearch ) {
+
+				this.searchAttacker = false;
+				this.endTimeSearch = Infinity;
+
+			}
+
 			// try to aim and shoot at a target
 
 			this.weaponSystem.aimAndShoot( delta );
@@ -275,9 +297,14 @@ class Enemy extends Vehicle {
 
 		// handle dying
 
-		if ( this.status === ENEMY_STATUS_DYING && this.currentTime >= this.endTimeDying ) {
+		if ( this.status === ENEMY_STATUS_DYING ) {
 
-			this.status = ENEMY_STATUS_DEAD;
+			if ( this.currentTime >= this.endTimeDying ) {
+
+				this.status = ENEMY_STATUS_DEAD;
+				this.endTimeDying = Infinity;
+
+			}
 
 		}
 
@@ -514,13 +541,19 @@ class Enemy extends Vehicle {
 
 			case MESSAGE_HIT:
 
+				// reduce health
+
 				this.health -= telegram.data.damage;
+
+				// logging
 
 				if ( this.world.debug ) {
 
 					console.log( 'DIVE.Enemy: Enemy with ID %s hit by Game Entity with ID %s receiving %i damage.', this.uuid, telegram.sender.uuid, telegram.data.damage );
 
 				}
+
+				// check if the enemy is death
 
 				if ( this.health <= 0 && this.status === ENEMY_STATUS_ALIVE ) {
 
@@ -535,6 +568,18 @@ class Enemy extends Vehicle {
 						const enemy = enemies[ i ];
 
 						if ( this !== enemy ) this.sendMessage( enemies[ i ], MESSAGE_DEAD );
+
+					}
+
+				} else {
+
+					// if not, search for attacker if the enemy has no current target and if the attacker is still alive
+
+					if ( this.targetSystem.hasTarget() === false && telegram.sender.status === ENEMY_STATUS_ALIVE ) {
+
+						this.searchAttacker = true;
+						this.endTimeSearch = this.currentTime + this.searchTime; // only search for a specific amount of time
+						this.attackDirection.copy( telegram.data.direction ).multiplyScalar( - 1 ); // negate the vector
 
 					}
 

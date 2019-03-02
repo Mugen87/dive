@@ -67,7 +67,7 @@ class Projectile extends MovingEntity {
 
 					// inform game entity about hit
 
-					this.owner.sendMessage( entity, MESSAGE_HIT, 0, { damage: this.damage } );
+					this.owner.sendMessage( entity, MESSAGE_HIT, 0, { damage: this.damage, direction: this.ray.direction } );
 
 					// remove projectile from world
 
