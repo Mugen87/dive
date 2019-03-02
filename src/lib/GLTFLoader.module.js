@@ -183,14 +183,6 @@ GLTFLoader.prototype = {
 						extensions[ extensionName ] = new GLTFMaterialsPbrSpecularGlossinessExtension( json );
 						break;
 
-					case EXTENSIONS.KHR_DRACO_MESH_COMPRESSION:
-						extensions[ extensionName ] = new GLTFDracoMeshCompressionExtension( json, this.dracoLoader );
-						break;
-
-					case EXTENSIONS.MSFT_TEXTURE_DDS:
-						extensions[ EXTENSIONS.MSFT_TEXTURE_DDS ] = new GLTFTextureDDSExtension();
-						break;
-
 					case EXTENSIONS.KHR_TEXTURE_TRANSFORM:
 						extensions[ EXTENSIONS.KHR_TEXTURE_TRANSFORM ] = new GLTFTextureTransformExtension( json );
 						break;
@@ -288,26 +280,6 @@ var EXTENSIONS = {
 	KHR_TEXTURE_TRANSFORM: 'KHR_texture_transform',
 	MSFT_TEXTURE_DDS: 'MSFT_texture_dds'
 };
-
-/**
- * DDS Texture Extension
- *
- * Specification:
- * https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/MSFT_texture_dds
- *
- */
-function GLTFTextureDDSExtension() {
-
-	if ( ! THREE.DDSLoader ) {
-
-		throw new Error( 'THREE.GLTFLoader: Attempting to load .dds texture without importing THREE.DDSLoader' );
-
-	}
-
-	this.name = EXTENSIONS.MSFT_TEXTURE_DDS;
-	this.ddsLoader = new THREE.DDSLoader();
-
-}
 
 /**
  * Lights Extension
@@ -494,83 +466,6 @@ function GLTFBinaryExtension( data ) {
 	}
 
 }
-
-/**
- * DRACO Mesh Compression Extension
- *
- * Specification: https://github.com/KhronosGroup/glTF/pull/874
- */
-function GLTFDracoMeshCompressionExtension( json, dracoLoader ) {
-
-	if ( ! dracoLoader ) {
-
-		throw new Error( 'THREE.GLTFLoader: No DRACOLoader instance provided.' );
-
-	}
-
-	this.name = EXTENSIONS.KHR_DRACO_MESH_COMPRESSION;
-	this.json = json;
-	this.dracoLoader = dracoLoader;
-	THREE.DRACOLoader.getDecoderModule();
-
-}
-
-GLTFDracoMeshCompressionExtension.prototype.decodePrimitive = function ( primitive, parser ) {
-
-	var json = this.json;
-	var dracoLoader = this.dracoLoader;
-	var bufferViewIndex = primitive.extensions[ this.name ].bufferView;
-	var gltfAttributeMap = primitive.extensions[ this.name ].attributes;
-	var threeAttributeMap = {};
-	var attributeNormalizedMap = {};
-	var attributeTypeMap = {};
-
-	for ( var attributeName in gltfAttributeMap ) {
-
-		if ( ! ( attributeName in ATTRIBUTES ) ) continue;
-
-		threeAttributeMap[ ATTRIBUTES[ attributeName ] ] = gltfAttributeMap[ attributeName ];
-
-	}
-
-	for ( attributeName in primitive.attributes ) {
-
-		if ( ATTRIBUTES[ attributeName ] !== undefined && gltfAttributeMap[ attributeName ] !== undefined ) {
-
-			var accessorDef = json.accessors[ primitive.attributes[ attributeName ] ];
-			var componentType = WEBGL_COMPONENT_TYPES[ accessorDef.componentType ];
-
-			attributeTypeMap[ ATTRIBUTES[ attributeName ] ] = componentType;
-			attributeNormalizedMap[ ATTRIBUTES[ attributeName ] ] = accessorDef.normalized === true;
-
-		}
-
-	}
-
-	return parser.getDependency( 'bufferView', bufferViewIndex ).then( function ( bufferView ) {
-
-		return new Promise( function ( resolve ) {
-
-			dracoLoader.decodeDracoFile( bufferView, function ( geometry ) {
-
-				for ( var attributeName in geometry.attributes ) {
-
-					var attribute = geometry.attributes[ attributeName ];
-					var normalized = attributeNormalizedMap[ attributeName ];
-
-					if ( normalized !== undefined ) attribute.normalized = normalized;
-
-				}
-
-				resolve( geometry );
-
-			}, threeAttributeMap, attributeTypeMap );
-
-		} );
-
-	} );
-
-};
 
 /**
  * Texture Transform Extension
@@ -2612,36 +2507,6 @@ GLTFParser.prototype.loadGeometries = function ( primitives ) {
 				return [ geometry ];
 
 			} );
-
-		} else if ( geometries.length > 1 && THREE.BufferGeometryUtils !== undefined ) {
-
-			// Tries to merge geometries with BufferGeometryUtils if possible
-
-			for ( var i = 1, il = primitives.length; i < il; i ++ ) {
-
-				// can't merge if draw mode is different
-				if ( primitives[ 0 ].mode !== primitives[ i ].mode ) return geometries;
-
-			}
-
-			// See if we've already created this combined geometry
-			var cache = parser.multiplePrimitivesCache;
-			var cacheKey = createArrayKeyBufferGeometry( geometries );
-			var cached = cache[ cacheKey ];
-
-			if ( cached ) {
-
-				if ( cached.geometry !== null ) return [ cached.geometry ];
-
-			} else {
-
-				var geometry = THREE.BufferGeometryUtils.mergeBufferGeometries( geometries, true );
-
-				cache[ cacheKey ] = { geometry: geometry, baseGeometries: geometries };
-
-				if ( geometry !== null ) return [ geometry ];
-
-			}
 
 		}
 
