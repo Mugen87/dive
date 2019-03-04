@@ -1,4 +1,4 @@
-import { Ray } from '../lib/yuka.module.js';
+import { Ray, FuzzyVariable, FuzzyRule, LeftShoulderFuzzySet, RightShoulderFuzzySet, TriangularFuzzySet, FuzzyAND, FuzzyModule } from '../lib/yuka.module.js';
 import { Weapon } from './Weapon.js';
 import { WEAPON_STATUS_READY, WEAPON_STATUS_SHOT, WEAPON_STATUS_RELOAD, WEAPON_STATUS_EMPTY, WEAPON_STATUS_OUT_OF_AMMO, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
 import { CONFIG } from '../core/Config.js';
@@ -175,6 +175,84 @@ class AssaultRifle extends Weapon {
 		this.endTimeShot = this.currentTime + this.shotTime;
 
 		return this;
+
+	}
+
+	/**
+	 * Returns a value representing the desirability of using the weapon.
+	 *
+	 * @param {Number} distance - The distance to the target.
+	 * @return {Number} A score between 0 and 1 representing the desirability.
+	 */
+	getDesirability( distance ) {
+
+		this.fuzzy.fuzzify( 'distanceToTarget', distance );
+
+		this.fuzzy.fuzzify( 'ammoStatus', this.roundsLeft );
+
+		return this.fuzzy.defuzzify( 'desirability' );
+
+	}
+
+	_initFuzzyModule() {
+
+		const fuzzyModuleAssaultRifle = this.fuzzy;
+
+		// FLV distance to target
+
+		const distanceToTarget = new FuzzyVariable();
+
+		const targetClose = new LeftShoulderFuzzySet( 0, 5, 10 );
+		const targetMedium = new TriangularFuzzySet( 5, 10, 15 );
+		const targetFar = new RightShoulderFuzzySet( 10, 15, 20 );
+
+		distanceToTarget.add( targetClose );
+		distanceToTarget.add( targetMedium );
+		distanceToTarget.add( targetFar );
+
+		fuzzyModuleAssaultRifle.addFLV( 'distanceToTarget', distanceToTarget );
+
+		// FLV desirability
+
+		const desirability = new FuzzyVariable();
+
+		const undesirable = new LeftShoulderFuzzySet( 0, 25, 50 );
+		const desirable = new TriangularFuzzySet( 25, 50, 75 );
+		const veryDesirable = new RightShoulderFuzzySet( 50, 75, 100 );
+
+		desirability.add( undesirable );
+		desirability.add( desirable );
+		desirability.add( veryDesirable );
+
+		fuzzyModuleAssaultRifle.addFLV( 'desirability', desirability );
+
+		// FLV ammo status assault rifle
+
+		const ammoStatusAssaultRifle = new FuzzyVariable();
+
+		const lowAssault = new LeftShoulderFuzzySet( 0, 2, 8 );
+		const okayAssault = new TriangularFuzzySet( 2, 10, 20 );
+		const LoadsAssault = new RightShoulderFuzzySet( 10, 20, this.maxAmmo );
+
+		ammoStatusAssaultRifle.add( lowAssault );
+		ammoStatusAssaultRifle.add( okayAssault );
+		ammoStatusAssaultRifle.add( LoadsAssault );
+
+		fuzzyModuleAssaultRifle.addFLV( 'ammoStatus', ammoStatusAssaultRifle );
+
+		// rules assault rifle
+
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( targetClose, lowAssault ), undesirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( targetClose, okayAssault ), desirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( targetClose, LoadsAssault ), desirable ) );
+
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( targetMedium, lowAssault ), desirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( targetMedium, okayAssault ), desirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( targetMedium, LoadsAssault ), veryDesirable ) );
+
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( targetFar, lowAssault ), desirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( targetFar, okayAssault ), veryDesirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( targetFar, LoadsAssault ), veryDesirable ) );
 
 	}
 

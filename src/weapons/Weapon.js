@@ -1,4 +1,4 @@
-import { GameEntity, MathUtils } from '../lib/yuka.module.js';
+import { FuzzyModule, GameEntity, MathUtils } from '../lib/yuka.module.js';
 import { WEAPON_STATUS_READY } from '../core/Constants.js';
 
 /**
@@ -39,6 +39,12 @@ class Weapon extends GameEntity {
 
 		this.endTimeShot = Infinity;
 		this.endTimeReload = Infinity;
+
+		//fuzzy module
+
+		this.fuzzy = new FuzzyModule();
+
+		this._initFuzzyModule();
 
 	}
 
@@ -107,6 +113,8 @@ class Weapon extends GameEntity {
 		return this;
 
 	}
+
+	_initFuzzyModule() {}
 
 }
 

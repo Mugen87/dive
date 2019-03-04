@@ -90,7 +90,7 @@ class WeaponSystem {
 
 		this._initRenderComponents();
 
-		// reset the system to its inital state
+		// reset the system to its initial state
 
 		this.reset();
 
@@ -119,6 +119,8 @@ class WeaponSystem {
 		// configure initial setup
 
 		this.addWeapon( WEAPON_TYPES_BLASTER );
+		this.addWeapon( WEAPON_TYPES_SHOTGUN );
+		this.addWeapon( WEAPON_TYPES_ASSAULT_RIFLE );
 
 		this.currentWeapon = this.weaponsMap.get( WEAPON_TYPES_BLASTER );
 
@@ -151,13 +153,13 @@ class WeaponSystem {
 
 				const weapon = this.weapons[ i ];
 
-				const desirability = weapon.getDesirability( distanceToTarget );
+				const desirability = ( weapon.roundsLeft === 0 ) ? 0 : weapon.getDesirability( distanceToTarget );
 
 				if ( desirability > highestDesirability ) {
 
 					highestDesirability = desirability;
 
-					this.currentWeapon = weapon;
+					this.changeWeapon( weapon.type );
 
 				}
 
@@ -180,7 +182,39 @@ class WeaponSystem {
 
 		const weapon = this.weaponsMap.get( type );
 
-		if ( weapon ) this.currentWeapon = weapon;
+		if ( weapon ) {
+
+			this.currentWeapon = weapon;
+			switch ( weapon.type ) {
+
+				case WEAPON_TYPES_BLASTER:
+
+					this.renderComponents.blaster.mesh.visible = true;
+					this.renderComponents.shotgun.mesh.visible = false;
+					this.renderComponents.assaultRifle.mesh.visible = false;
+					break;
+
+				case WEAPON_TYPES_SHOTGUN:
+
+					this.renderComponents.blaster.mesh.visible = false;
+					this.renderComponents.shotgun.mesh.visible = true;
+					this.renderComponents.assaultRifle.mesh.visible = false;
+					break;
+
+				case WEAPON_TYPES_ASSAULT_RIFLE:
+
+					this.renderComponents.blaster.mesh.visible = false;
+					this.renderComponents.shotgun.mesh.visible = false;
+					this.renderComponents.assaultRifle.mesh.visible = true;
+					break;
+
+				default:
+					console.error( 'DIVE.WeaponSystem: Invalid weapon type:', type );
+					break;
+
+			}
+
+		}
 
 		return this;
 

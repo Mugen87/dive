@@ -1,4 +1,4 @@
-import { Ray, Vector3 } from '../lib/yuka.module.js';
+import { Ray, Vector3, FuzzyRule, RightShoulderFuzzySet, LeftShoulderFuzzySet, TriangularFuzzySet, FuzzyVariable, FuzzyAND } from '../lib/yuka.module.js';
 import { Weapon } from './Weapon.js';
 import { CONFIG } from '../core/Config.js';
 import { WEAPON_STATUS_READY, WEAPON_STATUS_SHOT, WEAPON_STATUS_RELOAD, WEAPON_STATUS_EMPTY, WEAPON_STATUS_OUT_OF_AMMO, WEAPON_TYPES_SHOTGUN } from '../core/Constants.js';
@@ -208,6 +208,84 @@ class Shotgun extends Weapon {
 		this.endTimeShot = this.currentTime + this.shotTime;
 
 		return this;
+
+	}
+
+	/**
+	 * Returns a value representing the desirability of using the weapon.
+	 *
+	 * @param {Number} distance - The distance to the target.
+	 * @return {Number} A score between 0 and 1 representing the desirability.
+	 */
+	getDesirability( distance ) {
+
+		this.fuzzy.fuzzify( 'distanceToTarget', distance );
+
+		this.fuzzy.fuzzify( 'ammoStatus', this.roundsLeft );
+
+		return this.fuzzy.defuzzify( 'desirability' );
+
+	}
+
+	_initFuzzyModule() {
+
+		const fuzzyModuleShotGun = this.fuzzy;
+
+		// FLV distance to target
+
+		const distanceToTarget = new FuzzyVariable();
+
+		const targetClose = new LeftShoulderFuzzySet( 0, 5, 10 );
+		const targetMedium = new TriangularFuzzySet( 5, 10, 15 );
+		const targetFar = new RightShoulderFuzzySet( 10, 15, 20 );
+
+		distanceToTarget.add( targetClose );
+		distanceToTarget.add( targetMedium );
+		distanceToTarget.add( targetFar );
+
+		fuzzyModuleShotGun.addFLV( 'distanceToTarget', distanceToTarget );
+
+		// FLV desirability
+
+		const desirability = new FuzzyVariable();
+
+		const undesirable = new LeftShoulderFuzzySet( 0, 25, 50 );
+		const desirable = new TriangularFuzzySet( 25, 50, 75 );
+		const veryDesirable = new RightShoulderFuzzySet( 50, 75, 100 );
+
+		desirability.add( undesirable );
+		desirability.add( desirable );
+		desirability.add( veryDesirable );
+
+		fuzzyModuleShotGun.addFLV( 'desirability', desirability );
+
+		// FLV ammo status shotgun
+
+		const ammoStatusShotgun = new FuzzyVariable();
+
+		const lowShot = new LeftShoulderFuzzySet( 0, 2, 4 );
+		const okayShot = new TriangularFuzzySet( 2, 7, 10 );
+		const LoadsShot = new RightShoulderFuzzySet( 7, 10, 12 );
+
+		ammoStatusShotgun.add( lowShot );
+		ammoStatusShotgun.add( okayShot );
+		ammoStatusShotgun.add( LoadsShot );
+
+		fuzzyModuleShotGun.addFLV( 'ammoStatus', ammoStatusShotgun );
+
+		// rules shotgun
+
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetClose, lowShot ), desirable ) );
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetClose, okayShot ), veryDesirable ) );
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetClose, LoadsShot ), veryDesirable ) );
+
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetMedium, lowShot ), desirable ) );
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetMedium, okayShot ), veryDesirable ) );
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetMedium, LoadsShot ), veryDesirable ) );
+
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetFar, lowShot ), undesirable ) );
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetFar, okayShot ), undesirable ) );
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetFar, LoadsShot ), undesirable ) );
 
 	}
 
