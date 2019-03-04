@@ -83,8 +83,8 @@ class NavMeshUtils {
 
 	/**
 	* Creates a helper that visualizes the navigation path of a game entity.
-	* Note that the actual geometry is created at a later point since this
-	* helper is reused for all paths of a game entity.
+	* Note that the actual geometry is created at a later point since an instance
+	* of this helper is reused for all paths of a game entity.
 	*
 	* @return {Line} The helper.
 	*/
