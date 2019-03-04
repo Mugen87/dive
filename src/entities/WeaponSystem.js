@@ -10,6 +10,7 @@ const displacement = new Vector3();
 const targetPosition = new Vector3();
 const offset = new Vector3();
 
+
 /**
 * Class to manage all operations specific to weapons and their deployment.
 *
@@ -76,6 +77,12 @@ class WeaponSystem {
 			}
 		};
 
+		this.fuzzyModules = {
+			blaster: null,
+			shotgun: null,
+			assaultRifle: null
+		};
+
 	}
 
 	/**
@@ -108,7 +115,7 @@ class WeaponSystem {
 
 		// remove existing weapons if necessary
 
-		for ( let i = 0, l = this.weapons.length; i < l; i ++ ) {
+		for ( let i = ( this.weapons.length - 1 ); i >= 0; i -- ) {
 
 			const weapon = this.weapons[ i ];
 
@@ -635,6 +642,9 @@ class WeaponSystem {
 		this.renderComponents.assaultRifle.muzzle = muzzleSprite;
 
 		return this;
+
+	}
+	_initFuzzyModules() {
 
 	}
 

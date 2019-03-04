@@ -237,7 +237,7 @@ class Shotgun extends Weapon {
 
 		const targetClose = new LeftShoulderFuzzySet( 0, 5, 10 );
 		const targetMedium = new TriangularFuzzySet( 5, 10, 15 );
-		const targetFar = new RightShoulderFuzzySet( 10, 15, 20 );
+		const targetFar = new RightShoulderFuzzySet( 10, 15, 1000 );
 
 		distanceToTarget.add( targetClose );
 		distanceToTarget.add( targetMedium );
@@ -248,6 +248,7 @@ class Shotgun extends Weapon {
 		// FLV desirability
 
 		const desirability = new FuzzyVariable();
+
 
 		const undesirable = new LeftShoulderFuzzySet( 0, 25, 50 );
 		const desirable = new TriangularFuzzySet( 25, 50, 75 );
