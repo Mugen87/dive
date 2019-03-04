@@ -42,9 +42,7 @@ class Weapon extends GameEntity {
 
 		//fuzzy module
 
-		this.fuzzy = new FuzzyModule();
-
-		this._initFuzzyModule();
+		this.fuzzy = null;
 
 	}
 
@@ -113,8 +111,6 @@ class Weapon extends GameEntity {
 		return this;
 
 	}
-
-	_initFuzzyModule() {}
 
 }
 

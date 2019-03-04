@@ -1,4 +1,11 @@
-import { Vector3, MathUtils } from '../lib/yuka.module.js';
+import {
+	Vector3,
+	MathUtils,
+	FuzzyVariable,
+	LeftShoulderFuzzySet,
+	TriangularFuzzySet,
+	RightShoulderFuzzySet, FuzzyRule, FuzzyAND, FuzzyModule
+} from '../lib/yuka.module.js';
 import { CONFIG } from '../core/Config.js';
 import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
 import { WEAPON_STATUS_EMPTY, WEAPON_STATUS_READY, WEAPON_STATUS_OUT_OF_AMMO } from '../core/Constants.js';
@@ -79,7 +86,7 @@ class WeaponSystem {
 
 		this.fuzzyModules = {
 			blaster: null,
-			shotgun: null,
+			shotGun: null,
 			assaultRifle: null
 		};
 
@@ -96,6 +103,9 @@ class WeaponSystem {
 		// init render components
 
 		this._initRenderComponents();
+
+		// init fuzzy modules
+		this._initFuzzyModules();
 
 		// reset the system to its initial state
 
@@ -244,6 +254,7 @@ class WeaponSystem {
 
 			case WEAPON_TYPES_BLASTER:
 				weapon = new Blaster( owner );
+				weapon.fuzzy = this.fuzzyModules.blaster;
 				weapon.position.set( - 0.15, 1.30, 0.5 ); // relative position to the enenmy's body
 				weapon.muzzle = this.renderComponents.blaster.muzzle;
 				weapon.audios = this.renderComponents.blaster.audios;
@@ -251,6 +262,7 @@ class WeaponSystem {
 
 			case WEAPON_TYPES_SHOTGUN:
 				weapon = new Shotgun( owner );
+				weapon.fuzzy = this.fuzzyModules.shotGun;
 				weapon.position.set( - 0.15, 1.30, 0.5 );
 				weapon.muzzle = this.renderComponents.shotgun.muzzle;
 				weapon.audios = this.renderComponents.shotgun.audios;
@@ -258,6 +270,7 @@ class WeaponSystem {
 
 			case WEAPON_TYPES_ASSAULT_RIFLE:
 				weapon = new AssaultRifle( owner );
+				weapon.fuzzy = this.fuzzyModules.assaultRifle;
 				weapon.position.set( - 0.15, 1.30, 0.5 );
 				weapon.muzzle = this.renderComponents.assaultRifle.muzzle;
 				weapon.audios = this.renderComponents.assaultRifle.audios;
@@ -645,6 +658,163 @@ class WeaponSystem {
 
 	}
 	_initFuzzyModules() {
+
+		this.fuzzyModules.assaultRifle = new FuzzyModule();
+		this.fuzzyModules.blaster = new FuzzyModule();
+		this.fuzzyModules.shotGun = new FuzzyModule();
+
+		const fuzzyModuleAssaultRifle = this.fuzzyModules.assaultRifle;
+		const fuzzyModuleBlaster = this.fuzzyModules.blaster;
+		const fuzzyModuleShotGun = this.fuzzyModules.shotGun;
+
+		// FLV distance to target
+
+		const distanceToTarget = new FuzzyVariable();
+
+		const targetClose = new LeftShoulderFuzzySet( 0, 10, 20 );
+		const targetMedium = new TriangularFuzzySet( 10, 20, 40 );
+		const targetFar = new RightShoulderFuzzySet( 20, 40, 1000 );
+
+		distanceToTarget.add( targetClose );
+		distanceToTarget.add( targetMedium );
+		distanceToTarget.add( targetFar );
+
+		const distances = {
+			targetClose: targetClose,
+			targetMedium: targetMedium,
+			targetFar: targetFar
+		};
+
+		// FLV desirability
+
+		const desirability = new FuzzyVariable();
+
+		const undesirable = new LeftShoulderFuzzySet( 0, 25, 50 );
+		const desirable = new TriangularFuzzySet( 25, 50, 75 );
+		const veryDesirable = new RightShoulderFuzzySet( 50, 75, 100 );
+
+		desirability.add( undesirable );
+		desirability.add( desirable );
+		desirability.add( veryDesirable );
+
+		const desirables = {
+			undesirable: undesirable,
+			desirable: desirable,
+			veryDesirable: veryDesirable
+
+		};
+
+		fuzzyModuleAssaultRifle.addFLV( 'desirability', desirability );
+		fuzzyModuleAssaultRifle.addFLV( 'distanceToTarget', distanceToTarget );
+
+		fuzzyModuleBlaster.addFLV( 'desirability', desirability );
+		fuzzyModuleBlaster.addFLV( 'distanceToTarget', distanceToTarget );
+
+		fuzzyModuleShotGun.addFLV( 'desirability', desirability );
+		fuzzyModuleShotGun.addFLV( 'distanceToTarget', distanceToTarget );
+
+		this._initAssaultRifleFuzzyModule( distances, desirables );
+		this._initBlasterFuzzyModule( distances, desirables );
+		this._initShotGun( distances, desirables );
+
+	}
+
+	_initAssaultRifleFuzzyModule( distances, disrables ) {
+
+		// FLV ammo status assault rifle
+
+		const fuzzyModuleAssaultRifle = this.fuzzyModules.assaultRifle;
+		const ammoStatusAssaultRifle = new FuzzyVariable();
+
+		const lowAssault = new LeftShoulderFuzzySet( 0, 2, 8 );
+		const okayAssault = new TriangularFuzzySet( 2, 10, 20 );
+		const LoadsAssault = new RightShoulderFuzzySet( 10, 20, 30 );
+
+		ammoStatusAssaultRifle.add( lowAssault );
+		ammoStatusAssaultRifle.add( okayAssault );
+		ammoStatusAssaultRifle.add( LoadsAssault );
+
+		fuzzyModuleAssaultRifle.addFLV( 'ammoStatus', ammoStatusAssaultRifle );
+
+		// rules assault rifle
+
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( distances.targetClose, lowAssault ), disrables.undesirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( distances.targetClose, okayAssault ), disrables.desirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( distances.targetClose, LoadsAssault ), disrables.desirable ) );
+
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( distances.targetMedium, lowAssault ), disrables.desirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( distances.targetMedium, okayAssault ), disrables.desirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( distances.targetMedium, LoadsAssault ), disrables.veryDesirable ) );
+
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( distances.targetMedium, lowAssault ), disrables.desirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( distances.targetFar, okayAssault ), disrables.veryDesirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( distances.targetFar, LoadsAssault ), disrables.veryDesirable ) );
+
+	}
+
+	_initBlasterFuzzyModule( distances, disrables ) {
+
+		// FLV ammo status blaster
+
+		const fuzzyModuleBlaster = this.fuzzyModules.blaster;
+		const ammoStatusBlaster = new FuzzyVariable();
+
+		const lowBlaster = new LeftShoulderFuzzySet( 0, 8, 15 );
+		const okayBlaster = new TriangularFuzzySet( 8, 20, 30 );
+		const LoadsBlaster = new RightShoulderFuzzySet( 20, 30, 48 );
+
+		ammoStatusBlaster.add( lowBlaster );
+		ammoStatusBlaster.add( okayBlaster );
+		ammoStatusBlaster.add( LoadsBlaster );
+
+		fuzzyModuleBlaster.addFLV( 'ammoStatus', ammoStatusBlaster );
+
+		// rules blaster
+
+		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( distances.targetClose, lowBlaster ), disrables.undesirable ) );
+		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( distances.targetClose, okayBlaster ), disrables.desirable ) );
+		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( distances.targetClose, LoadsBlaster ), disrables.desirable ) );
+
+		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( distances.targetMedium, lowBlaster ), disrables.desirable ) );
+		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( distances.targetMedium, okayBlaster ), disrables.desirable ) );
+		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( distances.targetMedium, LoadsBlaster ), disrables.desirable ) );
+
+		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( distances.targetFar, lowBlaster ), disrables.desirable ) );
+		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( distances.targetFar, okayBlaster ), disrables.desirable ) );
+		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( distances.targetFar, LoadsBlaster ), disrables.desirable ) );
+
+	}
+
+	_initShotGun( distances, disrables ) {
+
+		// FLV ammo status assault rifle
+
+		const fuzzyModuleShotGun = this.fuzzyModules.shotGun;
+		const ammoStatusShotgun = new FuzzyVariable();
+
+		const lowShot = new LeftShoulderFuzzySet( 0, 2, 4 );
+		const okayShot = new TriangularFuzzySet( 2, 7, 10 );
+		const LoadsShot = new RightShoulderFuzzySet( 7, 10, 12 );
+
+		ammoStatusShotgun.add( lowShot );
+		ammoStatusShotgun.add( okayShot );
+		ammoStatusShotgun.add( LoadsShot );
+
+		fuzzyModuleShotGun.addFLV( 'ammoStatus', ammoStatusShotgun );
+
+		// rules shotgun
+
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( distances.targetClose, lowShot ), disrables.desirable ) );
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( distances.targetClose, okayShot ), disrables.veryDesirable ) );
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( distances.targetClose, LoadsShot ), disrables.veryDesirable ) );
+
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( distances.targetMedium, lowShot ), disrables.desirable ) );
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( distances.targetMedium, okayShot ), disrables.veryDesirable ) );
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( distances.targetMedium, LoadsShot ), disrables.veryDesirable ) );
+
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( distances.targetFar, lowShot ), disrables.undesirable ) );
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( distances.targetFar, okayShot ), disrables.undesirable ) );
+		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( distances.targetFar, LoadsShot ), disrables.undesirable ) );
 
 	}
 

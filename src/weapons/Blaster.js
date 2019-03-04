@@ -202,68 +202,6 @@ class Blaster extends Weapon {
 
 	}
 
-	_initFuzzyModule() {
-
-		const fuzzyModuleBlaster = this.fuzzy;
-
-		// FLV distance to target
-
-		const distanceToTarget = new FuzzyVariable();
-
-		const targetClose = new LeftShoulderFuzzySet( 0, 5, 10 );
-		const targetMedium = new TriangularFuzzySet( 5, 10, 15 );
-		const targetFar = new RightShoulderFuzzySet( 10, 15, 20 );
-
-		distanceToTarget.add( targetClose );
-		distanceToTarget.add( targetMedium );
-		distanceToTarget.add( targetFar );
-
-		fuzzyModuleBlaster.addFLV( 'distanceToTarget', distanceToTarget );
-
-		// FLV desirability
-
-		const desirability = new FuzzyVariable();
-
-		const undesirable = new LeftShoulderFuzzySet( 0, 25, 50 );
-		const desirable = new TriangularFuzzySet( 25, 50, 75 );
-		const veryDesirable = new RightShoulderFuzzySet( 50, 75, 100 );
-
-		desirability.add( undesirable );
-		desirability.add( desirable );
-		desirability.add( veryDesirable );
-
-		fuzzyModuleBlaster.addFLV( 'desirability', desirability );
-
-		// FLV ammo status blaster
-
-		const ammoStatusAssaultRifle = new FuzzyVariable();
-
-		const lowBlaster = new LeftShoulderFuzzySet( 0, 8, 15 );
-		const okayBlaster = new TriangularFuzzySet( 8, 20, 30 );
-		const LoadsBlaster = new RightShoulderFuzzySet( 20, 30, this.maxAmmo );
-
-		ammoStatusAssaultRifle.add( lowBlaster );
-		ammoStatusAssaultRifle.add( okayBlaster );
-		ammoStatusAssaultRifle.add( LoadsBlaster );
-
-		fuzzyModuleBlaster.addFLV( 'ammoStatus', ammoStatusAssaultRifle );
-
-		// rules blaster
-
-		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( targetClose, lowBlaster ), undesirable ) );
-		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( targetClose, okayBlaster ), desirable ) );
-		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( targetClose, LoadsBlaster ), desirable ) );
-
-		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( targetMedium, lowBlaster ), desirable ) );
-		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( targetMedium, okayBlaster ), desirable ) );
-		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( targetMedium, LoadsBlaster ), desirable ) );
-
-		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( targetFar, lowBlaster ), desirable ) );
-		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( targetFar, okayBlaster ), desirable ) );
-		fuzzyModuleBlaster.addRule( new FuzzyRule( new FuzzyAND( targetFar, LoadsBlaster ), desirable ) );
-
-	}
-
 }
 
 export { Blaster };

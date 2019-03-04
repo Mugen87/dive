@@ -227,68 +227,6 @@ class Shotgun extends Weapon {
 
 	}
 
-	_initFuzzyModule() {
-
-		const fuzzyModuleShotGun = this.fuzzy;
-
-		// FLV distance to target
-
-		const distanceToTarget = new FuzzyVariable();
-
-		const targetClose = new LeftShoulderFuzzySet( 0, 5, 10 );
-		const targetMedium = new TriangularFuzzySet( 5, 10, 15 );
-		const targetFar = new RightShoulderFuzzySet( 10, 15, 1000 );
-
-		distanceToTarget.add( targetClose );
-		distanceToTarget.add( targetMedium );
-		distanceToTarget.add( targetFar );
-
-		fuzzyModuleShotGun.addFLV( 'distanceToTarget', distanceToTarget );
-
-		// FLV desirability
-
-		const desirability = new FuzzyVariable();
-
-
-		const undesirable = new LeftShoulderFuzzySet( 0, 25, 50 );
-		const desirable = new TriangularFuzzySet( 25, 50, 75 );
-		const veryDesirable = new RightShoulderFuzzySet( 50, 75, 100 );
-
-		desirability.add( undesirable );
-		desirability.add( desirable );
-		desirability.add( veryDesirable );
-
-		fuzzyModuleShotGun.addFLV( 'desirability', desirability );
-
-		// FLV ammo status shotgun
-
-		const ammoStatusShotgun = new FuzzyVariable();
-
-		const lowShot = new LeftShoulderFuzzySet( 0, 2, 4 );
-		const okayShot = new TriangularFuzzySet( 2, 7, 10 );
-		const LoadsShot = new RightShoulderFuzzySet( 7, 10, 12 );
-
-		ammoStatusShotgun.add( lowShot );
-		ammoStatusShotgun.add( okayShot );
-		ammoStatusShotgun.add( LoadsShot );
-
-		fuzzyModuleShotGun.addFLV( 'ammoStatus', ammoStatusShotgun );
-
-		// rules shotgun
-
-		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetClose, lowShot ), desirable ) );
-		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetClose, okayShot ), veryDesirable ) );
-		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetClose, LoadsShot ), veryDesirable ) );
-
-		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetMedium, lowShot ), desirable ) );
-		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetMedium, okayShot ), veryDesirable ) );
-		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetMedium, LoadsShot ), veryDesirable ) );
-
-		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetFar, lowShot ), undesirable ) );
-		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetFar, okayShot ), undesirable ) );
-		fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( targetFar, LoadsShot ), undesirable ) );
-
-	}
 
 }
 
