@@ -1,7 +1,8 @@
-import { Vehicle, Regulator, Think, FollowPathBehavior, SeekBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, AABB, MathUtils } from '../lib/yuka.module.js';
+import { Vehicle, Regulator, Think, FollowPathBehavior, SeekBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, MathUtils } from '../lib/yuka.module.js';
 import { MESSAGE_HIT, MESSAGE_DEAD, ENEMY_STATUS_ALIVE, ENEMY_STATUS_DYING, ENEMY_STATUS_DEAD } from '../core/Constants.js';
 import { AttackEvaluator } from '../evaluators/AttackEvaluator.js';
 import { ExploreEvaluator } from '../evaluators/ExploreEvaluator.js';
+import { CharacterBounds } from './CharacterBounds.js';
 import { WeaponSystem } from './WeaponSystem.js';
 import { TargetSystem } from './TargetSystem.js';
 import { CONFIG } from '../core/Config.js';
@@ -64,10 +65,9 @@ class Enemy extends Vehicle {
 		this.head.position.y = CONFIG.BOT.HEAD.HEIGHT;
 		this.add( this.head );
 
-		// hitbox
+		// bounds
 
-		this.defaultHitbox = new AABB( new Vector3( - 0.4, 0, - 0.4 ), new Vector3( 0.4, 1.8, 0.4 ) );
-		this.currentHitbox = new AABB();
+		this.bounds = new CharacterBounds( this );
 
 		// animation
 
@@ -139,6 +139,7 @@ class Enemy extends Vehicle {
 		const level = this.manager.getEntityByName( 'level' );
 		this.vision.addObstacle( level );
 
+		this.bounds.init();
 		this.weaponSystem.init();
 
 		return this;
@@ -163,7 +164,7 @@ class Enemy extends Vehicle {
 
 			// update hitbox
 
-			this.currentHitbox.copy( this.defaultHitbox ).applyMatrix4( this.worldMatrix );
+			this.bounds.update();
 
 			// update perception
 
@@ -518,7 +519,7 @@ class Enemy extends Vehicle {
 	*/
 	checkProjectileIntersection( ray, intersectionPoint ) {
 
-		return ray.intersectAABB( this.currentHitbox, intersectionPoint );
+		return this.bounds.intersectRay( ray, intersectionPoint );
 
 	}
 

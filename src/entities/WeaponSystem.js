@@ -375,7 +375,7 @@ class WeaponSystem {
 
 				if ( targeted === true && timeBecameVisible >= this.reactionTime ) {
 
-					target.currentHitbox.getCenter( targetPosition );
+					target.bounds.getCenter( targetPosition );
 
 					this.addNoiseToAim( targetPosition );
 

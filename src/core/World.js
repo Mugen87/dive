@@ -346,14 +346,6 @@ class World {
 				renderComponent.add( uuidHelper );
 				this.helpers.uuidHelpers.push( uuidHelper );
 
-				//
-
-				const hitboxHelper = SceneUtils.createHitboxHelper( enemy.defaultHitbox );
-				hitboxHelper.visible = false;
-
-				renderComponent.add( hitboxHelper );
-				this.helpers.hitboxHelpers.push( hitboxHelper );
-
 			}
 
 		}
