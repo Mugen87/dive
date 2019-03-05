@@ -767,6 +767,7 @@ class WeaponSystem {
 	/**
 	* Inits the fuzzy module for the blaster.
 	*
+	* @param {Object} fuzzySets - An object with predefined fuzzy sets.
 	* @return {WeaponSystem} A reference to this weapon system.
 	*/
 	_initBlasterFuzzyModule( fuzzySets ) {
@@ -807,6 +808,7 @@ class WeaponSystem {
 	/**
 	* Inits the fuzzy module for the shotgun.
 	*
+	* @param {Object} fuzzySets - An object with predefined fuzzy sets.
 	* @return {WeaponSystem} A reference to this weapon system.
 	*/
 	_initShotgunFuzzyModule( fuzzySets ) {
