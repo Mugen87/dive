@@ -1,12 +1,4 @@
-import {
-	FuzzyAND,
-	FuzzyRule,
-	FuzzyVariable,
-	LeftShoulderFuzzySet,
-	Ray,
-	RightShoulderFuzzySet,
-	TriangularFuzzySet
-} from '../lib/yuka.module.js';
+import { Ray } from '../lib/yuka.module.js';
 import { Weapon } from './Weapon.js';
 import { WEAPON_STATUS_READY, WEAPON_STATUS_SHOT, WEAPON_STATUS_RELOAD, WEAPON_STATUS_EMPTY, WEAPON_STATUS_OUT_OF_AMMO, WEAPON_TYPES_BLASTER } from '../core/Constants.js';
 import { CONFIG } from '../core/Config.js';
@@ -187,15 +179,14 @@ class Blaster extends Weapon {
 	}
 
 	/**
-	 * Returns a value representing the desirability of using the weapon.
-	 *
-	 * @param {Number} distance - The distance to the target.
-	 * @return {Number} A score between 0 and 1 representing the desirability.
-	 */
+	* Returns a value representing the desirability of using the weapon.
+	*
+	* @param {Number} distance - The distance to the target.
+	* @return {Number} A score between 0 and 1 representing the desirability.
+	*/
 	getDesirability( distance ) {
 
 		this.fuzzy.fuzzify( 'distanceToTarget', distance );
-
 		this.fuzzy.fuzzify( 'ammoStatus', this.roundsLeft );
 
 		return this.fuzzy.defuzzify( 'desirability' );

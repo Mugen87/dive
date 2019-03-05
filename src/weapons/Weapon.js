@@ -1,4 +1,4 @@
-import { FuzzyModule, GameEntity, MathUtils } from '../lib/yuka.module.js';
+import { GameEntity, MathUtils } from '../lib/yuka.module.js';
 import { WEAPON_STATUS_READY } from '../core/Constants.js';
 
 /**
