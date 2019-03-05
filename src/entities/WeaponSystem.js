@@ -78,6 +78,9 @@ class WeaponSystem {
 			}
 		};
 
+		// manages the fuzzy modules for the weapons. they are going to be used to
+		// determine the best weapon for a given situation
+
 		this.fuzzyModules = {
 			blaster: null,
 			shotGun: null,
