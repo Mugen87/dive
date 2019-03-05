@@ -11,7 +11,6 @@ const displacement = new Vector3();
 const targetPosition = new Vector3();
 const offset = new Vector3();
 
-
 /**
 * Class to manage all operations specific to weapons and their deployment.
 *
@@ -200,24 +199,24 @@ class WeaponSystem {
 		if ( weapon ) {
 
 			this.currentWeapon = weapon;
+
+			// adjust render components. only a single weapon can be visible
+
 			switch ( weapon.type ) {
 
 				case WEAPON_TYPES_BLASTER:
-
 					this.renderComponents.blaster.mesh.visible = true;
 					this.renderComponents.shotgun.mesh.visible = false;
 					this.renderComponents.assaultRifle.mesh.visible = false;
 					break;
 
 				case WEAPON_TYPES_SHOTGUN:
-
 					this.renderComponents.blaster.mesh.visible = false;
 					this.renderComponents.shotgun.mesh.visible = true;
 					this.renderComponents.assaultRifle.mesh.visible = false;
 					break;
 
 				case WEAPON_TYPES_ASSAULT_RIFLE:
-
 					this.renderComponents.blaster.mesh.visible = false;
 					this.renderComponents.shotgun.mesh.visible = false;
 					this.renderComponents.assaultRifle.mesh.visible = true;
