@@ -155,6 +155,7 @@ class WeaponSystem {
 		if ( target ) {
 
 			let highestDesirability = 0;
+			let weaponType = WEAPON_TYPES_BLASTER;
 
 			// calculate the distance to the target
 
@@ -172,13 +173,13 @@ class WeaponSystem {
 				if ( desirability > highestDesirability ) {
 
 					highestDesirability = desirability;
-
-					this.changeWeapon( weapon.type );
+					weaponType = weapon.type;
 
 				}
 
 			}
 
+			this.changeWeapon( weaponType );
 
 		}
 
