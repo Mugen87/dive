@@ -129,13 +129,15 @@ class WeaponSystem {
 
 		}
 
-		// configure initial setup
+		// add weapons to inventory
 
 		this.addWeapon( WEAPON_TYPES_BLASTER );
 		this.addWeapon( WEAPON_TYPES_SHOTGUN );
 		this.addWeapon( WEAPON_TYPES_ASSAULT_RIFLE );
 
-		this.currentWeapon = this.weaponsMap.get( WEAPON_TYPES_BLASTER );
+		// change to initial weapon
+
+		this.changeWeapon( WEAPON_TYPES_BLASTER );
 
 		return this;
 
@@ -345,13 +347,12 @@ class WeaponSystem {
 	}
 
 	/**
-	* Aims the enemy's current weapon at the target (if there is a target)
-	* and, if aimed correctly, fires a round.
+	* Updates the aiming and shooting of the enemy.
 	*
 	* @param {Number} delta - The time delta value.
 	* @return {WeaponSystem} A reference to this weapon system.
 	*/
-	aimAndShoot( delta ) {
+	update( delta ) {
 
 		const owner = this.owner;
 		const targetSystem = owner.targetSystem;

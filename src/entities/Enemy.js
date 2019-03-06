@@ -196,7 +196,7 @@ class Enemy extends Vehicle {
 
 			}
 
-			// update weapon system
+			// update weapon selection
 
 			if ( this.weaponSelectionRegulator.ready() ) {
 
@@ -212,9 +212,10 @@ class Enemy extends Vehicle {
 
 			}
 
-			// try to aim and shoot at a target
+			// updating the weapon system means updating the aiming and shooting.
+			// so this call will change the actual heading/orientation of the enemy
 
-			this.weaponSystem.aimAndShoot( delta );
+			this.weaponSystem.update( delta );
 
 		}
 

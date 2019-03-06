@@ -35,8 +35,6 @@ class Weapon extends GameEntity {
 		this.shotTime = Infinity;
 		this.reloadTime = Infinity;
 
-		this.currentDesirability = 0;
-
 		this.endTimeShot = Infinity;
 		this.endTimeReload = Infinity;
 
