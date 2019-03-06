@@ -32,6 +32,8 @@ class Shotgun extends Weapon {
 
 		this.shotTime = CONFIG.SHOTGUN.SHOT_TIME;
 		this.reloadTime = CONFIG.SHOTGUN.RELOAD_TIME;
+		this.equipTime = CONFIG.SHOTGUN.EQUIP_TIME;
+		this.hideTime = CONFIG.SHOTGUN.HIDE_TIME;
 
 		// shotgun specific properties
 

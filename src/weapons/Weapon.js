@@ -1,5 +1,5 @@
 import { GameEntity, MathUtils } from '../lib/yuka.module.js';
-import { WEAPON_STATUS_READY } from '../core/Constants.js';
+import { WEAPON_STATUS_READY, WEAPON_STATUS_UNREADY, WEAPON_STATUS_EQUIP, WEAPON_STATUS_HIDE } from '../core/Constants.js';
 
 /**
 * Base class for all weapons.
@@ -20,7 +20,7 @@ class Weapon extends GameEntity {
 		this.owner = owner;
 
 		this.type = null;
-		this.status = WEAPON_STATUS_READY;
+		this.status = WEAPON_STATUS_UNREADY;
 
 		this.fuzzyModule = null;
 
@@ -32,11 +32,16 @@ class Weapon extends GameEntity {
 		// times are in seconds
 
 		this.currentTime = 0;
+
 		this.shotTime = Infinity;
 		this.reloadTime = Infinity;
+		this.equipTime = Infinity;
+		this.hideTime = Infinity;
 
 		this.endTimeShot = Infinity;
 		this.endTimeReload = Infinity;
+		this.endTimeEquip = Infinity;
+		this.endTimeHide = Infinity;
 
 		//fuzzy module
 
@@ -82,6 +87,34 @@ class Weapon extends GameEntity {
 	}
 
 	/**
+	* Equips the weapon.
+	*
+	* @return {Weapon} A reference to this weapon.
+	*/
+	equip() {
+
+		this.status = WEAPON_STATUS_EQUIP;
+		this.endTimeEquip = this.currentTime + this.equipTime;
+
+		return this;
+
+	}
+
+	/**
+	* Hides the weapon.
+	*
+	* @return {Weapon} A reference to this weapon.
+	*/
+	hide() {
+
+		this.status = WEAPON_STATUS_HIDE;
+		this.endTimeHide = this.currentTime + this.hideTime;
+
+		return this;
+
+	}
+
+	/**
 	* Reloads the weapon.
 	*
 	* @return {Weapon} A reference to this weapon.
@@ -105,6 +138,20 @@ class Weapon extends GameEntity {
 	update( delta ) {
 
 		this.currentTime += delta;
+
+		if ( this.currentTime >= this.endTimeEquip ) {
+
+			this.status = WEAPON_STATUS_READY;
+			this.endTimeEquip = Infinity;
+
+		}
+
+		if ( this.currentTime >= this.endTimeHide ) {
+
+			this.status = WEAPON_STATUS_UNREADY;
+			this.endTimeHide = Infinity;
+
+		}
 
 		return this;
 

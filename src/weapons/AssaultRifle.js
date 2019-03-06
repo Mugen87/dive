@@ -30,6 +30,8 @@ class AssaultRifle extends Weapon {
 
 		this.shotTime = CONFIG.ASSAULT_RIFLE.SHOT_TIME;
 		this.reloadTime = CONFIG.ASSAULT_RIFLE.RELOAD_TIME;
+		this.equipTime = CONFIG.ASSAULT_RIFLE.EQUIP_TIME;
+		this.hideTime = CONFIG.ASSAULT_RIFLE.HIDE_TIME;
 
 		// assault rifle specific properties
 

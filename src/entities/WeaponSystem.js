@@ -2,7 +2,7 @@ import { Vector3, MathUtils } from '../lib/yuka.module.js';
 import { FuzzyVariable, LeftShoulderFuzzySet, TriangularFuzzySet, RightShoulderFuzzySet, FuzzyRule, FuzzyAND, FuzzyModule } from '../lib/yuka.module.js';
 import { CONFIG } from '../core/Config.js';
 import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
-import { WEAPON_STATUS_EMPTY, WEAPON_STATUS_READY, WEAPON_STATUS_OUT_OF_AMMO } from '../core/Constants.js';
+import { WEAPON_STATUS_EMPTY, WEAPON_STATUS_READY, WEAPON_STATUS_OUT_OF_AMMO, WEAPON_STATUS_UNREADY } from '../core/Constants.js';
 import { Blaster } from '../weapons/Blaster.js';
 import { Shotgun } from '../weapons/Shotgun.js';
 import { AssaultRifle } from '../weapons/AssaultRifle.js';
@@ -56,6 +56,10 @@ class WeaponSystem {
 		// represents the current hold weapon
 
 		this.currentWeapon = null;
+
+		// represents the next weapon type the enemy wants to use
+
+		this.nextWeaponType = null;
 
 		// manages the render components for the weapons
 
@@ -139,6 +143,14 @@ class WeaponSystem {
 
 		this.changeWeapon( WEAPON_TYPES_BLASTER );
 
+		// reset next weapon
+
+		this.nextWeaponType = null;
+
+		// the initial weapon is always ready to use
+
+		this.currentWeapon.status = WEAPON_STATUS_READY;
+
 		return this;
 
 	}
@@ -156,7 +168,7 @@ class WeaponSystem {
 		if ( target ) {
 
 			let highestDesirability = 0;
-			let bestWeapon = WEAPON_TYPES_BLASTER;
+			let bestWeaponType = WEAPON_TYPES_BLASTER;
 
 			// calculate the distance to the target
 
@@ -174,13 +186,19 @@ class WeaponSystem {
 				if ( desirability > highestDesirability ) {
 
 					highestDesirability = desirability;
-					bestWeapon = weapon.type;
+					bestWeaponType = weapon.type;
 
 				}
 
 			}
 
-			this.changeWeapon( bestWeapon );
+			// if the best weapon is not already used, equip it
+
+			if ( this.currentWeapon.type !== bestWeaponType ) {
+
+				this.nextWeaponType = bestWeaponType;
+
+			}
 
 		}
 
@@ -347,12 +365,60 @@ class WeaponSystem {
 	}
 
 	/**
-	* Updates the aiming and shooting of the enemy.
+	* Updates method of the weapon system. Called each simulation step if the owner is alive.
 	*
 	* @param {Number} delta - The time delta value.
 	* @return {WeaponSystem} A reference to this weapon system.
 	*/
 	update( delta ) {
+
+		this.updateWeaponChange();
+		this.updateAimAndShot( delta );
+
+		return this;
+
+	}
+
+	/**
+	* Updates weapon changing logic.
+	*
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	updateWeaponChange() {
+
+		if ( this.nextWeaponType ) {
+
+			// if the current weapon is ready, hide it in order to start the weapon change
+
+			if ( this.currentWeapon.status === WEAPON_STATUS_READY ) {
+
+				this.currentWeapon.hide();
+
+			}
+
+			// as soon as the current weapon becomes unready, change to the defined next weapon type
+
+			if ( this.currentWeapon.status === WEAPON_STATUS_UNREADY ) {
+
+				this.changeWeapon( this.nextWeaponType );
+				this.currentWeapon.equip();
+				this.nextWeaponType = null;
+
+			}
+
+		}
+
+		return this;
+
+	}
+
+	/**
+	* Updates the aiming and shooting of the enemy.
+	*
+	* @param {Number} delta - The time delta value.
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	updateAimAndShot( delta ) {
 
 		const owner = this.owner;
 		const targetSystem = owner.targetSystem;

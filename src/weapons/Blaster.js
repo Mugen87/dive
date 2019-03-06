@@ -30,6 +30,8 @@ class Blaster extends Weapon {
 
 		this.shotTime = CONFIG.BLASTER.SHOT_TIME;
 		this.reloadTime = CONFIG.BLASTER.RELOAD_TIME;
+		this.equipTime = CONFIG.BLASTER.EQUIP_TIME;
+		this.hideTime = CONFIG.BLASTER.HIDE_TIME;
 
 		// blaster specific properties
 

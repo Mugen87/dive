@@ -45,7 +45,9 @@ const CONFIG = {
 		MAX_AMMO: 48, // number
 		SHOT_TIME: 0.4, // seconds
 		RELOAD_TIME: 1.6, // seconds
-		MUZZLE_TIME: 0.03 // seconds
+		MUZZLE_TIME: 0.03, // seconds
+		EQUIP_TIME: 1, // seconds
+		HIDE_TIME: 1 // seconds
 
 	},
 	SHOTGUN: {
@@ -58,7 +60,9 @@ const CONFIG = {
 		SHOT_RELOAD_TIME: 0.5, // seconds
 		MUZZLE_TIME: 0.03, // seconds
 		SPREAD: 0.04,
-		BULLETS_PER_SHOT: 6 // number
+		BULLETS_PER_SHOT: 6, // number
+		EQUIP_TIME: 1, // seconds
+		HIDE_TIME: 1 // seconds
 	},
 	ASSAULT_RIFLE: {
 		ROUNDS_LEFT: 30, // number
@@ -67,12 +71,14 @@ const CONFIG = {
 		MAX_AMMO: 90, // number
 		SHOT_TIME: 0.2, // seconds
 		RELOAD_TIME: 1.6, // seconds
-		MUZZLE_TIME: 0.03 // seconds
+		MUZZLE_TIME: 0.03, // seconds
+		EQUIP_TIME: 1, // seconds
+		HIDE_TIME: 1 // seconds
 
 	},
 	BULLET: {
 		MAXSPEED: 400, // meter/seconds
-		LIFETIME: 1, // seconds,
+		LIFETIME: 1, // seconds
 		DAMAGE: 20 // health points
 	}
 };
