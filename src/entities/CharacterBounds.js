@@ -45,7 +45,7 @@ class CharacterBounds {
 
 			// TODO: Replace this with the skeleton based AABBs
 			// Right now, the visualized AABB of the outer hitbox is wrong since the
-			// respective lines can be rotate. This is not possible with an AABB.
+			// respective lines can be rotated. This is not possible with an AABB.
 
 			const hitboxHelper = SceneUtils.createHitboxHelper( this._outerHitboxDefinition );
 			hitboxHelper.visible = false;
@@ -60,8 +60,8 @@ class CharacterBounds {
 	}
 
 	/**
-    * Updates the outer bounding volume of this instance. Deeper bounding volumes
-    * are only update if necessary.
+	* Updates the outer bounding volume of this instance. Deeper bounding volumes
+	* are only update if necessary.
 	*
 	* @return {CharacterBounds} A reference to this instance.
 	*/
@@ -86,8 +86,8 @@ class CharacterBounds {
 	}
 
 	/**
-    * Returns the intesection point if the given ray hits one of the bounding volumes.
-    * If no intersection is detected, null is returned.
+	* Returns the intesection point if the given ray hits one of the bounding volumes.
+	* If no intersection is detected, null is returned.
 	*
 	* @param {Ray} ray - The ray.
 	* @param {Vector3} intersectionPoint - The intersection point.
