@@ -561,7 +561,6 @@ class WeaponSystem {
 		shotgunMesh.rotation.set( Math.PI * 0.5, Math.PI * 1.05, 0 );
 		shotgunMesh.position.set( - 5, 30, 2 );
 		shotgunMesh.updateMatrix();
-		shotgunMesh.visible = false; // this weapon is not visible by default
 
 		// add the mesh to the right hand of the enemy
 
@@ -619,7 +618,6 @@ class WeaponSystem {
 		assaultRifleMesh.rotation.set( Math.PI * 0.5, Math.PI * 1, 0 );
 		assaultRifleMesh.position.set( - 5, 20, 7 );
 		assaultRifleMesh.updateMatrix();
-		assaultRifleMesh.visible = false; // this weapon is not visible by default
 
 		// add the mesh to the right hand of the enemy
 
