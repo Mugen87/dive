@@ -101,6 +101,7 @@ class WeaponSystem {
 		this._initRenderComponents();
 
 		// init fuzzy modules
+
 		this._initFuzzyModules();
 
 		// reset the system to its initial state
@@ -110,7 +111,6 @@ class WeaponSystem {
 		return this;
 
 	}
-
 
 	/**
 	* Resets the internal data structures and sets an initial weapon.
