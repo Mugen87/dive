@@ -191,7 +191,7 @@ class AssaultRifle extends Weapon {
 		this.fuzzy.fuzzify( 'distanceToTarget', distance );
 		this.fuzzy.fuzzify( 'ammoStatus', this.roundsLeft );
 
-		return this.fuzzy.defuzzify( 'desirability' );
+		return this.fuzzy.defuzzify( 'desirability' ) / 100;
 
 	}
 

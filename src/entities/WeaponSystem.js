@@ -181,7 +181,14 @@ class WeaponSystem {
 
 				const weapon = this.weapons[ i ];
 
-				const desirability = ( weapon.roundsLeft === 0 ) ? 0 : weapon.getDesirability( distanceToTarget );
+				let desirability = ( weapon.roundsLeft === 0 ) ? 0 : weapon.getDesirability( distanceToTarget );
+
+				// if weapon is different than currentWeapon, decrease the desirability in order to respect the
+				// cost of changing a weapon
+
+				if ( this.currentWeapon !== weapon ) desirability -= CONFIG.BOT.WEAPON.CHANGE_COST;
+
+				//
 
 				if ( desirability > highestDesirability ) {
 
