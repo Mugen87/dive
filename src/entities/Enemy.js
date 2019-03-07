@@ -624,9 +624,9 @@ class Enemy extends Vehicle {
 
 				} else {
 
-					// if not, search for attacker if the enemy has no current target and if the attacker is still alive
+					// if not, search for attacker if he is still alive
 
-					if ( this.targetSystem.hasTarget() === false && telegram.sender.status === ENEMY_STATUS_ALIVE ) {
+					if ( telegram.sender.status === ENEMY_STATUS_ALIVE ) {
 
 						this.searchAttacker = true;
 						this.endTimeSearch = this.currentTime + this.searchTime; // only search for a specific amount of time

@@ -433,19 +433,20 @@ class WeaponSystem {
 
 		if ( target ) {
 
-			// stop search for attacker if the enemy has a target
-
-			owner.resetSearch();
-
-			// if the game entity is visible, directly rotate towards it. Otherwise, focus
-			// the last known position
+			// if the target is visible, directly rotate towards it and then
+			// fire a round
 
 			if ( targetSystem.isTargetShootable() ) {
 
-				const targeted = owner.rotateTo( target.position, delta, 0.05 );
-				const timeBecameVisible = targetSystem.getTimeBecameVisible();
+				// stop search for the attacker if the target is shootable
 
-				// "targeted" is true if the entity is faced to the target
+				owner.resetSearch();
+
+				// the bot can fire a round if it is headed towards its target
+				// and after a certain reaction time
+
+				const targeted = owner.rotateTo( target.position, delta, 0.05 ); // "targeted" is true if the enemy is faced to the target
+				const timeBecameVisible = targetSystem.getTimeBecameVisible();
 
 				if ( targeted === true && timeBecameVisible >= this.reactionTime ) {
 
@@ -459,13 +460,27 @@ class WeaponSystem {
 
 			} else {
 
-				owner.rotateTo( targetSystem.getLastSensedPosition(), delta );
+				// the target might not be shootable but the enemy is still attacked.
+				// in this case, search for the attacker
+
+				if ( owner.searchAttacker ) {
+
+					targetPosition.copy( owner.position ).add( owner.attackDirection );
+					owner.rotateTo( targetPosition, delta );
+
+				} else {
+
+					// otherwise rotate to the latest recorded position
+
+					owner.rotateTo( targetSystem.getLastSensedPosition(), delta );
+
+				}
 
 			}
 
 		} else {
 
-			// of the enemy has no target, look for an attacker if necessary
+			// if the enemy has no target, look for an attacker if necessary
 
 			if ( owner.searchAttacker ) {
 
