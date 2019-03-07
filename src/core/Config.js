@@ -33,7 +33,7 @@ const CONFIG = {
 			UPDATE_FREQUENCY: 4, // number per seconds
 			REACTION_TIME: 0.2, // seconds
 			AIM_ACCURACY: 3, // world units
-			CHANGE_COST: 0.3 // desirability
+			CHANGE_COST: 0.4 // desirability
 		},
 		MAX_HEALTH: 100, // health points
 		DYING_TIME: 3, // seconds
