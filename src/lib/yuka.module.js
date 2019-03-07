@@ -1571,6 +1571,7 @@ const m1 = new Matrix3();
 const m2 = new Matrix3();
 
 const matrix = new Matrix3();
+const vector = new Vector3();
 
 /**
 * Class representing a quaternion.
@@ -1915,6 +1916,41 @@ class Quaternion {
 		this.x = ( x * ratioA ) + ( this.x * ratioB );
 		this.y = ( y * ratioA ) + ( this.y * ratioB );
 		this.z = ( z * ratioA ) + ( this.z * ratioB );
+
+		return this;
+
+	}
+
+	/**
+	* Extracts the rotation of the given 4x4 matrix and stores it in this quaternion.
+	*
+	* @param {Matrix4} m - A 4x4 matrix.
+	* @return {Quaternion} A reference to this quaternion.
+	*/
+	extractRotationFromMatrix( m ) {
+
+		const e = matrix.elements;
+		const me = m.elements;
+
+		// remove scaling from the 3x3 portion
+
+		const sx = 1 / vector.fromMatrix4Column( m, 0 ).length();
+		const sy = 1 / vector.fromMatrix4Column( m, 1 ).length();
+		const sz = 1 / vector.fromMatrix4Column( m, 2 ).length();
+
+		e[ 0 ] = me[ 0 ] * sx;
+		e[ 1 ] = me[ 1 ] * sx;
+		e[ 2 ] = me[ 2 ] * sx;
+
+		e[ 3 ] = me[ 4 ] * sy;
+		e[ 4 ] = me[ 5 ] * sy;
+		e[ 5 ] = me[ 6 ] * sy;
+
+		e[ 6 ] = me[ 8 ] * sz;
+		e[ 7 ] = me[ 9 ] * sz;
+		e[ 8 ] = me[ 10 ] * sz;
+
+		this.fromMatrix3( matrix );
 
 		return this;
 
@@ -2574,7 +2610,6 @@ class Matrix4 {
 const targetRotation = new Quaternion();
 const targetDirection = new Vector3();
 const quaternionWorld = new Quaternion();
-const rotationMatrix = new Matrix3();
 
 /**
 * Base class for all game entities.
@@ -2854,7 +2889,7 @@ class GameEntity {
 	*/
 	getWorldDirection( result ) {
 
-		quaternionWorld.fromMatrix3( rotationMatrix.fromMatrix4( this.worldMatrix ) );
+		quaternionWorld.extractRotationFromMatrix( this.worldMatrix );
 
 		return result.copy( this.forward ).applyRotation( quaternionWorld ).normalize();
 
@@ -6412,7 +6447,7 @@ class TriggerRegion {
 
 }
 
-const vector = new Vector3();
+const vector$1 = new Vector3();
 const center = new Vector3();
 const size = new Vector3();
 
@@ -6592,11 +6627,11 @@ class AABB {
 
 		// find the point on the AABB closest to the sphere center
 
-		this.clampPoint( sphere.center, vector );
+		this.clampPoint( sphere.center, vector$1 );
 
 		// if that point is inside the sphere, the AABB and sphere intersect.
 
-		return vector.squaredDistanceTo( sphere.center ) <= ( sphere.radius * sphere.radius );
+		return vector$1.squaredDistanceTo( sphere.center ) <= ( sphere.radius * sphere.radius );
 
 	}
 
@@ -6621,38 +6656,38 @@ class AABB {
 
 		// transform point into local space of AABB
 
-		vector.copy( point ).sub( center );
+		vector$1.copy( point ).sub( center );
 
 		// x-axis
 
-		distance = Math.abs( size.x - Math.abs( vector.x ) );
+		distance = Math.abs( size.x - Math.abs( vector$1.x ) );
 
 		if ( distance < minDistance ) {
 
 			minDistance = distance;
-			result.set( 1 * Math.sign( vector.x ), 0, 0 );
+			result.set( 1 * Math.sign( vector$1.x ), 0, 0 );
 
 		}
 
 		// y-axis
 
-		distance = Math.abs( size.y - Math.abs( vector.y ) );
+		distance = Math.abs( size.y - Math.abs( vector$1.y ) );
 
 		if ( distance < minDistance ) {
 
 			minDistance = distance;
-			result.set( 0, 1 * Math.sign( vector.y ), 0 );
+			result.set( 0, 1 * Math.sign( vector$1.y ), 0 );
 
 		}
 
 		// z-axis
 
-		distance = Math.abs( size.z - Math.abs( vector.z ) );
+		distance = Math.abs( size.z - Math.abs( vector$1.z ) );
 
 		if ( distance < minDistance ) {
 
 			minDistance = distance;
-			result.set( 0, 0, 1 * Math.sign( vector.z ) );
+			result.set( 0, 0, 1 * Math.sign( vector$1.z ) );
 
 		}
 
@@ -6669,10 +6704,10 @@ class AABB {
 	*/
 	fromCenterAndSize( center, size ) {
 
-		vector.copy( size ).multiplyScalar( 0.5 ); // compute half size
+		vector$1.copy( size ).multiplyScalar( 0.5 ); // compute half size
 
-		this.min.copy( center ).sub( vector );
-		this.max.copy( center ).add( vector );
+		this.min.copy( center ).sub( vector$1 );
+		this.max.copy( center ).add( vector$1 );
 
 		return this;
 
@@ -13572,8 +13607,10 @@ class GraphUtils {
 
 /**
 * A corridor is a sequence of portal edges representing a walkable way within a navigation mesh. The class is able
-* to find the shortest path through this corridor as a sequence of waypoints.
-* Code is based on the following {@link https://github.com/nickjanssen/PatrolJS/blob/master/patrol.js implementation}.
+* to find the shortest path through this corridor as a sequence of waypoints. It's an implementation of the so called
+* {@link http://digestingduck.blogspot.com/2010/03/simple-stupid-funnel-algorithm.html Funnel Algorithm}. Read
+* the paper {@link https://aaai.org/Papers/AAAI/2006/AAAI06-148.pdf Efficient Triangulation-Based Pathfinding} for
+* more detailed information.
 *
 * @author {@link https://github.com/Mugen87|Mugen87}
 * @author {@link https://github.com/robp94|robp94}
@@ -13641,9 +13678,9 @@ class Corridor {
 
 			// update right vertex
 
-			if ( MathUtils.area( portalApex, portalRight, right ) <= 0.0 ) {
+			if ( MathUtils.area( portalApex, portalRight, right ) <= 0 ) {
 
-				if ( portalApex === portalRight || MathUtils.area( portalApex, portalLeft, right ) > 0.0 ) {
+				if ( portalApex === portalRight || MathUtils.area( portalApex, portalLeft, right ) > 0 ) {
 
 					// tighten the funnel
 
@@ -13680,9 +13717,9 @@ class Corridor {
 
 			// update left vertex
 
-			if ( MathUtils.area( portalApex, portalLeft, left ) >= 0.0 ) {
+			if ( MathUtils.area( portalApex, portalLeft, left ) >= 0 ) {
 
-				if ( portalApex === portalLeft || MathUtils.area( portalApex, portalRight, left ) < 0.0 ) {
+				if ( portalApex === portalLeft || MathUtils.area( portalApex, portalRight, left ) < 0 ) {
 
 					// tighten the funnel
 
