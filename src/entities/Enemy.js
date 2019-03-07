@@ -47,6 +47,13 @@ class Enemy extends Vehicle {
 		this.health = CONFIG.BOT.MAX_HEALTH;
 		this.status = ENEMY_STATUS_ALIVE;
 
+		// current convex region of the navmesh the entity is in
+
+		this.currentRegion = null;
+		this.currentPosition = new Vector3();
+		this.previousPosition = new Vector3();
+
+
 		// searching for attackers
 
 		this.searchAttacker = false;
@@ -158,6 +165,10 @@ class Enemy extends Vehicle {
 
 		this.currentTime += delta;
 
+		// ensure the enemy never leaves the level
+
+		this.stayInLevel();
+
 		// only update the core logic of the enemy if it is alive
 
 		if ( this.status === ENEMY_STATUS_ALIVE ) {
@@ -250,6 +261,34 @@ class Enemy extends Vehicle {
 		// always update animations
 
 		this.updateAnimations( delta );
+
+		return this;
+
+	}
+
+	/**
+	* Ensures the enemy never leaves the level.
+	*
+	* @return {Enemy} A reference to this game entity.
+	*/
+	stayInLevel() {
+
+		// "currentPosition" represents the final position after the movement for a single
+		// simualation step. it's now necessary to check if this point is still on
+		// the navMesh
+
+		this.currentPosition.copy( this.position );
+
+		this.currentRegion = this.world.navMesh.clampMovement(
+			this.currentRegion,
+			this.previousPosition,
+			this.currentPosition,
+			this.position // this is the result vector that gets clamped
+		);
+
+		// save this position for the next method invocation
+
+		this.previousPosition.copy( this.position );
 
 		return this;
 
