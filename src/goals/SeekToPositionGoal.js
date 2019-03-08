@@ -19,7 +19,7 @@ class SeekToPositionGoal extends Goal {
 
 		const owner = this.owner;
 
-		const seekBehavior = owner.steering.behaviors[ 1 ];
+		const seekBehavior = owner.steering.behaviors[ 2 ];
 		seekBehavior.target.copy( this.target );
 		seekBehavior.active = true;
 
@@ -37,7 +37,7 @@ class SeekToPositionGoal extends Goal {
 
 	terminate() {
 
-		const seekBehavior = this.owner.steering.behaviors[ 1 ];
+		const seekBehavior = this.owner.steering.behaviors[ 2 ];
 		seekBehavior.active = false;
 
 	}

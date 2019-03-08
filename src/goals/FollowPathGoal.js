@@ -44,6 +44,9 @@ class FollowPathGoal extends Goal {
 			followPathBehavior.active = true;
 			followPathBehavior.path.clear();
 
+			const onPathBehavior = owner.steering.behaviors[ 1 ];
+			onPathBehavior.active = true;
+
 			for ( let i = 0, l = path.length; i < l; i ++ ) {
 
 				const waypoint = path[ i ];
@@ -83,8 +86,13 @@ class FollowPathGoal extends Goal {
 
 	terminate() {
 
-		const followPathBehavior = this.owner.steering.behaviors[ 0 ];
+		const owner = this.owner;
+
+		const followPathBehavior = owner.steering.behaviors[ 0 ];
 		followPathBehavior.active = false;
+
+		const onPathBehavior = owner.steering.behaviors[ 1 ];
+		onPathBehavior.active = false;
 
 	}
 

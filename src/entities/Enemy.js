@@ -1,4 +1,4 @@
-import { Vehicle, Regulator, Think, FollowPathBehavior, SeekBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, MathUtils } from '../lib/yuka.module.js';
+import { Vehicle, Regulator, Think, FollowPathBehavior, OnPathBehavior, SeekBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, MathUtils } from '../lib/yuka.module.js';
 import { MESSAGE_HIT, MESSAGE_DEAD, ENEMY_STATUS_ALIVE, ENEMY_STATUS_DYING, ENEMY_STATUS_DEAD } from '../core/Constants.js';
 import { AttackEvaluator } from '../evaluators/AttackEvaluator.js';
 import { ExploreEvaluator } from '../evaluators/ExploreEvaluator.js';
@@ -106,6 +106,12 @@ class Enemy extends Vehicle {
 		followPathBehavior.nextWaypointDistance = CONFIG.BOT.NAVIGATION.NEXT_WAYPOINT_DISTANCE;
 		followPathBehavior._arrive.deceleration = CONFIG.BOT.NAVIGATION.ARRIVE_DECELERATION;
 		this.steering.add( followPathBehavior );
+
+		const onPathBehavior = new OnPathBehavior();
+		onPathBehavior.active = false;
+		onPathBehavior.path = followPathBehavior.path;
+		onPathBehavior.radius = CONFIG.BOT.NAVIGATION.PATH_RADIUS;
+		this.steering.add( onPathBehavior );
 
 		const seekBehavior = new SeekBehavior();
 		seekBehavior.active = false;

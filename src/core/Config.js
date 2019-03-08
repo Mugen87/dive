@@ -19,9 +19,10 @@ const CONFIG = {
 			SPAN: 3 // seconds
 		},
 		NAVIGATION: {
-			NEXT_WAYPOINT_DISTANCE: 2, // meter
+			NEXT_WAYPOINT_DISTANCE: 0.5, // meter
 			ARRIVE_DECELERATION: 2, // unitless
-			ARRIVE_TOLERANCE: 2 // meter
+			ARRIVE_TOLERANCE: 1, // meter
+			PATH_RADIUS: 0.1, // meter
 		},
 		TARGET_SYSTEM: {
 			UPDATE_FREQUENCY: 5 // number per seconds
