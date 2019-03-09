@@ -19,7 +19,7 @@ class Bullet extends Projectile {
 
 		super( owner, ray );
 
-		this.maxSpeed = CONFIG.BULLET.MAXSPEED;
+		this.maxSpeed = CONFIG.BULLET.MAX_SPEED;
 
 		this.position.copy( ray.origin );
 		this.velocity.copy( ray.direction ).multiplyScalar( this.maxSpeed );

@@ -5,9 +5,18 @@
 */
 
 const CONFIG = {
+	PLAYER: {
+		HEAD_HEIGHT: 1.7, // meter
+		MAX_SPEED: 4 // meter/seconds
+	},
+	CONTROLS: {
+		LOOKING_SPEED: 2, // unitless
+		BRAKING_POWER: 10, // unitless
+		HEAD_MOVEMENT: 0.3 // unitless
+	},
 	BOT: {
 		MOVEMENT: {
-			MAXSPEED: 3, // meter/seconds
+			MAX_SPEED: 3, // meter/seconds
 			DODGE_SIZE: 4 // meter
 		},
 		HEAD: {
@@ -81,7 +90,7 @@ const CONFIG = {
 
 	},
 	BULLET: {
-		MAXSPEED: 400, // meter/seconds
+		MAX_SPEED: 400, // meter/seconds
 		LIFETIME: 1, // seconds
 		DAMAGE: 20 // health points
 	}

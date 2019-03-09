@@ -29,16 +29,14 @@ const worldPosition = new Vector3();
 class Enemy extends Vehicle {
 
 	/**
-	* Constructs a new enemy with the given values.
-	*
-	* @param {GameEntity} owner - The owner of this weapon system.
+	* Constructs a new enemy.
 	*/
 	constructor() {
 
 		super();
 
 		this.currentTime = 0;
-		this.maxSpeed = CONFIG.BOT.MOVEMENT.MAXSPEED;
+		this.maxSpeed = CONFIG.BOT.MOVEMENT.MAX_SPEED;
 		this.updateOrientation = false;
 		this.isEnemy = true;
 

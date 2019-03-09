@@ -1,5 +1,5 @@
 import { EntityManager, Time, MeshGeometry, Vector3 } from '../lib/yuka.module.js';
-import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer, AudioContext } from '../lib/three.module.js';
+import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer, AudioContext, Object3D } from '../lib/three.module.js';
 import { HemisphereLight, DirectionalLight } from '../lib/three.module.js';
 import { AxesHelper } from '../lib/three.module.js';
 import { OrbitControls } from '../lib/OrbitControls.module.js';
@@ -9,6 +9,8 @@ import { NavMeshUtils } from '../etc/NavMeshUtils.js';
 import { SceneUtils } from '../etc/SceneUtils.js';
 import { Level } from '../entities/Level.js';
 import { Enemy } from '../entities/Enemy.js';
+import { Player } from '../entities/Player.js';
+import { FirstPersonControls } from '../entities/FirstPersonControls.js';
 
 import { Bullet } from '../weapons/Bullet.js';
 import { PathPlanner } from '../etc/PathPlanner.js';
@@ -44,7 +46,13 @@ class World {
 		this.renderer = null;
 		this.camera = null;
 		this.scene = null;
+		this.fpsControls = null;
 		this.orbitControls = null;
+		this.useFPSControls = false;
+
+		//
+
+		this.player = null;
 
 		//
 
@@ -78,7 +86,11 @@ class World {
 			showSpawnPoints: false,
 			showUUIDHelpers: false,
 			showHitboxes: false,
-			enableSimulation: true,
+			enableFPSControls: () => {
+
+				this.fpsControls.connect();
+
+			},
 			resumeAudioContext: () => {
 
 				const context = AudioContext.getContext();
@@ -100,6 +112,7 @@ class World {
 		this.assetManager.init().then( () => {
 
 			this._initScene();
+			this._initPlayer();
 			this._initEnemies();
 			this._initLevel();
 			this._initNavMesh();
@@ -387,6 +400,49 @@ class World {
 	}
 
 	/**
+	* Creates the player instance.
+	*
+	* @return {World} A reference to this world object.
+	*/
+	_initPlayer() {
+
+		const assetManager = this.assetManager;
+
+		this.player = new Player();
+		this.player.world = this;
+
+		// render component
+
+		const body = new Object3D(); // dummy 3D object for adding spatial audios
+		body.matrixAutoUpdate = false;
+		this.player.setRenderComponent( body, sync );
+
+		// audio
+
+		const step1 = assetManager.cloneAudio( assetManager.audios.get( 'step1' ) );
+		const step2 = assetManager.cloneAudio( assetManager.audios.get( 'step2' ) );
+
+		step1.setRolloffFactor( 3 );
+		step1.setVolume( 0.5 );
+
+		step2.setRolloffFactor( 3 );
+		step2.setVolume( 0.5 );
+
+		body.add( step1 );
+		body.add( step2 );
+
+		this.player.audios.set( 'step1', step1 );
+		this.player.audios.set( 'step2', step2 );
+
+		//
+
+		this.add( this.player );
+
+		return this;
+
+	}
+
+	/**
 	* Inits the navigation mesh.
 	*
 	* @return {World} A reference to this world object.
@@ -418,6 +474,32 @@ class World {
 	* @return {World} A reference to this world object.
 	*/
 	_initControls() {
+
+		this.fpsControls = new FirstPersonControls( this.player );
+
+		this.fpsControls.addEventListener( 'lock', ( ) => {
+
+			this.useFPSControls = true;
+
+			this.orbitControls.enabled = false;
+			this.camera.matrixAutoUpdate = false;
+
+			this.player.head.setRenderComponent( this.camera, syncCamera );
+
+		} );
+
+		this.fpsControls.addEventListener( 'unlock', () => {
+
+			this.useFPSControls = false;
+
+			this.orbitControls.enabled = true;
+			this.camera.matrixAutoUpdate = true;
+
+			this.player.head.setRenderComponent( null, null );
+
+		} );
+
+		//
 
 		if ( this.debug ) {
 
@@ -470,23 +552,23 @@ class World {
 
 			// world folder
 
-			const folderScene = gui.addFolder( 'World' );
-			folderScene.open();
+			const folderWorld = gui.addFolder( 'World' );
+			folderWorld.open();
 
-			folderScene.add( params, 'showAxes' ).name( 'show axes helper' ).onChange( ( value ) => {
+			folderWorld.add( params, 'showAxes' ).name( 'show axes helper' ).onChange( ( value ) => {
 
 				this.helpers.axesHelper.visible = value;
 
 			} );
 
-			folderScene.add( params, 'showSpawnPoints' ).name( 'show spawn points' ).onChange( ( value ) => {
+			folderWorld.add( params, 'showSpawnPoints' ).name( 'show spawn points' ).onChange( ( value ) => {
 
 				this.helpers.spawnHelpers.visible = value;
 
 			} );
 
-			folderScene.add( params, 'enableSimulation' ).name( 'enable simulation' );
-			folderScene.add( params, 'resumeAudioContext' ).name( 'resume audio context ' );
+			folderWorld.add( params, 'resumeAudioContext' ).name( 'resume audio context ' );
+			folderWorld.add( params, 'enableFPSControls' ).name( 'enable FPS controls' );
 
 			// enemy folder
 
@@ -529,6 +611,12 @@ function sync( entity, renderComponent ) {
 
 }
 
+function syncCamera( entity, camera ) {
+
+	camera.matrixWorld.copy( entity.worldMatrix );
+
+}
+
 // used when the browser window is resized
 
 function onWindowResize() {
@@ -550,23 +638,15 @@ function animate() {
 
 	const delta = this.time.getDelta();
 
-	if ( this.debug ) {
+	if ( this.useFPSControls ) {
 
-		if ( this.uiParameter.enableSimulation ) {
-
-			this.entityManager.update( delta );
-
-			this.pathPlanner.update();
-
-		}
-
-	} else {
-
-		this.entityManager.update( delta );
-
-		this.pathPlanner.update();
+		this.fpsControls.update( delta );
 
 	}
+
+	this.entityManager.update( delta );
+
+	this.pathPlanner.update();
 
 	this.renderer.render( this.scene, this.camera );
 

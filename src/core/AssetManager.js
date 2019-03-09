@@ -105,17 +105,27 @@ class AssetManager {
 		const shotgunShotReload = new PositionalAudio( listener );
 		shotgunShotReload.matrixAutoUpdate = false;
 
+		const step1 = new PositionalAudio( listener );
+		step1.matrixAutoUpdate = false;
+
+		const step2 = new PositionalAudio( listener );
+		step2.matrixAutoUpdate = false;
+
 		audioLoader.load( './audios/blaster_shot.ogg', buffer => blasterShot.setBuffer( buffer ) );
 		audioLoader.load( './audios/shotgun_shot.ogg', buffer => shotgunShot.setBuffer( buffer ) );
 		audioLoader.load( './audios/assault_rifle_shot.ogg', buffer => assaultRifleShot.setBuffer( buffer ) );
 		audioLoader.load( './audios/reload.ogg', buffer => reload.setBuffer( buffer ) );
 		audioLoader.load( './audios/shotgun_shot_reload.ogg', buffer => shotgunShotReload.setBuffer( buffer ) );
+		audioLoader.load( './audios/step1.ogg', buffer => step1.setBuffer( buffer ) );
+		audioLoader.load( './audios/step2.ogg', buffer => step2.setBuffer( buffer ) );
 
 		audios.set( 'blaster_shot', blasterShot );
 		audios.set( 'shotgun_shot', shotgunShot );
 		audios.set( 'assault_rifle_shot', assaultRifleShot );
 		audios.set( 'reload', reload );
 		audios.set( 'shotgun_shot_reload', shotgunShotReload );
+		audios.set( 'step1', step1 );
+		audios.set( 'step2', step2 );
 
 		return this;
 
