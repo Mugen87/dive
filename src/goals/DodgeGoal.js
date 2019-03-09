@@ -39,6 +39,7 @@ class DodgeGoal extends CompositeGoal {
 				// no space anymore, now dodge to left
 
 				this.right = false;
+				this.status = Goal.STATUS.INACTIVE;
 
 			}
 
@@ -55,6 +56,7 @@ class DodgeGoal extends CompositeGoal {
 				// no space anymore, now dodge to right
 
 				this.right = true;
+				this.status = Goal.STATUS.INACTIVE;
 
 			}
 
