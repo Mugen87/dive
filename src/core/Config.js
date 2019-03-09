@@ -7,7 +7,8 @@
 const CONFIG = {
 	BOT: {
 		MOVEMENT: {
-			MAXSPEED: 3 // meter/seconds
+			MAXSPEED: 3, // meter/seconds
+			DODGE_SIZE: 4 // meter
 		},
 		HEAD: {
 			HEIGHT: 1.8 // meter
@@ -16,13 +17,14 @@ const CONFIG = {
 			UPDATE_FREQUENCY: 5 // number per seconds
 		},
 		MEMORY: {
-			SPAN: 3 // seconds
+			SPAN: 20 // seconds
 		},
 		NAVIGATION: {
 			NEXT_WAYPOINT_DISTANCE: 0.5, // meter
 			ARRIVE_DECELERATION: 2, // unitless
 			ARRIVE_TOLERANCE: 1, // meter
 			PATH_RADIUS: 0.1, // meter
+			ONPATH_WEIGHT: 1 // unitless
 		},
 		TARGET_SYSTEM: {
 			UPDATE_FREQUENCY: 5 // number per seconds
@@ -61,7 +63,7 @@ const CONFIG = {
 		RELOAD_TIME: 1.6, // seconds
 		SHOT_RELOAD_TIME: 0.5, // seconds
 		MUZZLE_TIME: 0.03, // seconds
-		SPREAD: 0.06, // unitless
+		SPREAD: 0.1, // unitless
 		BULLETS_PER_SHOT: 6, // number
 		EQUIP_TIME: 1, // seconds
 		HIDE_TIME: 1 // seconds

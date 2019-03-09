@@ -48,6 +48,12 @@ class ExploreGoal extends CompositeGoal {
 
 	}
 
+	terminate() {
+
+		this.clearSubgoals();
+
+	}
+
 }
 
 export { ExploreGoal };

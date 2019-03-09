@@ -111,6 +111,7 @@ class Enemy extends Vehicle {
 		onPathBehavior.active = false;
 		onPathBehavior.path = followPathBehavior.path;
 		onPathBehavior.radius = CONFIG.BOT.NAVIGATION.PATH_RADIUS;
+		onPathBehavior.weight = CONFIG.BOT.NAVIGATION.ONPATH_WEIGHT;
 		this.steering.add( onPathBehavior );
 
 		const seekBehavior = new SeekBehavior();
@@ -587,6 +588,26 @@ class Enemy extends Vehicle {
 	}
 
 	/**
+	* Returns true if the enemy can move a step to the given dirction without
+	* leaving the level. The new position vector is stored into the given vector.
+	*
+	* @param {Vector3} direction - The direction vector.
+	* @param {Vector3} position - The new position vector.
+	* @return {Boolean} Whether the enemy can move a bit to the left or not.
+	*/
+	canMoveInDirection( direction, position ) {
+
+		position.copy( direction ).applyRotation( this.rotation ).normalize();
+		position.multiplyScalar( CONFIG.BOT.MOVEMENT.DODGE_SIZE ).add( this.position );
+
+		const navMesh = this.world.navMesh;
+		const region = navMesh.getRegionForPoint( position, 1 );
+
+		return region !== null;
+
+	}
+
+	/**
 	* Holds the implementation for the message handling of this game entity.
 	*
 	* @param {Telegram} telegram - The telegram with the message data.
@@ -646,14 +667,18 @@ class Enemy extends Vehicle {
 
 			case MESSAGE_DEAD:
 
-				// delete the dead enemy from the memory system when it was visible
-
 				const sender = telegram.sender;
 				const memoryRecord = this.memorySystem.getRecord( sender );
+
+				// delete the dead enemy from the memory system when it was visible.
+				// also update the target system and immediately perform an arbitrate
 
 				if ( memoryRecord && memoryRecord.visible ) {
 
 					this.memorySystem.deleteRecord( sender );
+
+					this.targetSystem.update();
+					this.brain.arbitrate();
 
 				}
 

@@ -39,11 +39,13 @@ class AttackEvaluator extends GoalEvaluator {
 
 			desirability *= this.characterBias;
 
+			// TODO: set desirability to 1 for testing
+
+			desirability = 1;
+
 		}
 
-		// return desirability;
-
-		return 0; // TODO: Return 0 for now
+		return desirability;
 
 	}
 

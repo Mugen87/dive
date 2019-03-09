@@ -1,5 +1,11 @@
-import { Goal, CompositeGoal } from '../lib/yuka.module.js';
+import { Goal, CompositeGoal, Vector3 } from '../lib/yuka.module.js';
 import { HuntGoal } from './HuntGoal.js';
+import { DodgeGoal } from './DodgeGoal.js';
+import { ChargeGoal } from './ChargeGoal.js';
+
+const left = new Vector3( - 1, 0, 0 );
+const right = new Vector3( 1, 0, 0 );
+const targetPosition = new Vector3();
 
 /**
 * Top-Level goal that is used to manage the attack on a target.
@@ -22,12 +28,28 @@ class AttackGoal extends CompositeGoal {
 
 		const owner = this.owner;
 
+		// if the enemy is able to shoot the target (there is line of sight between enemy and
+		// target), then select a tactic to follow while shooting
+
 		if ( owner.targetSystem.isTargetShootable() === true ) {
 
-			// if the bot is able to shoot the target (there is line of sight between bot and
-			// target), then select a tactic to follow while shooting
+			// if the enemy has space to strafe then do so
 
+			if ( owner.canMoveInDirection( left, targetPosition ) ) {
 
+				this.addSubgoal( new DodgeGoal( owner, false ) );
+
+			} else if ( owner.canMoveInDirection( right, targetPosition ) ) {
+
+				this.addSubgoal( new DodgeGoal( owner, true ) );
+
+			} else {
+
+				// if not able to strafe, charge at the target's position
+
+				this.addSubgoal( new ChargeGoal( owner ) );
+
+			}
 
 
 		} else {
@@ -62,6 +84,12 @@ class AttackGoal extends CompositeGoal {
 			}
 
 		}
+
+	}
+
+	terminate() {
+
+		this.clearSubgoals();
 
 	}
 
