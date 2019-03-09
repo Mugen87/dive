@@ -31,10 +31,11 @@ class HuntGoal extends CompositeGoal {
 		if ( owner.atPosition( targetPosition ) ) {
 
 			// if the enemy is already at the last sensed positition, forget about
-			// the bot and consider this goal as completed
+			// the bot, update the target system and consider this goal as completed
 
 			const target = owner.targetSystem.getTarget();
 			owner.memorySystem.deleteRecord( target );
+			owner.targetSystem.update();
 
 			this.status = Goal.STATUS.COMPLETED;
 

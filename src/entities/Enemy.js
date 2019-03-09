@@ -671,14 +671,12 @@ class Enemy extends Vehicle {
 				const memoryRecord = this.memorySystem.getRecord( sender );
 
 				// delete the dead enemy from the memory system when it was visible.
-				// also update the target system and immediately perform an arbitrate
+				// also update the target system so the bot looks for a different target
 
 				if ( memoryRecord && memoryRecord.visible ) {
 
 					this.memorySystem.deleteRecord( sender );
-
 					this.targetSystem.update();
-					this.brain.arbitrate();
 
 				}
 
