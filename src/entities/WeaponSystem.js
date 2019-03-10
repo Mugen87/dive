@@ -568,11 +568,11 @@ class WeaponSystem {
 		switch ( status ) {
 
 			case WEAPON_STATUS_EMPTY:
-				this.currentWeapon.reload();
+				currentWeapon.reload();
 				break;
 
 			case WEAPON_STATUS_READY:
-				this.currentWeapon.shoot( targetPosition );
+				currentWeapon.shoot( targetPosition );
 				break;
 
 			default:
