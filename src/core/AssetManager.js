@@ -47,11 +47,9 @@ class AssetManager {
 		this._loadModels();
 		this._loadNavMesh();
 
-		const loadingManager = this.loadingManager;
-
 		return new Promise( ( resolve ) => {
 
-			loadingManager.onLoad = () => {
+			this.loadingManager.onLoad = () => {
 
 				resolve();
 
