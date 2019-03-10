@@ -1,4 +1,5 @@
 import { EventDispatcher, Vector3, Logger } from '../lib/yuka.module.js';
+import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
 import { CONFIG } from '../core/Config.js';
 
 const PI05 = Math.PI / 2;
@@ -9,7 +10,7 @@ const STEP1 = 'step1';
 const STEP2 = 'step2';
 
 let currentSign = 1;
-let elapsedTime = 0;
+let elapsed = 0;
 
 /**
 * Holds the implementation of the First-Person Controls.
@@ -35,6 +36,7 @@ class FirstPersonControls extends EventDispatcher {
 		this.lookingSpeed = CONFIG.CONTROLS.LOOKING_SPEED;
 		this.brakingPower = CONFIG.CONTROLS.BRAKING_POWER;
 		this.headMovement = CONFIG.CONTROLS.HEAD_MOVEMENT;
+		this.weaponMovement = CONFIG.CONTROLS.WEAPON_MOVEMENT;
 
 		this.input = {
 			forward: false,
@@ -102,8 +104,15 @@ class FirstPersonControls extends EventDispatcher {
 	update( delta ) {
 
 		this._updateVelocity( delta );
-		this._updateHead( delta );
-		this._updateWeapon( delta );
+
+		const speed = this.owner.getSpeed();
+		elapsed += delta * speed;
+
+		// elapsed is used by the following two methods. it is scaled with the speed
+		// to modulate the head bobbing and weapon movement
+
+		this._updateHead();
+		this._updateWeapon();
 
 		return this;
 
@@ -139,21 +148,16 @@ class FirstPersonControls extends EventDispatcher {
 	/**
 	* Computes the head bobbing of the owner (player).
 	*
-	* @param {Number} delta - The time delta.
 	* @return {FirstPersonControls} A reference to this instance.
 	*/
-	_updateHead( delta ) {
+	_updateHead() {
 
 		const owner = this.owner;
 		const head = owner.head;
 
 		// some simple head bobbing
 
-		const speed = owner.getSpeed();
-
-		elapsedTime += delta * speed; // scale delta with movement speed
-
-		const motion = Math.sin( elapsedTime * this.headMovement );
+		const motion = Math.sin( elapsed * this.headMovement );
 
 		head.position.y = Math.abs( motion ) * 0.06;
 		head.position.x = motion * 0.08;
@@ -164,7 +168,7 @@ class FirstPersonControls extends EventDispatcher {
 
 		//
 
-		const sign = Math.sign( Math.cos( elapsedTime * this.headMovement ) );
+		const sign = Math.sign( Math.cos( elapsed * this.headMovement ) );
 
 		if ( sign < currentSign ) {
 
@@ -191,13 +195,14 @@ class FirstPersonControls extends EventDispatcher {
 	/**
 	* Computes the movement of the current armed weapon.
 	*
-	* @param {Number} delta - The time delta.
 	* @return {FirstPersonControls} A reference to this instance.
 	*/
-	_updateWeapon( motion ) {
+	_updateWeapon() {
 
 		const owner = this.owner;
 		const weaponContainer = owner.weaponContainer;
+
+		const motion = Math.sin( elapsed * this.weaponMovement );
 
 		weaponContainer.position.x = motion * 0.005;
 		weaponContainer.position.y = Math.abs( motion ) * 0.002;
@@ -280,6 +285,18 @@ function onKeyDown( event ) {
 
 		case 82: // r
 			this.owner.reload();
+			break;
+
+		case 49: // 1
+			this.owner.changeWeapon( WEAPON_TYPES_BLASTER );
+			break;
+
+		case 50: // 2
+			this.owner.changeWeapon( WEAPON_TYPES_SHOTGUN );
+			break;
+
+		case 51: // 3
+			this.owner.changeWeapon( WEAPON_TYPES_ASSAULT_RIFLE );
 			break;
 
 	}

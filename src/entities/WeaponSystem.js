@@ -2,7 +2,7 @@ import { Vector3, MathUtils } from '../lib/yuka.module.js';
 import { FuzzyVariable, LeftShoulderFuzzySet, TriangularFuzzySet, RightShoulderFuzzySet, FuzzyRule, FuzzyAND, FuzzyModule } from '../lib/yuka.module.js';
 import { CONFIG } from '../core/Config.js';
 import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
-import { WEAPON_STATUS_EMPTY, WEAPON_STATUS_READY, WEAPON_STATUS_OUT_OF_AMMO, WEAPON_STATUS_UNREADY } from '../core/Constants.js';
+import { WEAPON_STATUS_EMPTY, WEAPON_STATUS_READY, WEAPON_STATUS_UNREADY } from '../core/Constants.js';
 import { Blaster } from '../weapons/Blaster.js';
 import { Shotgun } from '../weapons/Shotgun.js';
 import { AssaultRifle } from '../weapons/AssaultRifle.js';

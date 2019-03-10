@@ -97,6 +97,20 @@ class Player extends MovingEntity {
 
 	}
 
+	/**
+	* Changes the weapon to the defined type.
+	*
+	* @param {WEAPON_TYPES} type - The weapon type.
+	* @return {Player} A reference to this game entity.
+	*/
+	changeWeapon( type ) {
+
+		console.log( type );
+
+		return this;
+
+	}
+
 }
 
 
