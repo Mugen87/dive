@@ -550,10 +550,6 @@ class WeaponSystem {
 				this.currentWeapon.shoot( targetPosition );
 				break;
 
-			case WEAPON_STATUS_OUT_OF_AMMO:
-				// TODO: consider to use another weapon
-				break;
-
 			default:
 				break;
 
