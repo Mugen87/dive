@@ -1,4 +1,4 @@
-import { MovingEntity, GameEntity, Vector3 } from '../lib/yuka.module.js';
+import { GameEntity, MovingEntity, Vector3 } from '../lib/yuka.module.js';
 import { CONFIG } from '../core/Config.js';
 
 const startPosition = new Vector3();
@@ -22,13 +22,19 @@ class Player extends MovingEntity {
 		this.updateOrientation = false;
 		this.maxSpeed = CONFIG.PLAYER.MAX_SPEED;
 
-		//
+		// the camera is attached to the player's head
 
 		this.head = new GameEntity();
 		this.add( this.head );
 
-		this.world = null;
+		// the weapons are attached to the following container entity
 
+		this.weaponContainer = new GameEntity();
+		this.head.add( this.weaponContainer );
+
+		//
+
+		this.world = null;
 		this.audios = new Map();
 
 		//
@@ -59,6 +65,34 @@ class Player extends MovingEntity {
 			endPosition,
 			this.position
 		);
+
+		return this;
+
+	}
+
+	/**
+	* Fires a round at the player's target with the current armed weapon.
+	*
+	* @return {Player} A reference to this game entity.
+	*/
+	shoot() {
+
+		console.log( 'shoot' );
+
+		return this;
+
+	}
+
+	/**
+	* Reloads the current weapon of the player.
+	*
+	* @return {Player} A reference to this game entity.
+	*/
+	reload() {
+
+		console.log( 'reload' );
+
+		return this;
 
 	}
 

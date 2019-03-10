@@ -45,6 +45,7 @@ class FirstPersonControls extends EventDispatcher {
 
 		this.sounds = new Map();
 
+		this._mouseDownHandler = onMouseDown.bind( this );
 		this._mouseMoveHandler = onMouseMove.bind( this );
 		this._pointerlockChangeHandler = onPointerlockChange.bind( this );
 		this._pointerlockErrorHandler = onPointerlockError.bind( this );
@@ -60,6 +61,7 @@ class FirstPersonControls extends EventDispatcher {
 	*/
 	connect() {
 
+		document.addEventListener( 'mousedown', this._mouseDownHandler, false );
 		document.addEventListener( 'mousemove', this._mouseMoveHandler, false );
 		document.addEventListener( 'pointerlockchange', this._pointerlockChangeHandler, false );
 		document.addEventListener( 'pointerlockerror', this._pointerlockErrorHandler, false );
@@ -79,6 +81,7 @@ class FirstPersonControls extends EventDispatcher {
 	*/
 	disconnect() {
 
+		document.removeEventListener( 'mousedown', this._mouseDownHandler, false );
 		document.removeEventListener( 'mousemove', this._mouseMoveHandler, false );
 		document.removeEventListener( 'pointerlockchange', this._pointerlockChangeHandler, false );
 		document.removeEventListener( 'pointerlockerror', this._pointerlockErrorHandler, false );
@@ -100,6 +103,7 @@ class FirstPersonControls extends EventDispatcher {
 
 		this._updateVelocity( delta );
 		this._updateHead( delta );
+		this._updateWeapon( delta );
 
 		return this;
 
@@ -184,9 +188,37 @@ class FirstPersonControls extends EventDispatcher {
 
 	}
 
+	/**
+	* Computes the movement of the current armed weapon.
+	*
+	* @param {Number} delta - The time delta.
+	* @return {FirstPersonControls} A reference to this instance.
+	*/
+	_updateWeapon( motion ) {
+
+		const owner = this.owner;
+		const weaponContainer = owner.weaponContainer;
+
+		weaponContainer.position.x = motion * 0.005;
+		weaponContainer.position.y = Math.abs( motion ) * 0.002;
+
+		return this;
+
+	}
+
 }
 
 // event listeners
+
+function onMouseDown( event ) {
+
+	if ( event.which === 1 ) {
+
+		this.owner.shoot();
+
+	}
+
+}
 
 function onMouseMove( event ) {
 
@@ -244,6 +276,10 @@ function onKeyDown( event ) {
 		case 39: // right
 		case 68: // d
 			this.input.right = true;
+			break;
+
+		case 82: // r
+			this.owner.reload();
 			break;
 
 	}
