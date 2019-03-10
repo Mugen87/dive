@@ -1,22 +1,20 @@
 import { EntityManager, Time, MeshGeometry, Vector3 } from '../lib/yuka.module.js';
-import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer, AudioContext, Object3D } from '../lib/three.module.js';
+import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer, Object3D } from '../lib/three.module.js';
 import { HemisphereLight, DirectionalLight } from '../lib/three.module.js';
 import { AxesHelper } from '../lib/three.module.js';
 import { OrbitControls } from '../lib/OrbitControls.module.js';
 
 import { AssetManager } from './AssetManager.js';
+import { SpawningManager } from './SpawningManager.js';
+import { UIManager } from './UIManager.js';
 import { NavMeshUtils } from '../etc/NavMeshUtils.js';
 import { SceneUtils } from '../etc/SceneUtils.js';
 import { Level } from '../entities/Level.js';
 import { Enemy } from '../entities/Enemy.js';
 import { Player } from '../entities/Player.js';
 import { FirstPersonControls } from '../entities/FirstPersonControls.js';
-
 import { Bullet } from '../weapons/Bullet.js';
 import { PathPlanner } from '../etc/PathPlanner.js';
-
-import * as DAT from '../lib/dat.gui.module.js';
-import { SpawningManager } from './SpawningManager.js';
 
 const currentIntersectionPoint = new Vector3();
 
@@ -40,6 +38,7 @@ class World {
 		this.navMesh = null;
 		this.pathPlanner = null;
 		this.spawningManager = new SpawningManager( this );
+		this.uiManager = new UIManager( this );
 
 		//
 
@@ -76,27 +75,6 @@ class World {
 			spawnHelpers: new Array(),
 			uuidHelpers: new Array(),
 			hitboxHelpers: new Array()
-		};
-
-		this.uiParameter = {
-			showRegions: true,
-			showAxes: true,
-			showPaths: true,
-			showGraph: false,
-			showSpawnPoints: false,
-			showUUIDHelpers: false,
-			showHitboxes: false,
-			enableFPSControls: () => {
-
-				this.fpsControls.connect();
-
-			},
-			resumeAudioContext: () => {
-
-				const context = AudioContext.getContext();
-				context.resume();
-
-			}
 		};
 
 	}
@@ -486,6 +464,8 @@ class World {
 
 			this.player.head.setRenderComponent( this.camera, syncCamera );
 
+			this.uiManager.showFPSInterface();
+
 		} );
 
 		this.fpsControls.addEventListener( 'unlock', () => {
@@ -496,6 +476,8 @@ class World {
 			this.camera.matrixAutoUpdate = true;
 
 			this.player.head.setRenderComponent( null, null );
+
+			this.uiManager.hideFPSInterface();
 
 		} );
 
@@ -518,86 +500,9 @@ class World {
 	*/
 	_initUI() {
 
-		if ( this.debug ) {
+		this.uiManager.init();
 
-			const gui = new DAT.GUI( { width: 300 } );
-			const params = this.uiParameter;
-
-			// nav mesh folder
-
-			const folderNavMesh = gui.addFolder( 'Navigation Mesh' );
-			folderNavMesh.open();
-
-			folderNavMesh.add( params, 'showRegions' ).name( 'show convex regions' ).onChange( ( value ) => {
-
-				this.helpers.convexRegionHelper.visible = value;
-
-			} );
-
-			folderNavMesh.add( params, 'showPaths', 1, 30 ).name( 'show navigation paths' ).onChange( ( value ) => {
-
-				for ( const pathHelper of this.helpers.pathHelpers ) {
-
-					pathHelper.visible = value;
-
-				}
-
-			} );
-
-			folderNavMesh.add( params, 'showGraph' ).name( 'show graph' ).onChange( ( value ) => {
-
-				this.helpers.graphHelper.visible = value;
-
-			} );
-
-			// world folder
-
-			const folderWorld = gui.addFolder( 'World' );
-			folderWorld.open();
-
-			folderWorld.add( params, 'showAxes' ).name( 'show axes helper' ).onChange( ( value ) => {
-
-				this.helpers.axesHelper.visible = value;
-
-			} );
-
-			folderWorld.add( params, 'showSpawnPoints' ).name( 'show spawn points' ).onChange( ( value ) => {
-
-				this.helpers.spawnHelpers.visible = value;
-
-			} );
-
-			folderWorld.add( params, 'resumeAudioContext' ).name( 'resume audio context ' );
-			folderWorld.add( params, 'enableFPSControls' ).name( 'enable FPS controls' );
-
-			// enemy folder
-
-			const folderEnemy = gui.addFolder( 'Enemy' );
-			folderEnemy.open();
-
-			folderEnemy.add( params, 'showUUIDHelpers', 1, 30 ).name( 'show UUID helpers' ).onChange( ( value ) => {
-
-				for ( const uuidHelper of this.helpers.uuidHelpers ) {
-
-					uuidHelper.visible = value;
-
-				}
-
-			} );
-
-			folderEnemy.add( params, 'showHitboxes', 1, 30 ).name( 'show hitboxes' ).onChange( ( value ) => {
-
-				for ( const hitboxHelper of this.helpers.hitboxHelpers ) {
-
-					hitboxHelper.visible = value;
-
-				}
-
-			} );
-
-			gui.open();
-
-		}
+		return this;
 
 	}
 

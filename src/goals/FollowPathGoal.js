@@ -34,7 +34,7 @@ class FollowPathGoal extends Goal {
 
 				pathHelper.geometry.dispose();
 				pathHelper.geometry = new BufferGeometry().setFromPoints( path );
-				pathHelper.visible = owner.world.uiParameter.showPaths;
+				pathHelper.visible = owner.world.uiManager.debugParameter.showPaths;
 
 			}
 
