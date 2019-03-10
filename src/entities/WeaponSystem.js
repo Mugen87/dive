@@ -358,7 +358,7 @@ class WeaponSystem {
 	}
 
 	/**
-	* Returns the amount of ammo remaining for the specified weapon
+	* Returns the amount of ammo remaining for the specified weapon.
 	*
 	* @param {WEAPON_TYPES} type - The weapon type.
 	* @return {Number} The amount of ammo.
