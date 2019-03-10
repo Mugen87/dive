@@ -22,10 +22,12 @@ class WeaponSystem {
 	* Constructs a new weapon system with the given values.
 	*
 	* @param {GameEntity} owner - The owner of this weapon system.
+	* @param {Boolean} isPlayer - Whether this weapon system is used by the human player or not.
 	*/
-	constructor( owner ) {
+	constructor( owner, isPlayer = false ) {
 
 		this.owner = owner;
+		this.isPlayer = isPlayer;
 
 		// this is the minimum amount of time in seconds an enemy needs to
 		// see an opponent before it can react to it. This variable is used
@@ -104,10 +106,13 @@ class WeaponSystem {
 
 		this._initRenderComponents();
 
-		// init fuzzy modules
+		// init fuzzy modules (only necessary for bots)
 
-		this._initFuzzyModules();
+		if ( this.isPlayer === false ) {
 
+			this._initFuzzyModules();
+
+		}
 		// reset the system to its initial state
 
 		this.reset();
@@ -235,18 +240,21 @@ class WeaponSystem {
 					this.renderComponents.blaster.mesh.visible = true;
 					this.renderComponents.shotgun.mesh.visible = false;
 					this.renderComponents.assaultRifle.mesh.visible = false;
+					if ( this.isPlayer ) weapon.setRenderComponent( this.renderComponents.blaster.mesh, sync );
 					break;
 
 				case WEAPON_TYPES_SHOTGUN:
 					this.renderComponents.blaster.mesh.visible = false;
 					this.renderComponents.shotgun.mesh.visible = true;
 					this.renderComponents.assaultRifle.mesh.visible = false;
+					if ( this.isPlayer ) weapon.setRenderComponent( this.renderComponents.shotgun.mesh, sync );
 					break;
 
 				case WEAPON_TYPES_ASSAULT_RIFLE:
 					this.renderComponents.blaster.mesh.visible = false;
 					this.renderComponents.shotgun.mesh.visible = false;
 					this.renderComponents.assaultRifle.mesh.visible = true;
+					if ( this.isPlayer ) weapon.setRenderComponent( this.renderComponents.assaultRifle.mesh, sync );
 					break;
 
 				default:
@@ -279,7 +287,6 @@ class WeaponSystem {
 			case WEAPON_TYPES_BLASTER:
 				weapon = new Blaster( owner );
 				weapon.fuzzy = this.fuzzyModules.blaster;
-				weapon.position.set( - 0.15, 1.30, 0.5 ); // relative position to the enenmy's body
 				weapon.muzzle = this.renderComponents.blaster.muzzle;
 				weapon.audios = this.renderComponents.blaster.audios;
 				break;
@@ -287,7 +294,6 @@ class WeaponSystem {
 			case WEAPON_TYPES_SHOTGUN:
 				weapon = new Shotgun( owner );
 				weapon.fuzzy = this.fuzzyModules.shotGun;
-				weapon.position.set( - 0.15, 1.30, 0.5 );
 				weapon.muzzle = this.renderComponents.shotgun.muzzle;
 				weapon.audios = this.renderComponents.shotgun.audios;
 				break;
@@ -295,7 +301,6 @@ class WeaponSystem {
 			case WEAPON_TYPES_ASSAULT_RIFLE:
 				weapon = new AssaultRifle( owner );
 				weapon.fuzzy = this.fuzzyModules.assaultRifle;
-				weapon.position.set( - 0.15, 1.30, 0.5 );
 				weapon.muzzle = this.renderComponents.assaultRifle.muzzle;
 				weapon.audios = this.renderComponents.assaultRifle.audios;
 				break;
@@ -326,7 +331,19 @@ class WeaponSystem {
 			// also add it to owner entity so the weapon is correctly updated by
 			// the entity manager
 
-			owner.add( weapon );
+			if ( this.isPlayer ) {
+
+				weapon.position.set( 0.3, - 0.3, - 1 ); // relative position to the player's head
+				weapon.scale.set( 2, 2, 2 );
+				weapon.rotation.fromEuler( 0, Math.PI, 0 );
+				owner.weaponContainer.add( weapon );
+
+			} else {
+
+				weapon.position.set( - 0.15, 1.30, 0.5 ); // relative position to the enenmy's body
+				owner.add( weapon );
+
+			}
 
 		}
 
@@ -351,7 +368,16 @@ class WeaponSystem {
 			const index = this.weapons.indexOf( weapon );
 			this.weapons.splice( index, 1 );
 
-			this.owner.remove( weapon );
+
+			if ( this.isPlayer ) {
+
+				this.owner.weaponContainer.remove( weapon );
+
+			} else {
+
+				this.owner.remove( weapon );
+
+			}
 
 		}
 
@@ -393,7 +419,7 @@ class WeaponSystem {
 	*/
 	updateWeaponChange() {
 
-		if ( this.nextWeaponType ) {
+		if ( this.nextWeaponType !== null ) {
 
 			// if the current weapon is ready, hide it in order to start the weapon change
 
@@ -589,19 +615,29 @@ class WeaponSystem {
 		// setup copy of blaster mesh
 
 		const blasterMesh = assetManager.models.get( 'blaster' ).clone();
-		blasterMesh.scale.set( 100, 100, 100 );
-		blasterMesh.rotation.set( Math.PI * 0.5, Math.PI, 0 );
-		blasterMesh.position.set( 0, 15, 5 );
-		blasterMesh.updateMatrix();
 
-		// add the mesh to the right hand of the enemy
+		if ( this.isPlayer === false ) {
 
-		const rightHand = this.owner._renderComponent.getObjectByName( 'Armature_mixamorigRightHand' );
-		rightHand.add( blasterMesh );
+			blasterMesh.scale.set( 100, 100, 100 );
+			blasterMesh.rotation.set( Math.PI * 0.5, Math.PI, 0 );
+			blasterMesh.position.set( 0, 15, 5 );
+			blasterMesh.updateMatrix();
+
+			// add the mesh to the right hand of the enemy
+
+			const rightHand = this.owner._renderComponent.getObjectByName( 'Armature_mixamorigRightHand' );
+			rightHand.add( blasterMesh );
+
+		} else {
+
+			this.owner.world.scene.add( blasterMesh );
+
+		}
 
 		// add muzzle sprite to the blaster mesh
 
 		const muzzleSprite = assetManager.models.get( 'muzzle' ).clone();
+		muzzleSprite.material = muzzleSprite.material.clone(); // this is necessary since Mesh.clone() is not deep and SpriteMaterial.rotation is going to be changed
 		muzzleSprite.position.set( 0, 0.05, 0.2 );
 		muzzleSprite.scale.set( 0.3, 0.3, 0.3 );
 		muzzleSprite.updateMatrix();
@@ -641,19 +677,29 @@ class WeaponSystem {
 		// setup copy of shotgun mesh
 
 		const shotgunMesh = assetManager.models.get( 'shotgun' ).clone();
-		shotgunMesh.scale.set( 100, 100, 100 );
-		shotgunMesh.rotation.set( Math.PI * 0.5, Math.PI * 1.05, 0 );
-		shotgunMesh.position.set( - 5, 30, 2 );
-		shotgunMesh.updateMatrix();
 
-		// add the mesh to the right hand of the enemy
+		if ( this.isPlayer === false ) {
 
-		const rightHand = this.owner._renderComponent.getObjectByName( 'Armature_mixamorigRightHand' );
-		rightHand.add( shotgunMesh );
+			shotgunMesh.scale.set( 100, 100, 100 );
+			shotgunMesh.rotation.set( Math.PI * 0.5, Math.PI * 1.05, 0 );
+			shotgunMesh.position.set( - 5, 30, 2 );
+			shotgunMesh.updateMatrix();
 
-		// add muzzle sprite to the blaster mesh
+			// add the mesh to the right hand of the enemy
+
+			const rightHand = this.owner._renderComponent.getObjectByName( 'Armature_mixamorigRightHand' );
+			rightHand.add( shotgunMesh );
+
+		} else {
+
+			this.owner.world.scene.add( shotgunMesh );
+
+		}
+
+		// add muzzle sprite
 
 		const muzzleSprite = assetManager.models.get( 'muzzle' ).clone();
+		muzzleSprite.material = muzzleSprite.material.clone();
 		muzzleSprite.position.set( 0, 0.05, 0.3 );
 		muzzleSprite.scale.set( 0.4, 0.4, 0.4 );
 		muzzleSprite.updateMatrix();
@@ -698,19 +744,29 @@ class WeaponSystem {
 		// setup copy of assault rifle mesh
 
 		const assaultRifleMesh = assetManager.models.get( 'assault-rifle' ).clone();
-		assaultRifleMesh.scale.set( 100, 100, 100 );
-		assaultRifleMesh.rotation.set( Math.PI * 0.5, Math.PI * 1, 0 );
-		assaultRifleMesh.position.set( - 5, 20, 7 );
-		assaultRifleMesh.updateMatrix();
 
-		// add the mesh to the right hand of the enemy
+		if ( this.isPlayer === false ) {
 
-		const rightHand = this.owner._renderComponent.getObjectByName( 'Armature_mixamorigRightHand' );
-		rightHand.add( assaultRifleMesh );
+			assaultRifleMesh.scale.set( 100, 100, 100 );
+			assaultRifleMesh.rotation.set( Math.PI * 0.5, Math.PI * 1, 0 );
+			assaultRifleMesh.position.set( - 5, 20, 7 );
+			assaultRifleMesh.updateMatrix();
 
-		// add muzzle sprite to the blaster mesh
+			// add the mesh to the right hand of the enemy
+
+			const rightHand = this.owner._renderComponent.getObjectByName( 'Armature_mixamorigRightHand' );
+			rightHand.add( assaultRifleMesh );
+
+		} else {
+
+			this.owner.world.scene.add( assaultRifleMesh );
+
+		}
+
+		// add muzzle sprite
 
 		const muzzleSprite = assetManager.models.get( 'muzzle' ).clone();
+		muzzleSprite.material = muzzleSprite.material.clone();
 		muzzleSprite.position.set( 0, 0, 0.5 );
 		muzzleSprite.scale.set( 0.4, 0.4, 0.4 );
 		muzzleSprite.updateMatrix();
@@ -810,47 +866,6 @@ class WeaponSystem {
 	}
 
 	/**
-	* Inits the fuzzy module for the assault rifle.
-	*
-	* @param {Object} fuzzySets - An object with predefined fuzzy sets.
-	* @return {WeaponSystem} A reference to this weapon system.
-	*/
-	_initAssaultRifleFuzzyModule( fuzzySets ) {
-
-		// FLV ammo status
-
-		const fuzzyModuleAssaultRifle = this.fuzzyModules.assaultRifle;
-		const ammoStatusAssaultRifle = new FuzzyVariable();
-
-		const lowAssault = new LeftShoulderFuzzySet( 0, 2, 8 );
-		const okayAssault = new TriangularFuzzySet( 2, 10, 20 );
-		const LoadsAssault = new RightShoulderFuzzySet( 10, 20, 30 );
-
-		ammoStatusAssaultRifle.add( lowAssault );
-		ammoStatusAssaultRifle.add( okayAssault );
-		ammoStatusAssaultRifle.add( LoadsAssault );
-
-		fuzzyModuleAssaultRifle.addFLV( 'ammoStatus', ammoStatusAssaultRifle );
-
-		// rules
-
-		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetClose, lowAssault ), fuzzySets.undesirable ) );
-		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetClose, okayAssault ), fuzzySets.desirable ) );
-		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetClose, LoadsAssault ), fuzzySets.desirable ) );
-
-		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, lowAssault ), fuzzySets.desirable ) );
-		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, okayAssault ), fuzzySets.desirable ) );
-		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, LoadsAssault ), fuzzySets.veryDesirable ) );
-
-		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, lowAssault ), fuzzySets.desirable ) );
-		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetFar, okayAssault ), fuzzySets.veryDesirable ) );
-		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetFar, LoadsAssault ), fuzzySets.veryDesirable ) );
-
-		return this;
-
-	}
-
-	/**
 	* Inits the fuzzy module for the blaster.
 	*
 	* @param {Object} fuzzySets - An object with predefined fuzzy sets.
@@ -931,6 +946,53 @@ class WeaponSystem {
 		return this;
 
 	}
+
+	/**
+	* Inits the fuzzy module for the assault rifle.
+	*
+	* @param {Object} fuzzySets - An object with predefined fuzzy sets.
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	_initAssaultRifleFuzzyModule( fuzzySets ) {
+
+		// FLV ammo status
+
+		const fuzzyModuleAssaultRifle = this.fuzzyModules.assaultRifle;
+		const ammoStatusAssaultRifle = new FuzzyVariable();
+
+		const lowAssault = new LeftShoulderFuzzySet( 0, 2, 8 );
+		const okayAssault = new TriangularFuzzySet( 2, 10, 20 );
+		const LoadsAssault = new RightShoulderFuzzySet( 10, 20, 30 );
+
+		ammoStatusAssaultRifle.add( lowAssault );
+		ammoStatusAssaultRifle.add( okayAssault );
+		ammoStatusAssaultRifle.add( LoadsAssault );
+
+		fuzzyModuleAssaultRifle.addFLV( 'ammoStatus', ammoStatusAssaultRifle );
+
+		// rules
+
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetClose, lowAssault ), fuzzySets.undesirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetClose, okayAssault ), fuzzySets.desirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetClose, LoadsAssault ), fuzzySets.desirable ) );
+
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, lowAssault ), fuzzySets.desirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, okayAssault ), fuzzySets.desirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, LoadsAssault ), fuzzySets.veryDesirable ) );
+
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, lowAssault ), fuzzySets.desirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetFar, okayAssault ), fuzzySets.veryDesirable ) );
+		fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetFar, LoadsAssault ), fuzzySets.veryDesirable ) );
+
+		return this;
+
+	}
+
+}
+
+function sync( entity, renderComponent ) {
+
+	renderComponent.matrix.copy( entity.worldMatrix );
 
 }
 

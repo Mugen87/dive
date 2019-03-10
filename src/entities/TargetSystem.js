@@ -1,4 +1,4 @@
-import { ENEMY_STATUS_ALIVE } from '../core/Constants.js';
+import { STATUS_ALIVE } from '../core/Constants.js';
 
 /**
 * Class to select a target from the opponents currently in a bot's perceptive memory.
@@ -36,7 +36,7 @@ class TargetSystem {
 
 			const record = records[ i ];
 
-			if ( record.entity.status === ENEMY_STATUS_ALIVE ) {
+			if ( record.entity.status === STATUS_ALIVE ) {
 
 				const distance = this.owner.position.squaredDistanceTo( record.lastSensedPosition );
 

@@ -1,8 +1,14 @@
 import { GameEntity, MovingEntity, Vector3 } from '../lib/yuka.module.js';
+import { WeaponSystem } from './WeaponSystem.js';
 import { CONFIG } from '../core/Config.js';
+import { Projectile } from '../weapons/Projectile.js';
+import { STATUS_ALIVE } from '../core/Constants.js';
 
 const startPosition = new Vector3();
 const endPosition = new Vector3();
+const intersectionPoint = new Vector3();
+const targetPosition = new Vector3();
+const projectile = new Projectile();
 
 /**
 * Class for representing the human player of the game.
@@ -13,19 +19,25 @@ class Player extends MovingEntity {
 
 	/**
 	* Constructs a new player object.
+	*
+	* @param {World} world - A reference to the world.
 	*/
-	constructor() {
+	constructor( world ) {
 
 		super();
+
+		this.world = world;
 
 		this.height = CONFIG.PLAYER.HEAD_HEIGHT;
 		this.updateOrientation = false;
 		this.maxSpeed = CONFIG.PLAYER.MAX_SPEED;
-		this.forward.set( 0, 0, - 1 );
+
+		this.status = STATUS_ALIVE;
 
 		// the camera is attached to the player's head
 
 		this.head = new GameEntity();
+		this.head.forward.set( 0, 0, - 1 );
 		this.add( this.head );
 
 		// the weapons are attached to the following container entity
@@ -35,12 +47,20 @@ class Player extends MovingEntity {
 
 		//
 
-		this.world = null;
+		this.weaponSystem = new WeaponSystem( this, true );
+		this.weaponSystem.init();
+
+		//
+
 		this.audios = new Map();
 
 		//
 
 		this.currentRegion = null;
+
+		// TODO: Only for dev
+
+		this.deactivate();
 
 	}
 
@@ -67,6 +87,10 @@ class Player extends MovingEntity {
 			this.position
 		);
 
+		//
+
+		this.weaponSystem.updateWeaponChange();
+
 		return this;
 
 	}
@@ -78,7 +102,29 @@ class Player extends MovingEntity {
 	*/
 	shoot() {
 
-		console.log( 'shoot' );
+		const head = this.head;
+		const world = this.world;
+
+		// simulate a shot in order to retrieve the closest intersection point
+
+		const ray = projectile.ray;
+
+		head.getWorldPosition( ray.origin );
+		head.getWorldDirection( ray.direction );
+
+		projectile.owner = this;
+
+		const result = world.checkProjectileIntersection( projectile, intersectionPoint );
+
+		// now calculate the distance to the closest intersection point. if no point was found,
+		// choose a point on the ray far away from the origin
+
+		const distance = ( result === null ) ? 1000 : ray.origin.distanceTo( intersectionPoint );
+		targetPosition.copy( ray.origin ).add( ray.direction.multiplyScalar( distance ) );
+
+		// fire
+
+		this.weaponSystem.shoot( targetPosition );
 
 		return this;
 
@@ -105,7 +151,41 @@ class Player extends MovingEntity {
 	*/
 	changeWeapon( type ) {
 
-		console.log( type );
+		if ( this.weaponSystem.currentWeapon.type !== type ) {
+
+			this.weaponSystem.nextWeaponType = type;
+
+		}
+
+		return this;
+
+	}
+
+	/**
+	* Activates this game entity. Enemies will shot at the player and
+	* the current weapon is rendered.
+	*
+	* @return {Player} A reference to this game entity.
+	*/
+	activate() {
+
+		this.active = true;
+		this.weaponSystem.currentWeapon._renderComponent.visible = true;
+
+		return this;
+
+	}
+
+	/**
+	* Deactivates this game entity. Enemies will not shot at the player and
+	* the current weapon is not rendered.
+	*
+	* @return {Player} A reference to this game entity.
+	*/
+	deactivate() {
+
+		this.active = false;
+		this.weaponSystem.currentWeapon._renderComponent.visible = false;
 
 		return this;
 

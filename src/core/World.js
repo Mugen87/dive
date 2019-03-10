@@ -181,7 +181,7 @@ class World {
 
 		const entities = this.entityManager.entities;
 		let minDistance = Infinity;
-		let hittedEntitiy = null;
+		let hittedEntity = null;
 
 		const owner = projectile.owner;
 		const ray = projectile.ray;
@@ -201,7 +201,7 @@ class World {
 					if ( squaredDistance < minDistance ) {
 
 						minDistance = squaredDistance;
-						hittedEntitiy = entity;
+						hittedEntity = entity;
 
 						intersectionPoint.copy( currentIntersectionPoint );
 
@@ -214,7 +214,7 @@ class World {
 
 		}
 
-		return hittedEntitiy;
+		return hittedEntity;
 
 	}
 
@@ -289,12 +289,8 @@ class World {
 
 			const renderComponent = SceneUtils.cloneWithSkinning( this.assetManager.models.get( 'soldier' ) );
 
-			const enemy = new Enemy();
+			const enemy = new Enemy( this );
 			enemy.setRenderComponent( renderComponent, sync );
-
-			// set references
-
-			enemy.world = this;
 
 			// set animations
 
@@ -386,8 +382,7 @@ class World {
 
 		const assetManager = this.assetManager;
 
-		this.player = new Player();
-		this.player.world = this;
+		this.player = new Player( this );
 
 		// render component
 
@@ -462,6 +457,7 @@ class World {
 			this.orbitControls.enabled = false;
 			this.camera.matrixAutoUpdate = false;
 
+			this.player.activate();
 			this.player.head.setRenderComponent( this.camera, syncCamera );
 
 			this.uiManager.showFPSInterface();
@@ -475,6 +471,7 @@ class World {
 			this.orbitControls.enabled = true;
 			this.camera.matrixAutoUpdate = true;
 
+			this.player.deactivate();
 			this.player.head.setRenderComponent( null, null );
 
 			this.uiManager.hideFPSInterface();

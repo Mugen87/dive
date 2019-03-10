@@ -60,7 +60,7 @@ const CONFIG = {
 		MAX_AMMO: 48, // number
 		SHOT_TIME: 0.4, // seconds
 		RELOAD_TIME: 1.6, // seconds
-		MUZZLE_TIME: 0.03, // seconds
+		MUZZLE_TIME: 0.04, // seconds
 		EQUIP_TIME: 0.5, // seconds
 		HIDE_TIME: 0.5 // seconds
 
@@ -73,7 +73,7 @@ const CONFIG = {
 		SHOT_TIME: 1.2, // seconds
 		RELOAD_TIME: 1.6, // seconds
 		SHOT_RELOAD_TIME: 0.5, // seconds
-		MUZZLE_TIME: 0.03, // seconds
+		MUZZLE_TIME: 0.04, // seconds
 		SPREAD: 0.1, // unitless
 		BULLETS_PER_SHOT: 6, // number
 		EQUIP_TIME: 1, // seconds
@@ -86,7 +86,7 @@ const CONFIG = {
 		MAX_AMMO: 90, // number
 		SHOT_TIME: 0.2, // seconds
 		RELOAD_TIME: 1.6, // seconds
-		MUZZLE_TIME: 0.03, // seconds
+		MUZZLE_TIME: 0.04, // seconds
 		EQUIP_TIME: 1, // seconds
 		HIDE_TIME: 1 // seconds
 

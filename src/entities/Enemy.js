@@ -1,5 +1,5 @@
 import { Vehicle, Regulator, Think, FollowPathBehavior, OnPathBehavior, SeekBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, MathUtils } from '../lib/yuka.module.js';
-import { MESSAGE_HIT, MESSAGE_DEAD, ENEMY_STATUS_ALIVE, ENEMY_STATUS_DYING, ENEMY_STATUS_DEAD } from '../core/Constants.js';
+import { MESSAGE_HIT, MESSAGE_DEAD, STATUS_ALIVE, STATUS_DYING, STATUS_DEAD } from '../core/Constants.js';
 import { AttackEvaluator } from '../evaluators/AttackEvaluator.js';
 import { ExploreEvaluator } from '../evaluators/ExploreEvaluator.js';
 import { CharacterBounds } from './CharacterBounds.js';
@@ -30,20 +30,22 @@ class Enemy extends Vehicle {
 
 	/**
 	* Constructs a new enemy.
+	*
+	* @param {World} world - A reference to the world.
 	*/
-	constructor() {
+	constructor( world ) {
 
 		super();
+
+		this.world = world;
 
 		this.currentTime = 0;
 		this.maxSpeed = CONFIG.BOT.MOVEMENT.MAX_SPEED;
 		this.updateOrientation = false;
 		this.isEnemy = true;
 
-		this.world = null;
-
 		this.health = CONFIG.BOT.MAX_HEALTH;
-		this.status = ENEMY_STATUS_ALIVE;
+		this.status = STATUS_ALIVE;
 
 		// current convex region of the navmesh the entity is in
 
@@ -176,7 +178,7 @@ class Enemy extends Vehicle {
 
 		// only update the core logic of the enemy if it is alive
 
-		if ( this.status === ENEMY_STATUS_ALIVE ) {
+		if ( this.status === STATUS_ALIVE ) {
 
 			// update hitbox
 
@@ -237,11 +239,11 @@ class Enemy extends Vehicle {
 
 		// handle dying
 
-		if ( this.status === ENEMY_STATUS_DYING ) {
+		if ( this.status === STATUS_DYING ) {
 
 			if ( this.currentTime >= this.endTimeDying ) {
 
-				this.status = ENEMY_STATUS_DEAD;
+				this.status = STATUS_DEAD;
 				this.endTimeDying = Infinity;
 
 			}
@@ -250,7 +252,7 @@ class Enemy extends Vehicle {
 
 		// handle death
 
-		if ( this.status === ENEMY_STATUS_DEAD ) {
+		if ( this.status === STATUS_DEAD ) {
 
 			if ( this.world.debug ) {
 
@@ -318,7 +320,7 @@ class Enemy extends Vehicle {
 
 			// ignore own entity and consider only living enemies
 
-			if ( enemy === this || enemy.status !== ENEMY_STATUS_ALIVE ) continue;
+			if ( enemy === this || enemy.status !== STATUS_ALIVE ) continue;
 
 			if ( memorySystem.hasRecord( enemy ) === false ) {
 
@@ -357,7 +359,7 @@ class Enemy extends Vehicle {
 	*/
 	updateAnimations( delta ) {
 
-		if ( this.status === ENEMY_STATUS_ALIVE ) {
+		if ( this.status === STATUS_ALIVE ) {
 
 			// directions
 
@@ -457,7 +459,7 @@ class Enemy extends Vehicle {
 		this.rotation.set( 0, 0, 0, 1 );
 
 		this.health = CONFIG.BOT.MAX_HEALTH;
-		this.status = ENEMY_STATUS_ALIVE;
+		this.status = STATUS_ALIVE;
 
 		// reset search for attacker
 
@@ -527,7 +529,7 @@ class Enemy extends Vehicle {
 	*/
 	initDeath() {
 
-		this.status = ENEMY_STATUS_DYING;
+		this.status = STATUS_DYING;
 		this.endTimeDying = this.currentTime + this.dyingTime;
 
 		this.velocity.set( 0, 0, 0 );
@@ -631,7 +633,7 @@ class Enemy extends Vehicle {
 
 				// check if the enemy is death
 
-				if ( this.health <= 0 && this.status === ENEMY_STATUS_ALIVE ) {
+				if ( this.health <= 0 && this.status === STATUS_ALIVE ) {
 
 					this.initDeath();
 
@@ -651,7 +653,7 @@ class Enemy extends Vehicle {
 
 					// if not, search for attacker if he is still alive
 
-					if ( telegram.sender.status === ENEMY_STATUS_ALIVE ) {
+					if ( telegram.sender.status === STATUS_ALIVE ) {
 
 						this.searchAttacker = true;
 						this.endTimeSearch = this.currentTime + this.searchTime; // only search for a specific amount of time
