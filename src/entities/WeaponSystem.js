@@ -327,17 +327,17 @@ class WeaponSystem {
 			// also add it to owner entity so the weapon is correctly updated by
 			// the entity manager
 
+			owner.weaponContainer.add( weapon );
+
 			if ( this.isPlayer ) {
 
-				weapon.position.set( 0.3, - 0.3, - 1 ); // relative position to the player's head
 				weapon.scale.set( 2, 2, 2 );
+				weapon.position.set( 0.3, - 0.3, - 1 );
 				weapon.rotation.fromEuler( 0, Math.PI, 0 );
-				owner.weaponContainer.add( weapon );
 
 			} else {
 
-				weapon.position.set( - 0.15, 1.30, 0.5 ); // relative position to the enenmy's body
-				owner.add( weapon );
+				weapon.position.set( - 0.1, - 0.2, 0.5 );
 
 			}
 
@@ -364,15 +364,7 @@ class WeaponSystem {
 			const index = this.weapons.indexOf( weapon );
 			this.weapons.splice( index, 1 );
 
-			if ( this.isPlayer ) {
-
-				this.owner.weaponContainer.remove( weapon );
-
-			} else {
-
-				this.owner.remove( weapon );
-
-			}
+			this.owner.weaponContainer.remove( weapon );
 
 		}
 

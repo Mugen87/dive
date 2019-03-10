@@ -22,7 +22,7 @@ const CONFIG = {
 			DODGE_SIZE: 4 // meter
 		},
 		HEAD: {
-			HEIGHT: 1.8 // meter
+			HEIGHT: 1.5 // meter
 		},
 		GOAL: {
 			UPDATE_FREQUENCY: 5 // number per seconds

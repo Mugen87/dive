@@ -72,6 +72,11 @@ class Enemy extends Vehicle {
 		this.head.position.y = CONFIG.BOT.HEAD.HEIGHT;
 		this.add( this.head );
 
+		// the weapons are attached to the following container entity
+
+		this.weaponContainer = new GameEntity();
+		this.head.add( this.weaponContainer );
+
 		// bounds
 
 		this.bounds = new CharacterBounds( this );
