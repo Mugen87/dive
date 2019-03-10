@@ -98,6 +98,21 @@ class FirstPersonControls extends EventDispatcher {
 	*/
 	update( delta ) {
 
+		this._updateVelocity( delta );
+		this._updateHead( delta );
+
+		return this;
+
+	}
+
+	/**
+	* Computes the current velocity of the owner (player).
+	*
+	* @param {Number} delta - The time delta.
+	* @return {FirstPersonControls} A reference to this instance.
+	*/
+	_updateVelocity( delta ) {
+
 		const input = this.input;
 		const owner = this.owner;
 
@@ -112,10 +127,6 @@ class FirstPersonControls extends EventDispatcher {
 		if ( input.left || input.right ) velocity.x -= direction.x * CONFIG.CONTROLS.ACCELERATION;
 
 		owner.velocity.copy( velocity ).applyRotation( owner.rotation );
-
-		//
-
-		this._updateHead( delta );
 
 		return this;
 
