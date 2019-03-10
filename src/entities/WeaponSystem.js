@@ -368,7 +368,6 @@ class WeaponSystem {
 			const index = this.weapons.indexOf( weapon );
 			this.weapons.splice( index, 1 );
 
-
 			if ( this.isPlayer ) {
 
 				this.owner.weaponContainer.remove( weapon );
@@ -578,6 +577,25 @@ class WeaponSystem {
 
 			default:
 				break;
+
+		}
+
+		return this;
+
+	}
+
+	/**
+	* Reloads the current weapon.
+	*
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	reload() {
+
+		const currentWeapon = this.currentWeapon;
+
+		if ( currentWeapon.status === WEAPON_STATUS_READY ) {
+
+			currentWeapon.reload();
 
 		}
 

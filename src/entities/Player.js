@@ -137,7 +137,7 @@ class Player extends MovingEntity {
 	*/
 	reload() {
 
-		console.log( 'reload' );
+		this.weaponSystem.reload();
 
 		return this;
 
