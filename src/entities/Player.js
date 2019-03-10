@@ -21,6 +21,7 @@ class Player extends MovingEntity {
 		this.height = CONFIG.PLAYER.HEAD_HEIGHT;
 		this.updateOrientation = false;
 		this.maxSpeed = CONFIG.PLAYER.MAX_SPEED;
+		this.forward.set( 0, 0, - 1 );
 
 		// the camera is attached to the player's head
 
