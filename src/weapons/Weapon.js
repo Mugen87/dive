@@ -22,7 +22,11 @@ class Weapon extends GameEntity {
 		this.type = null;
 		this.status = WEAPON_STATUS_UNREADY;
 
-		this.fuzzyModule = null;
+		// use to restore the state after a weapon change
+
+		this.previousState = WEAPON_STATUS_READY;
+
+		// ammo related stuff
 
 		this.roundsLeft = 0;
 		this.roundsPerClip = 0;
@@ -43,9 +47,9 @@ class Weapon extends GameEntity {
 		this.endTimeEquip = Infinity;
 		this.endTimeHide = Infinity;
 
-		//fuzzy module
+		// used for weapon selection
 
-		this.fuzzy = null;
+		this.fuzzyModule = null;
 
 	}
 
@@ -107,6 +111,7 @@ class Weapon extends GameEntity {
 	*/
 	hide() {
 
+		this.previousState = this.status;
 		this.status = WEAPON_STATUS_HIDE;
 		this.endTimeHide = this.currentTime + this.hideTime;
 
@@ -141,7 +146,7 @@ class Weapon extends GameEntity {
 
 		if ( this.currentTime >= this.endTimeEquip ) {
 
-			this.status = WEAPON_STATUS_READY;
+			this.status = this.previousState; // restore previous state
 			this.endTimeEquip = Infinity;
 
 		}

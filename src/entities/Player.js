@@ -151,11 +151,7 @@ class Player extends MovingEntity {
 	*/
 	changeWeapon( type ) {
 
-		if ( this.weaponSystem.currentWeapon.type !== type ) {
-
-			this.weaponSystem.nextWeaponType = type;
-
-		}
+		this.weaponSystem.setNextWeapon( type );
 
 		return this;
 

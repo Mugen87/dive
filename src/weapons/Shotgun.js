@@ -221,10 +221,10 @@ class Shotgun extends Weapon {
  */
 	getDesirability( distance ) {
 
-		this.fuzzy.fuzzify( 'distanceToTarget', distance );
-		this.fuzzy.fuzzify( 'ammoStatus', this.roundsLeft );
+		this.fuzzyModule.fuzzify( 'distanceToTarget', distance );
+		this.fuzzyModule.fuzzify( 'ammoStatus', this.roundsLeft );
 
-		return this.fuzzy.defuzzify( 'desirability' ) / 100;
+		return this.fuzzyModule.defuzzify( 'desirability' ) / 100;
 
 	}
 

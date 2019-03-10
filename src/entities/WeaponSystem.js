@@ -1,7 +1,7 @@
 import { Vector3, MathUtils } from '../lib/yuka.module.js';
 import { FuzzyVariable, LeftShoulderFuzzySet, TriangularFuzzySet, RightShoulderFuzzySet, FuzzyRule, FuzzyAND, FuzzyModule } from '../lib/yuka.module.js';
 import { CONFIG } from '../core/Config.js';
-import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
+import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE, WEAPON_STATUS_OUT_OF_AMMO } from '../core/Constants.js';
 import { WEAPON_STATUS_EMPTY, WEAPON_STATUS_READY, WEAPON_STATUS_UNREADY } from '../core/Constants.js';
 import { Blaster } from '../weapons/Blaster.js';
 import { Shotgun } from '../weapons/Shotgun.js';
@@ -204,13 +204,9 @@ class WeaponSystem {
 
 			}
 
-			// if the best weapon is not already used, equip it
+			// select the best weapon
 
-			if ( this.currentWeapon.type !== bestWeaponType ) {
-
-				this.nextWeaponType = bestWeaponType;
-
-			}
+			this.setNextWeapon( bestWeaponType );
 
 		}
 
@@ -286,21 +282,21 @@ class WeaponSystem {
 
 			case WEAPON_TYPES_BLASTER:
 				weapon = new Blaster( owner );
-				weapon.fuzzy = this.fuzzyModules.blaster;
+				weapon.fuzzyModule = this.fuzzyModules.blaster;
 				weapon.muzzle = this.renderComponents.blaster.muzzle;
 				weapon.audios = this.renderComponents.blaster.audios;
 				break;
 
 			case WEAPON_TYPES_SHOTGUN:
 				weapon = new Shotgun( owner );
-				weapon.fuzzy = this.fuzzyModules.shotGun;
+				weapon.fuzzyModule = this.fuzzyModules.shotGun;
 				weapon.muzzle = this.renderComponents.shotgun.muzzle;
 				weapon.audios = this.renderComponents.shotgun.audios;
 				break;
 
 			case WEAPON_TYPES_ASSAULT_RIFLE:
 				weapon = new AssaultRifle( owner );
-				weapon.fuzzy = this.fuzzyModules.assaultRifle;
+				weapon.fuzzyModule = this.fuzzyModules.assaultRifle;
 				weapon.muzzle = this.renderComponents.assaultRifle.muzzle;
 				weapon.audios = this.renderComponents.assaultRifle.audios;
 				break;
@@ -383,6 +379,26 @@ class WeaponSystem {
 	}
 
 	/**
+	* Sets the next weapon type the owner should use.
+	*
+	* @param {WEAPON_TYPES} type - The weapon type.
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	setNextWeapon( type ) {
+
+		// no need for action if the current weapon is already of the given type
+
+		if ( this.currentWeapon.type !== type ) {
+
+			this.nextWeaponType = type;
+
+		}
+
+		return this;
+
+	}
+
+	/**
 	* Returns the amount of ammo remaining for the specified weapon.
 	*
 	* @param {WEAPON_TYPES} type - The weapon type.
@@ -420,9 +436,11 @@ class WeaponSystem {
 
 		if ( this.nextWeaponType !== null ) {
 
-			// if the current weapon is ready, hide it in order to start the weapon change
+			// if the current weapon is in certain states, hide it in order to start the weapon change
 
-			if ( this.currentWeapon.status === WEAPON_STATUS_READY ) {
+			if ( this.currentWeapon.status === WEAPON_STATUS_READY ||
+					this.currentWeapon.status === WEAPON_STATUS_EMPTY ||
+					this.currentWeapon.status === WEAPON_STATUS_OUT_OF_AMMO ) {
 
 				this.currentWeapon.hide();
 
