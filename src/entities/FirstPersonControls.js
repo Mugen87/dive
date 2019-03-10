@@ -108,8 +108,10 @@ class FirstPersonControls extends EventDispatcher {
 		direction.x = Number( input.left ) - Number( input.right );
 		direction.normalize();
 
-		if ( input.forward || input.backward ) velocity.z -= direction.z * owner.maxSpeed;
-		if ( input.left || input.right ) velocity.x -= direction.x * owner.maxSpeed;
+		if ( input.forward || input.backward ) velocity.z -= direction.z * CONFIG.CONTROLS.ACCELERATION;
+		if ( input.left || input.right ) velocity.x -= direction.x * CONFIG.CONTROLS.ACCELERATION;
+
+		console.log( velocity );
 
 		owner.velocity.copy( velocity ).applyRotation( owner.rotation );
 

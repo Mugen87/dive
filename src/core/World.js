@@ -638,7 +638,15 @@ function animate() {
 
 	const delta = this.time.getDelta();
 
-	if ( this.useFPSControls ) {
+	if ( this.debug ) {
+
+		if ( this.useFPSControls ) {
+
+			this.fpsControls.update( delta );
+
+		}
+
+	} else {
 
 		this.fpsControls.update( delta );
 
