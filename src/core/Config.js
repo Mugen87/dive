@@ -21,9 +21,6 @@ const CONFIG = {
 			MAX_SPEED: 3, // meter/seconds
 			DODGE_SIZE: 4 // meter
 		},
-		HEAD: {
-			HEIGHT: 1.5 // meter
-		},
 		GOAL: {
 			UPDATE_FREQUENCY: 5 // number per seconds
 		},
@@ -49,6 +46,7 @@ const CONFIG = {
 			AIM_ACCURACY: 3, // world units
 			CHANGE_COST: 0.5 // desirability
 		},
+		HEAD_HEIGHT: 1.5, // meter
 		MAX_HEALTH: 100, // health points
 		DYING_TIME: 3, // seconds
 		SEARCH_FOR_ATTACKER_TIME: 3 // seconds
