@@ -1,4 +1,5 @@
 import { Ray, Vector3 } from '../lib/yuka.module.js';
+import { AnimationMixer, LoopOnce } from '../lib/three.module.js';
 import { Weapon } from './Weapon.js';
 import { CONFIG } from '../core/Config.js';
 import { WEAPON_STATUS_READY, WEAPON_STATUS_SHOT, WEAPON_STATUS_RELOAD, WEAPON_STATUS_EMPTY, WEAPON_STATUS_OUT_OF_AMMO, WEAPON_TYPES_SHOTGUN } from '../core/Constants.js';
@@ -34,6 +35,7 @@ class Shotgun extends Weapon {
 		this.reloadTime = CONFIG.SHOTGUN.RELOAD_TIME;
 		this.equipTime = CONFIG.SHOTGUN.EQUIP_TIME;
 		this.hideTime = CONFIG.SHOTGUN.HIDE_TIME;
+		this.muzzleFireTime = CONFIG.SHOTGUN.MUZZLE_TIME;
 
 		// shotgun specific properties
 
@@ -42,14 +44,6 @@ class Shotgun extends Weapon {
 
 		this.shotReloadTime = CONFIG.SHOTGUN.SHOT_RELOAD_TIME;
 		this.endTimeShotReload = Infinity;
-
-		this.muzzleFireTime = CONFIG.BLASTER.MUZZLE_TIME;
-		this.endTimeMuzzleFire = Infinity;
-
-		// render specific stuff
-
-		this.muzzle = null;
-		this.audios = null;
 
 	}
 
@@ -148,9 +142,21 @@ class Shotgun extends Weapon {
 
 		this.status = WEAPON_STATUS_RELOAD;
 
+		// audio
+
 		const audio = this.audios.get( 'reload' );
 		if ( audio.isPlaying === true ) audio.stop();
 		audio.play();
+
+		// animation
+
+		if ( this.mixer ) {
+
+			const animation = this.animations.get( 'reload' );
+			animation.stop();
+			animation.play();
+
+		}
 
 		this.endTimeReload = this.currentTime + this.reloadTime;
 
@@ -162,7 +168,7 @@ class Shotgun extends Weapon {
 	* Shoots at the given position.
 	*
 	* @param {Vector3} targetPosition - The target position.
-	* @return {Blaster} A reference to this weapon.
+	* @return {Shotgun} A reference to this weapon.
 	*/
 	shoot( targetPosition ) {
 
@@ -173,6 +179,16 @@ class Shotgun extends Weapon {
 		const audio = this.audios.get( 'shot' );
 		if ( audio.isPlaying === true ) audio.stop();
 		audio.play();
+
+		// animation
+
+		if ( this.mixer ) {
+
+			const animation = this.animations.get( 'shot' );
+			animation.stop();
+			animation.play();
+
+		}
 
 		// muzzle fire
 
@@ -218,13 +234,55 @@ class Shotgun extends Weapon {
 	*
 	* @param {Number} distance - The distance to the target.
 	* @return {Number} A score between 0 and 1 representing the desirability.
- */
+ 	*/
 	getDesirability( distance ) {
 
 		this.fuzzyModule.fuzzify( 'distanceToTarget', distance );
 		this.fuzzyModule.fuzzify( 'ammoStatus', this.roundsLeft );
 
 		return this.fuzzyModule.defuzzify( 'desirability' ) / 100;
+
+	}
+
+	/**
+	* Inits animations for this weapon. Only used for the player.
+	*
+	* @return {Shotgun} A reference to this weapon.
+	*/
+	initAnimations() {
+
+		const assetManager = this.owner.world.assetManager;
+
+		const mixer = new AnimationMixer( this );
+		const animations = new Map();
+
+		const shotClip = assetManager.animations.get( 'shotgun_shot' );
+		const reloadClip = assetManager.animations.get( 'shotgun_reload' );
+		const hideClip = assetManager.animations.get( 'shotgun_hide' );
+		const equipClip = assetManager.animations.get( 'shotgun_equip' );
+
+		const shotAction = mixer.clipAction( shotClip );
+		shotAction.loop = LoopOnce;
+
+		const reloadAction = mixer.clipAction( reloadClip );
+		reloadAction.loop = LoopOnce;
+
+		const hideAction = mixer.clipAction( hideClip );
+		hideAction.loop = LoopOnce;
+		hideAction.clampWhenFinished = true;
+
+		const equipAction = mixer.clipAction( equipClip );
+		equipAction.loop = LoopOnce;
+
+		animations.set( 'shot', shotAction );
+		animations.set( 'reload', reloadAction );
+		animations.set( 'hide', hideAction );
+		animations.set( 'equip', equipAction );
+
+		this.animations = animations;
+		this.mixer = mixer;
+
+		return this;
 
 	}
 

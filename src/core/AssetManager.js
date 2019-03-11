@@ -1,4 +1,4 @@
-import { LoadingManager, AudioLoader, TextureLoader } from '../lib/three.module.js';
+import { LoadingManager, AnimationLoader, AudioLoader, TextureLoader } from '../lib/three.module.js';
 import { Sprite, SpriteMaterial, DoubleSide, AudioListener, PositionalAudio } from '../lib/three.module.js';
 import { LineSegments, LineBasicMaterial, BufferGeometry, Vector3 } from '../lib/three.module.js';
 import { GLTFLoader } from '../lib/GLTFLoader.module.js';
@@ -20,6 +20,7 @@ class AssetManager {
 
 		this.loadingManager = new LoadingManager();
 
+		this.animationLoader = new AnimationLoader( this.loadingManager );
 		this.audioLoader = new AudioLoader( this.loadingManager );
 		this.textureLoader = new TextureLoader( this.loadingManager );
 		this.gltfLoader = new GLTFLoader( this.loadingManager );
@@ -43,6 +44,7 @@ class AssetManager {
 	*/
 	init() {
 
+		this._loadAnimations();
 		this._loadAudios();
 		this._loadModels();
 		this._loadNavMesh();
@@ -74,6 +76,55 @@ class AssetManager {
 		audio.setVolume( source.getVolume() );
 
 		return audio;
+
+	}
+
+	/**
+	* Loads all external animations from the backend.
+	*
+	* @return {AssetManager} A reference to this asset manager.
+	*/
+	_loadAnimations() {
+
+		const animationLoader = this.animationLoader;
+
+		// blaster
+
+		animationLoader.load( './animations/blaster.json', ( clips ) => {
+
+			for ( let clip of clips ) {
+
+				this.animations.set( clip.name, clip );
+
+			}
+
+		} );
+
+		// shotgun
+
+		animationLoader.load( './animations/shotgun.json', ( clips ) => {
+
+			for ( let clip of clips ) {
+
+				this.animations.set( clip.name, clip );
+
+			}
+
+		} );
+
+		// assault rifle
+
+		animationLoader.load( './animations/assaultRifle.json', ( clips ) => {
+
+			for ( let clip of clips ) {
+
+				this.animations.set( clip.name, clip );
+
+			}
+
+		} );
+
+		return this;
 
 	}
 

@@ -1,4 +1,5 @@
 import { Ray } from '../lib/yuka.module.js';
+import { AnimationMixer, LoopOnce } from '../lib/three.module.js';
 import { Weapon } from './Weapon.js';
 import { WEAPON_STATUS_READY, WEAPON_STATUS_SHOT, WEAPON_STATUS_RELOAD, WEAPON_STATUS_EMPTY, WEAPON_STATUS_OUT_OF_AMMO, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
 import { CONFIG } from '../core/Config.js';
@@ -32,16 +33,7 @@ class AssaultRifle extends Weapon {
 		this.reloadTime = CONFIG.ASSAULT_RIFLE.RELOAD_TIME;
 		this.equipTime = CONFIG.ASSAULT_RIFLE.EQUIP_TIME;
 		this.hideTime = CONFIG.ASSAULT_RIFLE.HIDE_TIME;
-
-		// assault rifle specific properties
-
 		this.muzzleFireTime = CONFIG.ASSAULT_RIFLE.MUZZLE_TIME;
-		this.endTimeMuzzleFire = Infinity;
-
-		// render specific stuff
-
-		this.muzzle = null;
-		this.audios = null;
 
 	}
 
@@ -49,7 +41,7 @@ class AssaultRifle extends Weapon {
 	* Update method of this weapon.
 	*
 	* @param {Number} delta - The time delta value;
-	* @return {Blaster} A reference to this weapon.
+	* @return {AssaultRifle} A reference to this weapon.
 	*/
 	update( delta ) {
 
@@ -128,9 +120,21 @@ class AssaultRifle extends Weapon {
 
 		this.status = WEAPON_STATUS_RELOAD;
 
+		// audio
+
 		const audio = this.audios.get( 'reload' );
 		if ( audio.isPlaying === true ) audio.stop();
 		audio.play();
+
+		// animation
+
+		if ( this.mixer ) {
+
+			const animation = this.animations.get( 'reload' );
+			animation.stop();
+			animation.play();
+
+		}
 
 		this.endTimeReload = this.currentTime + this.reloadTime;
 
@@ -142,7 +146,7 @@ class AssaultRifle extends Weapon {
 	* Shoots at the given position.
 	*
 	* @param {Vector3} targetPosition - The target position.
-	* @return {Blaster} A reference to this weapon.
+	* @return {AssaultRifle} A reference to this weapon.
 	*/
 	shoot( targetPosition ) {
 
@@ -153,6 +157,16 @@ class AssaultRifle extends Weapon {
 		const audio = this.audios.get( 'shot' );
 		if ( audio.isPlaying === true ) audio.stop();
 		audio.play();
+
+		// animation
+
+		if ( this.mixer ) {
+
+			const animation = this.animations.get( 'shot' );
+			animation.stop();
+			animation.play();
+
+		}
 
 		// muzzle fire
 
@@ -192,6 +206,48 @@ class AssaultRifle extends Weapon {
 		this.fuzzyModule.fuzzify( 'ammoStatus', this.roundsLeft );
 
 		return this.fuzzyModule.defuzzify( 'desirability' ) / 100;
+
+	}
+
+	/**
+	* Inits animations for this weapon. Only used for the player.
+	*
+	* @return {AssaultRifle} A reference to this weapon.
+	*/
+	initAnimations() {
+
+		const assetManager = this.owner.world.assetManager;
+
+		const mixer = new AnimationMixer( this );
+		const animations = new Map();
+
+		const shotClip = assetManager.animations.get( 'assaultRifle_shot' );
+		const reloadClip = assetManager.animations.get( 'assaultRifle_reload' );
+		const hideClip = assetManager.animations.get( 'assaultRifle_hide' );
+		const equipClip = assetManager.animations.get( 'assaultRifle_equip' );
+
+		const shotAction = mixer.clipAction( shotClip );
+		shotAction.loop = LoopOnce;
+
+		const reloadAction = mixer.clipAction( reloadClip );
+		reloadAction.loop = LoopOnce;
+
+		const hideAction = mixer.clipAction( hideClip );
+		hideAction.loop = LoopOnce;
+		hideAction.clampWhenFinished = true;
+
+		const equipAction = mixer.clipAction( equipClip );
+		equipAction.loop = LoopOnce;
+
+		animations.set( 'shot', shotAction );
+		animations.set( 'reload', reloadAction );
+		animations.set( 'hide', hideAction );
+		animations.set( 'equip', equipAction );
+
+		this.animations = animations;
+		this.mixer = mixer;
+
+		return this;
 
 	}
 

@@ -334,6 +334,7 @@ class WeaponSystem {
 				weapon.scale.set( 2, 2, 2 );
 				weapon.position.set( 0.3, - 0.3, - 1 );
 				weapon.rotation.fromEuler( 0, Math.PI, 0 );
+				weapon.initAnimations();
 
 			} else {
 

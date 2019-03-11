@@ -46,10 +46,18 @@ class Weapon extends GameEntity {
 		this.endTimeReload = Infinity;
 		this.endTimeEquip = Infinity;
 		this.endTimeHide = Infinity;
+		this.endTimeMuzzleFire = Infinity;
 
 		// used for weapon selection
 
 		this.fuzzyModule = null;
+
+		// render specific properties
+
+		this.muzzle = null;
+		this.audios = null;
+		this.mixer = null;
+		this.animations = null;
 
 	}
 
@@ -100,6 +108,17 @@ class Weapon extends GameEntity {
 		this.status = WEAPON_STATUS_EQUIP;
 		this.endTimeEquip = this.currentTime + this.equipTime;
 
+		if ( this.mixer ) {
+
+			let animation = this.animations.get( 'hide' );
+			animation.stop();
+
+			animation = this.animations.get( 'equip' );
+			animation.stop();
+			animation.play();
+
+		}
+
 		return this;
 
 	}
@@ -114,6 +133,14 @@ class Weapon extends GameEntity {
 		this.previousState = this.status;
 		this.status = WEAPON_STATUS_HIDE;
 		this.endTimeHide = this.currentTime + this.hideTime;
+
+		if ( this.mixer ) {
+
+			const animation = this.animations.get( 'hide' );
+			animation.stop();
+			animation.play();
+
+		}
 
 		return this;
 
@@ -155,6 +182,14 @@ class Weapon extends GameEntity {
 
 			this.status = WEAPON_STATUS_UNREADY;
 			this.endTimeHide = Infinity;
+
+		}
+
+		// update animations
+
+		if ( this.mixer ) {
+
+			this.mixer.update( delta );
 
 		}
 
