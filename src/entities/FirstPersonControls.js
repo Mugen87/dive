@@ -42,12 +42,14 @@ class FirstPersonControls extends EventDispatcher {
 			forward: false,
 			backward: false,
 			right: false,
-			left: false
+			left: false,
+			mouseDown: false
 		};
 
 		this.sounds = new Map();
 
 		this._mouseDownHandler = onMouseDown.bind( this );
+		this._mouseUpHandler = onMouseUp.bind( this );
 		this._mouseMoveHandler = onMouseMove.bind( this );
 		this._pointerlockChangeHandler = onPointerlockChange.bind( this );
 		this._pointerlockErrorHandler = onPointerlockError.bind( this );
@@ -64,6 +66,7 @@ class FirstPersonControls extends EventDispatcher {
 	connect() {
 
 		document.addEventListener( 'mousedown', this._mouseDownHandler, false );
+		document.addEventListener( 'mouseup', this._mouseUpHandler, false );
 		document.addEventListener( 'mousemove', this._mouseMoveHandler, false );
 		document.addEventListener( 'pointerlockchange', this._pointerlockChangeHandler, false );
 		document.addEventListener( 'pointerlockerror', this._pointerlockErrorHandler, false );
@@ -84,6 +87,7 @@ class FirstPersonControls extends EventDispatcher {
 	disconnect() {
 
 		document.removeEventListener( 'mousedown', this._mouseDownHandler, false );
+		document.removeEventListener( 'mouseup', this._mouseUpHandler, false );
 		document.removeEventListener( 'mousemove', this._mouseMoveHandler, false );
 		document.removeEventListener( 'pointerlockchange', this._pointerlockChangeHandler, false );
 		document.removeEventListener( 'pointerlockerror', this._pointerlockErrorHandler, false );
@@ -113,6 +117,15 @@ class FirstPersonControls extends EventDispatcher {
 
 		this._updateHead();
 		this._updateWeapon();
+
+		// if the mouse is pressed and an automatic weapon like the assault rifle is equiped
+		// support automatic fire
+
+		if ( this.input.mouseDown && this.owner.isAutomaticWeaponUsed() ) {
+
+			this.owner.shoot();
+
+		}
 
 		return this;
 
@@ -219,7 +232,18 @@ function onMouseDown( event ) {
 
 	if ( event.which === 1 ) {
 
+		this.input.mouseDown = true;
 		this.owner.shoot();
+
+	}
+
+}
+
+function onMouseUp( event ) {
+
+	if ( event.which === 1 ) {
+
+		this.input.mouseDown = false;
 
 	}
 

@@ -2,7 +2,7 @@ import { GameEntity, MovingEntity, Vector3 } from '../lib/yuka.module.js';
 import { WeaponSystem } from './WeaponSystem.js';
 import { CONFIG } from '../core/Config.js';
 import { Projectile } from '../weapons/Projectile.js';
-import { STATUS_ALIVE } from '../core/Constants.js';
+import { STATUS_ALIVE, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
 
 const startPosition = new Vector3();
 const endPosition = new Vector3();
@@ -154,6 +154,17 @@ class Player extends MovingEntity {
 		this.weaponSystem.setNextWeapon( type );
 
 		return this;
+
+	}
+
+	/**
+	* Indicates if the player does currently use an automatic weapon.
+	*
+	* @return {Boolean} Whether an automatic weapon is used or not.
+	*/
+	isAutomaticWeaponUsed() {
+
+		return ( this.weaponSystem.currentWeapon.type === WEAPON_TYPES_ASSAULT_RIFLE );
 
 	}
 
