@@ -603,7 +603,7 @@ class WeaponSystem {
 
 		const currentWeapon = this.currentWeapon;
 
-		if ( currentWeapon.status === WEAPON_STATUS_READY ) {
+		if ( currentWeapon.status === WEAPON_STATUS_READY || currentWeapon.status === WEAPON_STATUS_EMPTY ) {
 
 			currentWeapon.reload();
 
