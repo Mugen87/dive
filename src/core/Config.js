@@ -43,7 +43,7 @@ const CONFIG = {
 		WEAPON: {
 			UPDATE_FREQUENCY: 4, // number per seconds
 			REACTION_TIME: 0.2, // seconds
-			AIM_ACCURACY: 3, // world units
+			AIM_ACCURACY: 2.5, // world units
 			CHANGE_COST: 0.5 // desirability
 		},
 		COUNT: 2, // number
@@ -61,7 +61,8 @@ const CONFIG = {
 		RELOAD_TIME: 1.6, // seconds
 		MUZZLE_TIME: 0.04, // seconds
 		EQUIP_TIME: 0.5, // seconds
-		HIDE_TIME: 0.5 // seconds
+		HIDE_TIME: 0.5, // seconds
+		SPREAD: 0.01, // unitless
 
 	},
 	SHOTGUN: {
@@ -73,10 +74,10 @@ const CONFIG = {
 		RELOAD_TIME: 1.6, // seconds
 		SHOT_RELOAD_TIME: 0.5, // seconds
 		MUZZLE_TIME: 0.04, // seconds
-		SPREAD: 0.08, // unitless
-		BULLETS_PER_SHOT: 6, // number
 		EQUIP_TIME: 1, // seconds
-		HIDE_TIME: 1 // seconds
+		HIDE_TIME: 1, // seconds
+		SPREAD: 0.08, // unitless
+		BULLETS_PER_SHOT: 6 // number
 	},
 	ASSAULT_RIFLE: {
 		ROUNDS_LEFT: 30, // number
@@ -87,7 +88,8 @@ const CONFIG = {
 		RELOAD_TIME: 1.6, // seconds
 		MUZZLE_TIME: 0.04, // seconds
 		EQUIP_TIME: 1, // seconds
-		HIDE_TIME: 1 // seconds
+		HIDE_TIME: 1, // seconds
+		SPREAD: 0.01, // unitless
 
 	},
 	BULLET: {
