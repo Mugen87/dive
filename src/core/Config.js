@@ -46,6 +46,7 @@ const CONFIG = {
 			AIM_ACCURACY: 3, // world units
 			CHANGE_COST: 0.5 // desirability
 		},
+		COUNT: 2, // number
 		HEAD_HEIGHT: 1.5, // meter
 		MAX_HEALTH: 100, // health points
 		DYING_TIME: 3, // seconds

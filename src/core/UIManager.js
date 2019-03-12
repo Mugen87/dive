@@ -28,7 +28,7 @@ class UIManager {
 			showGraph: false,
 			showSpawnPoints: false,
 			showUUIDHelpers: false,
-			showHitboxes: false,
+			showSkeletons: false,
 			enableFPSControls: () => {
 
 				this.world.fpsControls.connect();
@@ -124,11 +124,11 @@ class UIManager {
 
 			} );
 
-			folderEnemy.add( params, 'showHitboxes', 1, 30 ).name( 'show hitboxes' ).onChange( ( value ) => {
+			folderEnemy.add( params, 'showSkeletons', 1, 30 ).name( 'show skeletons' ).onChange( ( value ) => {
 
-				for ( const hitboxHelper of world.helpers.hitboxHelpers ) {
+				for ( const skeletonHelper of world.helpers.skeletonHelpers ) {
 
-					hitboxHelper.visible = value;
+					skeletonHelper.visible = value;
 
 				}
 

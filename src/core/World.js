@@ -1,5 +1,5 @@
 import { EntityManager, Time, MeshGeometry, Vector3 } from '../lib/yuka.module.js';
-import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer, Object3D } from '../lib/three.module.js';
+import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer, Object3D, SkeletonHelper } from '../lib/three.module.js';
 import { HemisphereLight, DirectionalLight } from '../lib/three.module.js';
 import { AxesHelper } from '../lib/three.module.js';
 import { OrbitControls } from '../lib/OrbitControls.module.js';
@@ -15,6 +15,7 @@ import { Player } from '../entities/Player.js';
 import { FirstPersonControls } from '../entities/FirstPersonControls.js';
 import { Bullet } from '../weapons/Bullet.js';
 import { PathPlanner } from '../etc/PathPlanner.js';
+import { CONFIG } from './Config.js';
 
 const currentIntersectionPoint = new Vector3();
 
@@ -33,6 +34,7 @@ class World {
 
 		this.entityManager = new EntityManager();
 		this.time = new Time();
+		this.tick = 0;
 
 		this.assetManager = new AssetManager();
 		this.navMesh = null;
@@ -55,7 +57,7 @@ class World {
 
 		//
 
-		this.enemyCount = 2;
+		this.enemyCount = CONFIG.BOT.COUNT;
 		this.enemies = new Array();
 
 		//
@@ -74,7 +76,7 @@ class World {
 			pathHelpers: new Array(),
 			spawnHelpers: new Array(),
 			uuidHelpers: new Array(),
-			hitboxHelpers: new Array()
+			skeletonHelpers: new Array()
 		};
 
 	}
@@ -332,6 +334,14 @@ class World {
 				renderComponent.add( uuidHelper );
 				this.helpers.uuidHelpers.push( uuidHelper );
 
+				//
+
+				const skeletonHelper = new SkeletonHelper( renderComponent );
+				skeletonHelper.visible = false;
+
+				this.scene.add( skeletonHelper );
+				this.helpers.skeletonHelpers.push( skeletonHelper );
+
 			}
 
 		}
@@ -537,6 +547,8 @@ function animate() {
 	requestAnimationFrame( this._animate );
 
 	this.time.update();
+
+	this.tick ++;
 
 	const delta = this.time.getDelta();
 

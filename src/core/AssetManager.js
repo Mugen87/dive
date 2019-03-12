@@ -210,7 +210,6 @@ class AssetManager {
 					object.matrixAutoUpdate = false;
 					object.updateMatrix();
 
-
 				}
 
 			} );
