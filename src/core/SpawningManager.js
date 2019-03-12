@@ -17,20 +17,21 @@ class SpawningManager {
 		this.spawningPoints = new Array();
 		this.spawningPoints.push( new Vector3( 0, 0, 0 ) );
 		this.spawningPoints.push( new Vector3( - 40, 0, 15 ) );
+		this.spawningPoints.push( new Vector3( - 30, 0, - 25 ) );
 		this.world = world;
 
 	}
 
 	/**
-	* Respawns the given enemy.
+	* Respawns the given competitor.
 	*
-	* @param {Enemy} enemy - The enemy to respawn.
+	* @param {GameEntity} competitor - The entity to respawn.
 	* @return {SpawningManager} A reference to this spawning manager.
 	*/
-	respawnEnemy( enemy ) {
+	respawnCompetitor( competitor ) {
 
-		const spawnPoint = this.getSpawnPoint( enemy );
-		enemy.position.copy( spawnPoint );
+		const spawnPoint = this.getSpawnPoint( competitor );
+		competitor.position.copy( spawnPoint );
 
 		return this;
 
@@ -48,7 +49,7 @@ class SpawningManager {
 
 		let bestSpawningPoint = this.spawningPoints[ 0 ];
 
-		const entities = this.world.entityManager.entities;
+		const competitors = this.world.competitors;
 		const spawningPoints = this.spawningPoints;
 
 		// searching for the spawning point furthest away from an enemy
@@ -59,15 +60,13 @@ class SpawningManager {
 
 			let closestDistance = Infinity;
 
-			for ( let j = 0, jl = entities.length; j < jl; j ++ ) {
+			for ( let j = 0, jl = competitors.length; j < jl; j ++ ) {
 
-				const entity = entities[ j ];
+				const competitor = competitors[ j ];
 
-				// only consider game entites of type "Enemy"
+				if ( competitor !== enemy ) {
 
-				if ( entity.isEnemy && entity !== enemy ) {
-
-					const distance = spawningPoint.squaredDistanceTo( entity.position );
+					const distance = spawningPoint.squaredDistanceTo( competitor.position );
 
 					if ( distance < closestDistance ) {
 

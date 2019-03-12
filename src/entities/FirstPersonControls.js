@@ -30,6 +30,8 @@ class FirstPersonControls extends EventDispatcher {
 
 		this.owner = owner;
 
+		this.active = true;
+
 		this.movementX = 0; // mouse left/right
 		this.movementY = 0; // mouse up/down
 
@@ -99,6 +101,27 @@ class FirstPersonControls extends EventDispatcher {
 	}
 
 	/**
+	* Resets the controls (e.g. after a respawn).
+	*
+	* @param {Number} delta - The time delta.
+	* @return {FirstPersonControls} A reference to this instance.
+	*/
+	reset() {
+
+		this.active = true;
+
+		this.movementX = 0;
+		this.movementY = 0;
+
+		this.input.forward = false;
+		this.input.backward = false;
+		this.input.right = false;
+		this.input.left = false;
+		this.input.mouseDown = false;
+
+	}
+
+	/**
 	* Update method of this controls. Computes the current velocity and head bobbing
 	* of the owner (player).
 	*
@@ -107,23 +130,31 @@ class FirstPersonControls extends EventDispatcher {
 	*/
 	update( delta ) {
 
-		this._updateVelocity( delta );
+		if ( this.active ) {
 
-		const speed = this.owner.getSpeed();
-		elapsed += delta * speed;
+			this._updateVelocity( delta );
 
-		// elapsed is used by the following two methods. it is scaled with the speed
-		// to modulate the head bobbing and weapon movement
+			const speed = this.owner.getSpeed();
+			elapsed += delta * speed;
 
-		this._updateHead();
-		this._updateWeapon();
+			// elapsed is used by the following two methods. it is scaled with the speed
+			// to modulate the head bobbing and weapon movement
 
-		// if the mouse is pressed and an automatic weapon like the assault rifle is equiped
-		// support automatic fire
+			this._updateHead();
+			this._updateWeapon();
 
-		if ( this.input.mouseDown && this.owner.isAutomaticWeaponUsed() ) {
+			// if the mouse is pressed and an automatic weapon like the assault rifle is equiped
+			// support automatic fire
 
-			this.owner.shoot();
+			if ( this.input.mouseDown && this.owner.isAutomaticWeaponUsed() ) {
+
+				this.owner.shoot();
+
+			}
+
+		} else {
+
+			console.log( 'deactived' );
 
 		}
 
@@ -230,7 +261,7 @@ class FirstPersonControls extends EventDispatcher {
 
 function onMouseDown( event ) {
 
-	if ( event.which === 1 ) {
+	if ( this.active && event.which === 1 ) {
 
 		this.input.mouseDown = true;
 		this.owner.shoot();
@@ -241,7 +272,7 @@ function onMouseDown( event ) {
 
 function onMouseUp( event ) {
 
-	if ( event.which === 1 ) {
+	if ( this.active && event.which === 1 ) {
 
 		this.input.mouseDown = false;
 
@@ -251,13 +282,17 @@ function onMouseUp( event ) {
 
 function onMouseMove( event ) {
 
-	this.movementX -= event.movementX * 0.001 * this.lookingSpeed;
-	this.movementY -= event.movementY * 0.001 * this.lookingSpeed;
+	if ( this.active ) {
 
-	this.movementY = Math.max( - PI05, Math.min( PI05, this.movementY ) );
+		this.movementX -= event.movementX * 0.001 * this.lookingSpeed;
+		this.movementY -= event.movementY * 0.001 * this.lookingSpeed;
 
-	this.owner.rotation.fromEuler( 0, this.movementX, 0 ); // yaw
-	this.owner.head.rotation.fromEuler( this.movementY, 0, 0 ); // pitch
+		this.movementY = Math.max( - PI05, Math.min( PI05, this.movementY ) );
+
+		this.owner.rotation.fromEuler( 0, this.movementX, 0 ); // yaw
+		this.owner.head.rotation.fromEuler( this.movementY, 0, 0 ); // pitch
+
+	}
 
 }
 
@@ -285,43 +320,47 @@ function onPointerlockError() {
 
 function onKeyDown( event ) {
 
-	switch ( event.keyCode ) {
+	if ( this.active ) {
 
-		case 38: // up
-		case 87: // w
-			this.input.forward = true;
-			break;
+		switch ( event.keyCode ) {
 
-		case 37: // left
-		case 65: // a
-			this.input.left = true;
-			break;
+			case 38: // up
+			case 87: // w
+				this.input.forward = true;
+				break;
 
-		case 40: // down
-		case 83: // s
-			this.input.backward = true;
-			break;
+			case 37: // left
+			case 65: // a
+				this.input.left = true;
+				break;
 
-		case 39: // right
-		case 68: // d
-			this.input.right = true;
-			break;
+			case 40: // down
+			case 83: // s
+				this.input.backward = true;
+				break;
 
-		case 82: // r
-			this.owner.reload();
-			break;
+			case 39: // right
+			case 68: // d
+				this.input.right = true;
+				break;
 
-		case 49: // 1
-			this.owner.changeWeapon( WEAPON_TYPES_BLASTER );
-			break;
+			case 82: // r
+				this.owner.reload();
+				break;
 
-		case 50: // 2
-			this.owner.changeWeapon( WEAPON_TYPES_SHOTGUN );
-			break;
+			case 49: // 1
+				this.owner.changeWeapon( WEAPON_TYPES_BLASTER );
+				break;
 
-		case 51: // 3
-			this.owner.changeWeapon( WEAPON_TYPES_ASSAULT_RIFLE );
-			break;
+			case 50: // 2
+				this.owner.changeWeapon( WEAPON_TYPES_SHOTGUN );
+				break;
+
+			case 51: // 3
+				this.owner.changeWeapon( WEAPON_TYPES_ASSAULT_RIFLE );
+				break;
+
+		}
 
 	}
 
@@ -329,27 +368,31 @@ function onKeyDown( event ) {
 
 function onKeyUp( event ) {
 
-	switch ( event.keyCode ) {
+	if ( this.active ) {
 
-		case 38: // up
-		case 87: // w
-			this.input.forward = false;
-			break;
+		switch ( event.keyCode ) {
 
-		case 37: // left
-		case 65: // a
-			this.input.left = false;
-			break;
+			case 38: // up
+			case 87: // w
+				this.input.forward = false;
+				break;
 
-		case 40: // down
-		case 83: // s
-			this.input.backward = false;
-			break;
+			case 37: // left
+			case 65: // a
+				this.input.left = false;
+				break;
 
-		case 39: // right
-		case 68: // d
-			this.input.right = false;
-			break;
+			case 40: // down
+			case 83: // s
+				this.input.backward = false;
+				break;
+
+			case 39: // right
+			case 68: // d
+				this.input.right = false;
+				break;
+
+		}
 
 	}
 

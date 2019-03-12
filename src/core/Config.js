@@ -6,7 +6,10 @@
 
 const CONFIG = {
 	PLAYER: {
+		BOUNDING_RADIUS: 0.5, // meter
+		DYING_TIME: 3, // seconds
 		HEAD_HEIGHT: 1.7, // meter
+		MAX_HEALTH: 100, // health points
 		MAX_SPEED: 4 // meter/seconds
 	},
 	CONTROLS: {
@@ -46,6 +49,7 @@ const CONFIG = {
 			AIM_ACCURACY: 2.5, // world units
 			CHANGE_COST: 0.5 // desirability
 		},
+		BOUNDING_RADIUS: 0.5, // meter
 		COUNT: 2, // number
 		HEAD_HEIGHT: 1.5, // meter
 		MAX_HEALTH: 100, // health points

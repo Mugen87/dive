@@ -58,7 +58,7 @@ class World {
 		//
 
 		this.enemyCount = CONFIG.BOT.COUNT;
-		this.enemies = new Array();
+		this.competitors = new Array();
 
 		//
 
@@ -194,7 +194,7 @@ class World {
 
 			// do not test with the owner entity and only process entities with the correct interface
 
-			if ( entity !== owner && entity.checkProjectileIntersection ) {
+			if ( entity !== owner && entity.active && entity.checkProjectileIntersection ) {
 
 				if ( entity.checkProjectileIntersection( ray, currentIntersectionPoint ) !== null ) {
 
@@ -313,7 +313,8 @@ class World {
 			//
 
 			this.add( enemy );
-			this.enemies.push( enemy );
+			this.competitors.push( enemy );
+			this.spawningManager.respawnCompetitor( enemy );
 
 			//
 
@@ -392,13 +393,13 @@ class World {
 
 		const assetManager = this.assetManager;
 
-		this.player = new Player( this );
+		const player = new Player( this );
 
 		// render component
 
 		const body = new Object3D(); // dummy 3D object for adding spatial audios
 		body.matrixAutoUpdate = false;
-		this.player.setRenderComponent( body, sync );
+		player.setRenderComponent( body, sync );
 
 		// audio
 
@@ -414,12 +415,16 @@ class World {
 		body.add( step1 );
 		body.add( step2 );
 
-		this.player.audios.set( 'step1', step1 );
-		this.player.audios.set( 'step2', step2 );
+		player.audios.set( 'step1', step1 );
+		player.audios.set( 'step2', step2 );
 
 		//
 
-		this.add( this.player );
+		this.add( player );
+		this.competitors.push( player );
+		this.spawningManager.respawnCompetitor( player );
+
+		this.player = player;
 
 		return this;
 

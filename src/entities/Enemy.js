@@ -40,9 +40,9 @@ class Enemy extends Vehicle {
 		this.world = world;
 
 		this.currentTime = 0;
+		this.boundingRadius = CONFIG.BOT.BOUNDING_RADIUS;
 		this.maxSpeed = CONFIG.BOT.MOVEMENT.MAX_SPEED;
 		this.updateOrientation = false;
-		this.isEnemy = true;
 
 		this.health = CONFIG.BOT.MAX_HEALTH;
 		this.status = STATUS_ALIVE;
@@ -265,7 +265,7 @@ class Enemy extends Vehicle {
 
 			}
 
-			this.world.spawningManager.respawnEnemy( this );
+			this.world.spawningManager.respawnCompetitor( this );
 			this.reset();
 
 		}
@@ -317,30 +317,30 @@ class Enemy extends Vehicle {
 		const memorySystem = this.memorySystem;
 		const vision = this.vision;
 
-		const enemies = this.world.enemies;
+		const competitors = this.world.competitors;
 
-		for ( let i = 0, l = enemies.length; i < l; i ++ ) {
+		for ( let i = 0, l = competitors.length; i < l; i ++ ) {
 
-			const enemy = enemies[ i ];
+			const competitor = competitors[ i ];
 
 			// ignore own entity and consider only living enemies
 
-			if ( enemy === this || enemy.status !== STATUS_ALIVE ) continue;
+			if ( competitor === this || competitor.status !== STATUS_ALIVE ) continue;
 
-			if ( memorySystem.hasRecord( enemy ) === false ) {
+			if ( memorySystem.hasRecord( competitor ) === false ) {
 
-				memorySystem.createRecord( enemy );
+				memorySystem.createRecord( competitor );
 
 			}
 
-			const record = memorySystem.getRecord( enemy );
+			const record = memorySystem.getRecord( competitor );
 
-			enemy.head.getWorldPosition( worldPosition );
+			competitor.head.getWorldPosition( worldPosition );
 
-			if ( vision.visible( worldPosition ) === true ) {
+			if ( vision.visible( worldPosition ) === true && competitor.active ) {
 
 				record.timeLastSensed = this.currentTime;
-				record.lastSensedPosition.copy( enemy.position ); // it's intended to use the body's position here
+				record.lastSensedPosition.copy( competitor.position ); // it's intended to use the body's position here
 				if ( record.visible === false ) record.timeBecameVisible = this.currentTime;
 				record.visible = true;
 
@@ -642,15 +642,15 @@ class Enemy extends Vehicle {
 
 					this.initDeath();
 
-					// inform all other enemies about its death
+					// inform all other competitors about its death
 
-					const enemies = this.world.enemies;
+					const competitors = this.world.competitors;
 
-					for ( let i = 0, l = enemies.length; i < l; i ++ ) {
+					for ( let i = 0, l = competitors.length; i < l; i ++ ) {
 
-						const enemy = enemies[ i ];
+						const competitor = competitors[ i ];
 
-						if ( this !== enemy ) this.sendMessage( enemies[ i ], MESSAGE_DEAD );
+						if ( this !== competitor ) this.sendMessage( competitor, MESSAGE_DEAD );
 
 					}
 

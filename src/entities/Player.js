@@ -1,8 +1,8 @@
-import { GameEntity, MovingEntity, Vector3 } from '../lib/yuka.module.js';
+import { GameEntity, MovingEntity, Vector3, AABB } from '../lib/yuka.module.js';
 import { WeaponSystem } from './WeaponSystem.js';
 import { CONFIG } from '../core/Config.js';
 import { Projectile } from '../weapons/Projectile.js';
-import { STATUS_ALIVE, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
+import { STATUS_ALIVE, WEAPON_TYPES_ASSAULT_RIFLE, MESSAGE_HIT, MESSAGE_DEAD, STATUS_DYING, STATUS_DEAD } from '../core/Constants.js';
 
 const startPosition = new Vector3();
 const endPosition = new Vector3();
@@ -28,10 +28,14 @@ class Player extends MovingEntity {
 
 		this.world = world;
 
+		this.currentTime = 0;
+		this.boundingRadius = CONFIG.PLAYER.BOUNDING_RADIUS;
 		this.height = CONFIG.PLAYER.HEAD_HEIGHT;
 		this.updateOrientation = false;
 		this.maxSpeed = CONFIG.PLAYER.MAX_SPEED;
+		this.health = CONFIG.PLAYER.MAX_HEALTH;
 
+		this.active = false;
 		this.status = STATUS_ALIVE;
 
 		// the camera is attached to the player's head
@@ -40,15 +44,25 @@ class Player extends MovingEntity {
 		this.head.forward.set( 0, 0, - 1 );
 		this.add( this.head );
 
+		// death animation
+
+		this.endTimeDying = Infinity;
+		this.dyingTime = CONFIG.PLAYER.DYING_TIME;
+
 		// the weapons are attached to the following container entity
 
 		this.weaponContainer = new GameEntity();
 		this.head.add( this.weaponContainer );
 
-		//
+		// the player uses the weapon system, too
 
 		this.weaponSystem = new WeaponSystem( this, true );
 		this.weaponSystem.init();
+
+		//
+
+		this.bounds = new AABB();
+		this.boundsDefinition = new AABB( new Vector3( - 0.5, 0, - 0.5 ), new Vector3( 0.5, 1.8, 0.5 ) );
 
 		//
 
@@ -76,6 +90,8 @@ class Player extends MovingEntity {
 
 		super.update( delta );
 
+		this.currentTime += delta;
+
 		endPosition.copy( this.position );
 
 		// ensure the player stays inside its navmesh
@@ -89,7 +105,81 @@ class Player extends MovingEntity {
 
 		//
 
-		this.weaponSystem.updateWeaponChange();
+		if ( this.status === STATUS_ALIVE ) {
+
+			// update weapon system
+
+			this.weaponSystem.updateWeaponChange();
+
+			// update bounds
+
+			this.bounds.copy( this.boundsDefinition ).applyMatrix4( this.worldMatrix );
+
+		}
+
+		// handle dying
+
+		if ( this.status === STATUS_DYING ) {
+
+			if ( this.currentTime >= this.endTimeDying ) {
+
+				this.status = STATUS_DEAD;
+				this.endTimeDying = Infinity;
+
+			}
+
+		}
+
+		// handle death
+
+		if ( this.status === STATUS_DEAD ) {
+
+			if ( this.world.debug ) console.log( 'DIVE.Enemy: Player died.' );
+
+			this.world.spawningManager.respawnCompetitor( this );
+
+			this.reset();
+
+		}
+
+
+		return this;
+
+	}
+
+	/**
+	* Resets the player after a death.
+	*
+	* @return {Enemy} A reference to this game entity.
+	*/
+	reset() {
+
+		this.rotation.set( 0, 0, 0, 1 );
+
+		this.health = CONFIG.PLAYER.MAX_HEALTH;
+		this.status = STATUS_ALIVE;
+
+		this.weaponSystem.reset();
+
+		this.world.fpsControls.reset();
+
+		return this;
+
+	}
+
+	/**
+	* Inits the death of the player.
+	*
+	* @return {Player} A reference to this game entity.
+	*/
+	initDeath() {
+
+		this.status = STATUS_DYING;
+		this.endTimeDying = this.currentTime + this.dyingTime;
+
+		this.velocity.set( 0, 0, 0 );
+
+		this.world.fpsControls.active = false;
 
 		return this;
 
@@ -195,6 +285,72 @@ class Player extends MovingEntity {
 		this.weaponSystem.currentWeapon._renderComponent.visible = false;
 
 		return this;
+
+	}
+
+	/**
+	* Returns the intesection point if a projectile intersects with this entity.
+	* If no intersection is detected, null is returned.
+	*
+	* @param {Ray} ray - The ray that defines the trajectory of this bullet.
+	* @param {Vector3} intersectionPoint - The intersection point.
+	* @return {Vector3} The intersection point.
+	*/
+	checkProjectileIntersection( ray, intersectionPoint ) {
+
+		return ray.intersectAABB( this.bounds, intersectionPoint );
+
+	}
+
+	/**
+	* Holds the implementation for the message handling of this game entity.
+	*
+	* @param {Telegram} telegram - The telegram with the message data.
+	* @return {Boolean} Whether the message was processed or not.
+	*/
+	handleMessage( telegram ) {
+
+		switch ( telegram.message ) {
+
+			case MESSAGE_HIT:
+
+				// reduce health
+
+				this.health -= telegram.data.damage;
+
+				// logging
+
+				if ( this.world.debug ) {
+
+					console.log( 'DIVE.Enemy: Player hit by Game Entity with ID %s receiving %i damage.', telegram.sender.uuid, telegram.data.damage );
+
+				}
+
+				// check if the player is death
+
+				if ( this.health <= 0 && this.status === STATUS_ALIVE ) {
+
+					this.initDeath();
+
+					// inform all other competitors about its death
+
+					const competitors = this.world.competitors;
+
+					for ( let i = 0, l = competitors.length; i < l; i ++ ) {
+
+						const competitor = competitors[ i ];
+
+						if ( this !== competitor ) this.sendMessage( competitor, MESSAGE_DEAD );
+
+					}
+
+				}
+
+				break;
+
+		}
+
+		return true;
 
 	}
 
