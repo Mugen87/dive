@@ -418,6 +418,16 @@ class World {
 		player.audios.set( 'step1', step1 );
 		player.audios.set( 'step2', step2 );
 
+		// animation
+
+		const mixer = new AnimationMixer( player.head );
+
+		const deathClip = this.assetManager.animations.get( 'player_death' );
+
+		const clips = [ deathClip ];
+
+		player.setAnimations( mixer, clips );
+
 		//
 
 		this.add( player );

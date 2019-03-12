@@ -88,11 +88,23 @@ class AssetManager {
 
 		const animationLoader = this.animationLoader;
 
+		// player
+
+		animationLoader.load( './animations/player.json', ( clips ) => {
+
+			for ( const clip of clips ) {
+
+				this.animations.set( clip.name, clip );
+
+			}
+
+		} );
+
 		// blaster
 
 		animationLoader.load( './animations/blaster.json', ( clips ) => {
 
-			for ( let clip of clips ) {
+			for ( const clip of clips ) {
 
 				this.animations.set( clip.name, clip );
 
@@ -104,7 +116,7 @@ class AssetManager {
 
 		animationLoader.load( './animations/shotgun.json', ( clips ) => {
 
-			for ( let clip of clips ) {
+			for ( const clip of clips ) {
 
 				this.animations.set( clip.name, clip );
 
@@ -116,7 +128,7 @@ class AssetManager {
 
 		animationLoader.load( './animations/assaultRifle.json', ( clips ) => {
 
-			for ( let clip of clips ) {
+			for ( const clip of clips ) {
 
 				this.animations.set( clip.name, clip );
 

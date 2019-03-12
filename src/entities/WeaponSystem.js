@@ -392,6 +392,72 @@ class WeaponSystem {
 	}
 
 	/**
+	* Ensures that the current equiped weapon is rendered.
+	*
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	showCurrentWeapon() {
+
+		const type = this.currentWeapon.type;
+
+		switch ( type ) {
+
+			case WEAPON_TYPES_BLASTER:
+				this.renderComponents.blaster.mesh.visible = true;
+				break;
+
+			case WEAPON_TYPES_SHOTGUN:
+				this.renderComponents.shotgun.mesh.visible = true;
+				break;
+
+			case WEAPON_TYPES_ASSAULT_RIFLE:
+				this.renderComponents.assaultRifle.mesh.visible = true;
+				break;
+
+			default:
+				console.error( 'DIVE.WeaponSystem: Invalid weapon type:', type );
+				break;
+
+		}
+
+		return this;
+
+	}
+
+	/**
+	* Ensures that the current equiped weapon is not rendered.
+	*
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	hideCurrentWeapon() {
+
+		const type = this.currentWeapon.type;
+
+		switch ( type ) {
+
+			case WEAPON_TYPES_BLASTER:
+				this.renderComponents.blaster.mesh.visible = false;
+				break;
+
+			case WEAPON_TYPES_SHOTGUN:
+				this.renderComponents.shotgun.mesh.visible = false;
+				break;
+
+			case WEAPON_TYPES_ASSAULT_RIFLE:
+				this.renderComponents.assaultRifle.mesh.visible = false;
+				break;
+
+			default:
+				console.error( 'DIVE.WeaponSystem: Invalid weapon type:', type );
+				break;
+
+		}
+
+		return this;
+
+	}
+
+	/**
 	* Returns the amount of ammo remaining for the specified weapon.
 	*
 	* @param {WEAPON_TYPES} type - The weapon type.

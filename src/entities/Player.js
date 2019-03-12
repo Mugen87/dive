@@ -1,4 +1,5 @@
 import { GameEntity, MovingEntity, Vector3, AABB } from '../lib/yuka.module.js';
+import { LoopOnce } from '../lib/three.module.js';
 import { WeaponSystem } from './WeaponSystem.js';
 import { CONFIG } from '../core/Config.js';
 import { Projectile } from '../weapons/Projectile.js';
@@ -67,6 +68,11 @@ class Player extends MovingEntity {
 		//
 
 		this.audios = new Map();
+
+		//
+
+		this.mixer = null;
+		this.animations = new Map();
 
 		//
 
@@ -142,6 +148,10 @@ class Player extends MovingEntity {
 
 		}
 
+		//
+
+		this.mixer.update( delta );
+
 		return this;
 
 	}
@@ -162,6 +172,8 @@ class Player extends MovingEntity {
 
 		this.world.fpsControls.reset();
 
+		this.world.uiManager.showFPSInterface();
+
 		return this;
 
 	}
@@ -178,7 +190,13 @@ class Player extends MovingEntity {
 
 		this.velocity.set( 0, 0, 0 );
 
+		const dying = this.animations.get( 'player_death' );
+		dying.play();
+
+		this.weaponSystem.hideCurrentWeapon();
+
 		this.world.fpsControls.active = false;
+		this.world.uiManager.hideFPSInterface();
 
 		return this;
 
@@ -298,6 +316,34 @@ class Player extends MovingEntity {
 	checkProjectileIntersection( ray, intersectionPoint ) {
 
 		return ray.intersectAABB( this.bounds, intersectionPoint );
+
+	}
+
+	/**
+	* Sets the animations of this game entity by creating a
+	* series of animation actions.
+	*
+	* @param {AnimationMixer} mixer - The animation mixer.
+	* @param {Array} clips - An array of animation clips.
+	* @return {Player} A reference to this game entity.
+	*/
+	setAnimations( mixer, clips ) {
+
+		this.mixer = mixer;
+
+		// actions
+
+		for ( const clip of clips ) {
+
+			const action = mixer.clipAction( clip );
+			action.loop = LoopOnce;
+			action.name = clip.name;
+
+			this.animations.set( action.name, action );
+
+		}
+
+		return this;
 
 	}
 
