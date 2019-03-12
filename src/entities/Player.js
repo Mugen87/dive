@@ -36,7 +36,6 @@ class Player extends MovingEntity {
 		this.health = CONFIG.PLAYER.MAX_HEALTH;
 		this.isPlayer = true;
 
-		this.active = false;
 		this.status = STATUS_ALIVE;
 
 		// the camera is attached to the player's head
@@ -142,7 +141,6 @@ class Player extends MovingEntity {
 			this.reset();
 
 		}
-
 
 		return this;
 
