@@ -190,8 +190,9 @@ class Player extends MovingEntity {
 
 		this.velocity.set( 0, 0, 0 );
 
-		const dying = this.animations.get( 'player_death' );
-		dying.play();
+		const animation = this.animations.get( 'player_death' );
+		animation.stop();
+		animation.play();
 
 		this.weaponSystem.hideCurrentWeapon();
 
