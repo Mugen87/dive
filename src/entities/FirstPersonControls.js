@@ -119,6 +119,10 @@ class FirstPersonControls extends EventDispatcher {
 		this.input.left = false;
 		this.input.mouseDown = false;
 
+		currentSign = 1;
+		elapsed = 0;
+		velocity.set( 0, 0, 0 );
+
 	}
 
 	/**
