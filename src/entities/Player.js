@@ -134,7 +134,7 @@ class Player extends MovingEntity {
 
 		if ( this.status === STATUS_DEAD ) {
 
-			if ( this.world.debug ) console.log( 'DIVE.Enemy: Player died.' );
+			if ( this.world.debug ) console.log( 'DIVE.Player: Player died.' );
 
 			this.world.spawningManager.respawnCompetitor( this );
 
@@ -321,7 +321,7 @@ class Player extends MovingEntity {
 
 				if ( this.world.debug ) {
 
-					console.log( 'DIVE.Enemy: Player hit by Game Entity with ID %s receiving %i damage.', telegram.sender.uuid, telegram.data.damage );
+					console.log( 'DIVE.Player: Player hit by Game Entity with ID %s receiving %i damage.', telegram.sender.uuid, telegram.data.damage );
 
 				}
 
