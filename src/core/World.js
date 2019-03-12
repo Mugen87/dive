@@ -577,6 +577,8 @@ function animate() {
 
 	this.renderer.render( this.scene, this.camera );
 
+	this.uiManager.update( delta );
+
 }
 
 export default World;

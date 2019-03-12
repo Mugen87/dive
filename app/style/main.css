@@ -26,3 +26,6 @@ body {
 	border: 2px solid #cccccc;
 	opacity: 0.5;
 }
+#crosshairs.hit>div {
+	border: 2px solid #ff0000;
+}

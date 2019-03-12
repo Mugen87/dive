@@ -100,6 +100,9 @@ const CONFIG = {
 		MAX_SPEED: 400, // meter/seconds
 		LIFETIME: 1, // seconds
 		DAMAGE: 20 // health points
+	},
+	UI: {
+		HIT_INDICATION_TIME: 0.3 //seconds
 	}
 };
 

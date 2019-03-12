@@ -34,6 +34,7 @@ class Player extends MovingEntity {
 		this.updateOrientation = false;
 		this.maxSpeed = CONFIG.PLAYER.MAX_SPEED;
 		this.health = CONFIG.PLAYER.MAX_HEALTH;
+		this.isPlayer = true;
 
 		this.active = false;
 		this.status = STATUS_ALIVE;

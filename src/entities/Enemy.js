@@ -53,7 +53,6 @@ class Enemy extends Vehicle {
 		this.currentPosition = new Vector3();
 		this.previousPosition = new Vector3();
 
-
 		// searching for attackers
 
 		this.searchAttacker = false;
@@ -633,6 +632,14 @@ class Enemy extends Vehicle {
 				if ( this.world.debug ) {
 
 					console.log( 'DIVE.Enemy: Enemy with ID %s hit by Game Entity with ID %s receiving %i damage.', this.uuid, telegram.sender.uuid, telegram.data.damage );
+
+				}
+
+				// if the player is the sender and if the enemy still lives, change the style of the crosshairs
+
+				if ( telegram.sender.isPlayer && this.status === STATUS_ALIVE ) {
+
+					this.world.uiManager.showHitIndication();
 
 				}
 

@@ -1,4 +1,5 @@
 import { AudioContext } from '../lib/three.module.js';
+import { CONFIG } from './Config.js';
 import * as DAT from '../lib/dat.gui.module.js';
 
 /**
@@ -16,6 +17,10 @@ class UIManager {
 	constructor( world ) {
 
 		this.world = world;
+		this.currentTime = 0;
+
+		this.hitIndicationTime = CONFIG.UI.HIT_INDICATION_TIME;
+		this.endTimeHitIndication = Infinity;
 
 		this.uiElements = {
 			crosshairs: null
@@ -137,6 +142,58 @@ class UIManager {
 			gui.open();
 
 		}
+
+	}
+
+	/**
+	* Update method of this manager. Called each simulation step.
+	*
+	* @param {Number} delta - The time delta.
+	* @return {UIManager} A reference to this UI manager.
+	*/
+	update( delta ) {
+
+		this.currentTime += delta;
+
+		if ( this.currentTime >= this.endTimeHitIndication ) {
+
+			this.hideHitIndication();
+
+		}
+
+	}
+
+	/**
+	* Changes the style of the crosshairs in order to show a
+	* sucessfull hit.
+	*
+	* @return {UIManager} A reference to this UI manager.
+	*/
+	showHitIndication() {
+
+		const elapsedTime = this.world.time.getElapsed();
+
+		this.uiElements.crosshairs.classList.add( 'hit' );
+
+		this.endTimeHitIndication = elapsedTime + this.hitIndicationTime;
+
+		return this;
+
+	}
+
+	/**
+	* Removes the hit indication of the crosshairs in order to show its
+	* default state.
+	*
+	* @return {UIManager} A reference to this UI manager.
+	*/
+	hideHitIndication() {
+
+		this.uiElements.crosshairs.classList.remove( 'hit' );
+
+		this.endTimeHitIndication = Infinity;
+
+		return this;
 
 	}
 
