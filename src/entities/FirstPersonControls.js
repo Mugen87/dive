@@ -152,10 +152,6 @@ class FirstPersonControls extends EventDispatcher {
 
 			}
 
-		} else {
-
-			console.log( 'deactived' );
-
 		}
 
 		return this;
