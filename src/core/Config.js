@@ -73,7 +73,7 @@ const CONFIG = {
 		RELOAD_TIME: 1.6, // seconds
 		SHOT_RELOAD_TIME: 0.5, // seconds
 		MUZZLE_TIME: 0.04, // seconds
-		SPREAD: 0.1, // unitless
+		SPREAD: 0.08, // unitless
 		BULLETS_PER_SHOT: 6, // number
 		EQUIP_TIME: 1, // seconds
 		HIDE_TIME: 1 // seconds
