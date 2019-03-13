@@ -33,6 +33,10 @@ class SpawningManager {
 		const spawnPoint = this.getSpawnPoint( competitor );
 		competitor.position.copy( spawnPoint );
 
+		// ensure all world matrices of the competitor are immediately up to date
+
+		competitor.updateWorldMatrix( true, true );
+
 		return this;
 
 	}
