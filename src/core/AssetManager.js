@@ -3,6 +3,7 @@ import { Sprite, SpriteMaterial, DoubleSide, AudioListener, PositionalAudio } fr
 import { LineSegments, LineBasicMaterial, BufferGeometry, Vector3 } from '../lib/three.module.js';
 import { GLTFLoader } from '../lib/GLTFLoader.module.js';
 import { NavMeshLoader } from '../lib/yuka.module.js';
+import { CONFIG } from './Config.js';
 
 /**
 * Class for representing the global asset manager. It is responsible
@@ -62,8 +63,7 @@ class AssetManager {
 	}
 
 	/**
-	* Clones the given audio source. This method should be ideally part
-	* of three.js.
+	* Clones the given audio source.
 	*
 	* @param {PositionalAudio} source - A positional audio.
 	* @return {PositionalAudio} A clone of the given audio.
@@ -72,8 +72,6 @@ class AssetManager {
 
 		const audio = new source.constructor( source.listener );
 		audio.buffer = source.buffer;
-		audio.setRolloffFactor( source.getRolloffFactor() );
-		audio.setVolume( source.getVolume() );
 
 		return audio;
 
@@ -172,6 +170,34 @@ class AssetManager {
 		const step2 = new PositionalAudio( listener );
 		step2.matrixAutoUpdate = false;
 
+		const impact1 = new PositionalAudio( listener );
+		impact1.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact1.matrixAutoUpdate = false;
+
+		const impact2 = new PositionalAudio( listener );
+		impact2.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact2.matrixAutoUpdate = false;
+
+		const impact3 = new PositionalAudio( listener );
+		impact3.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact3.matrixAutoUpdate = false;
+
+		const impact4 = new PositionalAudio( listener );
+		impact4.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact4.matrixAutoUpdate = false;
+
+		const impact5 = new PositionalAudio( listener );
+		impact5.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact5.matrixAutoUpdate = false;
+
+		const impact6 = new PositionalAudio( listener );
+		impact6.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact6.matrixAutoUpdate = false;
+
+		const impact7 = new PositionalAudio( listener );
+		impact7.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact7.matrixAutoUpdate = false;
+
 		audioLoader.load( './audios/blaster_shot.ogg', buffer => blasterShot.setBuffer( buffer ) );
 		audioLoader.load( './audios/shotgun_shot.ogg', buffer => shotgunShot.setBuffer( buffer ) );
 		audioLoader.load( './audios/assault_rifle_shot.ogg', buffer => assaultRifleShot.setBuffer( buffer ) );
@@ -179,6 +205,13 @@ class AssetManager {
 		audioLoader.load( './audios/shotgun_shot_reload.ogg', buffer => shotgunShotReload.setBuffer( buffer ) );
 		audioLoader.load( './audios/step1.ogg', buffer => step1.setBuffer( buffer ) );
 		audioLoader.load( './audios/step2.ogg', buffer => step2.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact1.ogg', buffer => impact1.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact2.ogg', buffer => impact2.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact3.ogg', buffer => impact3.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact4.ogg', buffer => impact4.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact5.ogg', buffer => impact5.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact6.ogg', buffer => impact6.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact7.ogg', buffer => impact7.setBuffer( buffer ) );
 
 		audios.set( 'blaster_shot', blasterShot );
 		audios.set( 'shotgun_shot', shotgunShot );
@@ -187,6 +220,13 @@ class AssetManager {
 		audios.set( 'shotgun_shot_reload', shotgunShotReload );
 		audios.set( 'step1', step1 );
 		audios.set( 'step2', step2 );
+		audios.set( 'impact1', impact1 );
+		audios.set( 'impact2', impact2 );
+		audios.set( 'impact3', impact3 );
+		audios.set( 'impact4', impact4 );
+		audios.set( 'impact5', impact5 );
+		audios.set( 'impact6', impact6 );
+		audios.set( 'impact7', impact7 );
 
 		return this;
 

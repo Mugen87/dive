@@ -406,17 +406,31 @@ class World {
 		const step1 = assetManager.cloneAudio( assetManager.audios.get( 'step1' ) );
 		const step2 = assetManager.cloneAudio( assetManager.audios.get( 'step2' ) );
 
-		step1.setRolloffFactor( 3 );
-		step1.setVolume( 0.5 );
+		// the following audios are unique and will be used only for the player (no cloning needed)
 
-		step2.setRolloffFactor( 3 );
+		const impact1 = assetManager.audios.get( 'impact1' );
+		const impact2 = assetManager.audios.get( 'impact2' );
+		const impact3 = assetManager.audios.get( 'impact3' );
+		const impact4 = assetManager.audios.get( 'impact4' );
+		const impact5 = assetManager.audios.get( 'impact5' );
+		const impact6 = assetManager.audios.get( 'impact6' );
+		const impact7 = assetManager.audios.get( 'impact7' );
+
+		step1.setVolume( 0.5 );
 		step2.setVolume( 0.5 );
 
-		body.add( step1 );
-		body.add( step2 );
+		body.add( step1, step2 );
+		body.add( impact1, impact2, impact3, impact4, impact5, impact6, impact7 );
 
 		player.audios.set( 'step1', step1 );
 		player.audios.set( 'step2', step2 );
+		player.audios.set( 'impact1', impact1 );
+		player.audios.set( 'impact2', impact2 );
+		player.audios.set( 'impact3', impact3 );
+		player.audios.set( 'impact4', impact4 );
+		player.audios.set( 'impact5', impact5 );
+		player.audios.set( 'impact6', impact6 );
+		player.audios.set( 'impact7', impact7 );
 
 		// animation
 

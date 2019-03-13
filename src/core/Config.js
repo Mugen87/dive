@@ -5,6 +5,9 @@
 */
 
 const CONFIG = {
+	AUDIO: {
+		VOLUME_IMPACT: 0.2 // volume
+	},
 	PLAYER: {
 		BOUNDING_RADIUS: 0.5, // meter
 		DYING_TIME: 3, // seconds

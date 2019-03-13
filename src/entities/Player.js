@@ -1,4 +1,4 @@
-import { GameEntity, MovingEntity, Vector3, AABB } from '../lib/yuka.module.js';
+import { GameEntity, MovingEntity, Vector3, AABB, MathUtils } from '../lib/yuka.module.js';
 import { LoopOnce } from '../lib/three.module.js';
 import { WeaponSystem } from './WeaponSystem.js';
 import { CONFIG } from '../core/Config.js';
@@ -359,6 +359,12 @@ class Player extends MovingEntity {
 		switch ( telegram.message ) {
 
 			case MESSAGE_HIT:
+
+				// play audio
+
+				const audio = this.audios.get( 'impact' + MathUtils.randInt( 1, 7 ) );
+				if ( audio.isPlaying === true ) audio.stop();
+				audio.play();
 
 				// reduce health
 
