@@ -92,10 +92,10 @@ class World {
 		this.assetManager.init().then( () => {
 
 			this._initScene();
-			this._initPlayer();
-			this._initEnemies();
 			this._initLevel();
 			this._initNavMesh();
+			this._initEnemies();
+			this._initPlayer();
 			this._initControls();
 			this._initUI();
 

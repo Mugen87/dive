@@ -64,7 +64,7 @@ class SpawningManager {
 
 				const competitor = competitors[ j ];
 
-				if ( competitor !== enemy ) {
+				if ( competitor.active && competitor !== enemy ) {
 
 					const distance = spawningPoint.squaredDistanceTo( competitor.position );
 

@@ -741,11 +741,11 @@ class WeaponSystem {
 		// add positional audios
 
 		const shot = assetManager.cloneAudio( assetManager.audios.get( 'blaster_shot' ) );
-		shot.setRolloffFactor( 3 );
+		shot.setRolloffFactor( 2 );
 		shot.setVolume( 0.4 );
 		blasterMesh.add( shot );
 		const reload = assetManager.cloneAudio( assetManager.audios.get( 'reload' ) );
-		reload.setRolloffFactor( 3 );
+		reload.setRolloffFactor( 2 );
 		reload.setVolume( 0.1 );
 		blasterMesh.add( reload );
 
@@ -803,15 +803,15 @@ class WeaponSystem {
 		// add positional audios
 
 		const shot = assetManager.cloneAudio( assetManager.audios.get( 'shotgun_shot' ) );
-		shot.setRolloffFactor( 3 );
+		shot.setRolloffFactor( 2 );
 		shot.setVolume( 0.4 );
 		shotgunMesh.add( shot );
 		const reload = assetManager.cloneAudio( assetManager.audios.get( 'reload' ) );
-		reload.setRolloffFactor( 3 );
+		reload.setRolloffFactor( 2 );
 		reload.setVolume( 0.1 );
 		shotgunMesh.add( reload );
 		const shotReload = assetManager.cloneAudio( assetManager.audios.get( 'shotgun_shot_reload' ) );
-		shotReload.setRolloffFactor( 3 );
+		shotReload.setRolloffFactor( 2 );
 		shotReload.setVolume( 0.1 );
 		shotgunMesh.add( shotReload );
 
@@ -870,11 +870,11 @@ class WeaponSystem {
 		// add positional audios
 
 		const shot = assetManager.cloneAudio( assetManager.audios.get( 'assault_rifle_shot' ) );
-		shot.setRolloffFactor( 3 );
+		shot.setRolloffFactor( 2 );
 		shot.setVolume( 0.8 );
 		assaultRifleMesh.add( shot );
 		const reload = assetManager.cloneAudio( assetManager.audios.get( 'reload' ) );
-		reload.setRolloffFactor( 3 );
+		reload.setRolloffFactor( 2 );
 		reload.setVolume( 0.1 );
 		assaultRifleMesh.add( reload );
 
