@@ -171,11 +171,9 @@ class UIManager {
 	*/
 	showHitIndication() {
 
-		const elapsedTime = this.world.time.getElapsed();
-
 		this.uiElements.crosshairs.classList.add( 'hit' );
 
-		this.endTimeHitIndication = elapsedTime + this.hitIndicationTime;
+		this.endTimeHitIndication = this.currentTime + this.hitIndicationTime;
 
 		return this;
 
