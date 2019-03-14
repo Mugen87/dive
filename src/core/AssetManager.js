@@ -1,6 +1,6 @@
-import { LoadingManager, AnimationLoader, AudioLoader, TextureLoader } from '../lib/three.module.js';
+import { LoadingManager, AnimationLoader, AudioLoader, TextureLoader, Mesh, MultiplyBlending, AdditiveBlending, NormalBlending } from '../lib/three.module.js';
 import { Sprite, SpriteMaterial, DoubleSide, AudioListener, PositionalAudio } from '../lib/three.module.js';
-import { LineSegments, LineBasicMaterial, BufferGeometry, Vector3 } from '../lib/three.module.js';
+import { LineSegments, LineBasicMaterial, MeshBasicMaterial, BufferGeometry, Vector3, PlaneBufferGeometry } from '../lib/three.module.js';
 import { GLTFLoader } from '../lib/GLTFLoader.module.js';
 import { NavMeshLoader } from '../lib/yuka.module.js';
 import { CONFIG } from './Config.js';
@@ -244,6 +244,19 @@ class AssetManager {
 		const models = this.models;
 		const animations = this.animations;
 
+		// shadow for soldiers
+
+		const shadowTexture = textureLoader.load( './textures/shadow.png' );
+		const planeGeometry = new PlaneBufferGeometry();
+		const planeMaterial = new MeshBasicMaterial( { map: shadowTexture, transparent: true, opacity: 0.4 } );
+
+		const shadowPlane = new Mesh( planeGeometry, planeMaterial );
+		shadowPlane.position.set( 0, 0.1, 0 );
+		shadowPlane.rotation.set( - Math.PI * 0.5, 0, 0 );
+		shadowPlane.scale.multiplyScalar( 2 );
+		shadowPlane.matrixAutoUpdate = false;
+		shadowPlane.updateMatrix();
+
 		// soldier
 
 		gltfLoader.load( './models/soldier.glb', ( gltf ) => {
@@ -265,6 +278,8 @@ class AssetManager {
 				}
 
 			} );
+
+			renderComponent.add( shadowPlane );
 
 			models.set( 'soldier', renderComponent );
 
