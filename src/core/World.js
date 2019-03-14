@@ -76,7 +76,8 @@ class World {
 			pathHelpers: new Array(),
 			spawnHelpers: new Array(),
 			uuidHelpers: new Array(),
-			skeletonHelpers: new Array()
+			skeletonHelpers: new Array(),
+			itemHelpers: new Array()
 		};
 
 	}
@@ -378,6 +379,8 @@ class World {
 			this.scene.add( this.helpers.spawnHelpers );
 
 		}
+
+		this.spawningManager.spawnHealthPacks();
 
 		return this;
 

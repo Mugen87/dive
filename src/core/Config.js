@@ -16,6 +16,11 @@ const CONFIG = {
 		WEAPON_MOVEMENT: 1.4, // unitless
 		ACCELERATION: 0.7 // unitless
 	},
+	HEALTHPACK: {
+		HEALTH: 50, //health
+		TIME: 5, //seconds
+		RADIUS: 0.5 //world units
+	},
 	BOT: {
 		MOVEMENT: {
 			MAX_SPEED: 3, // meter/seconds

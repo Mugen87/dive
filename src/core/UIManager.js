@@ -29,6 +29,7 @@ class UIManager {
 			showSpawnPoints: false,
 			showUUIDHelpers: false,
 			showSkeletons: false,
+			showItemRadius: true,
 			enableFPSControls: () => {
 
 				this.world.fpsControls.connect();
@@ -103,6 +104,16 @@ class UIManager {
 			folderWorld.add( params, 'showSpawnPoints' ).name( 'show spawn points' ).onChange( ( value ) => {
 
 				world.helpers.spawnHelpers.visible = value;
+
+			} );
+
+			folderWorld.add( params, 'showItemRadius' ).name( 'show item radius' ).onChange( ( value ) => {
+
+				for ( const itemHelper of world.helpers.itemHelpers ) {
+
+					itemHelper.visible = value;
+
+				}
 
 			} );
 
