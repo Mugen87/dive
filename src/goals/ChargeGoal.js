@@ -25,7 +25,7 @@ class ChargeGoal extends CompositeGoal {
 
 		const target = owner.targetSystem.getTarget();
 
-		// it's important to use path finding since an enemy might visibile
+		// it's important to use path finding since an enemy might visible
 		// but not directly reachable via a seek behavior
 
 		const from = new Vector3().copy( owner.position );

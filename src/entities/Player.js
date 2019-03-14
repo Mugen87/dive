@@ -5,8 +5,6 @@ import { CONFIG } from '../core/Config.js';
 import { Projectile } from '../weapons/Projectile.js';
 import { STATUS_ALIVE, WEAPON_TYPES_ASSAULT_RIFLE, MESSAGE_HIT, MESSAGE_DEAD, STATUS_DYING, STATUS_DEAD } from '../core/Constants.js';
 
-const startPosition = new Vector3();
-const endPosition = new Vector3();
 const intersectionPoint = new Vector3();
 const targetPosition = new Vector3();
 const projectile = new Projectile();
@@ -60,23 +58,25 @@ class Player extends MovingEntity {
 		this.weaponSystem = new WeaponSystem( this, true );
 		this.weaponSystem.init();
 
-		//
+		// the player's bounds (using a single AABB is sufficient for now)
 
 		this.bounds = new AABB();
 		this.boundsDefinition = new AABB( new Vector3( - 0.25, 0, - 0.25 ), new Vector3( 0.25, 1.8, 0.25 ) );
 
-		//
+		// current convex region of the navmesh the entity is in
+
+		this.currentRegion = null;
+		this.currentPosition = new Vector3();
+		this.previousPosition = new Vector3();
+
+		// audio
 
 		this.audios = new Map();
 
-		//
+		// animation
 
 		this.mixer = null;
 		this.animations = new Map();
-
-		//
-
-		this.currentRegion = null;
 
 		// TODO: Only for dev
 
@@ -92,22 +92,13 @@ class Player extends MovingEntity {
 	*/
 	update( delta ) {
 
-		startPosition.copy( this.position );
-
 		super.update( delta );
 
 		this.currentTime += delta;
 
-		endPosition.copy( this.position );
+		// ensure the enemy never leaves the level
 
-		// ensure the player stays inside its navmesh
-
-		this.currentRegion = this.world.navMesh.clampMovement(
-			this.currentRegion,
-			startPosition,
-			endPosition,
-			this.position
-		);
+		this.stayInLevel();
 
 		//
 
@@ -123,7 +114,7 @@ class Player extends MovingEntity {
 
 		}
 
-		// handle dying
+		//
 
 		if ( this.status === STATUS_DYING ) {
 
@@ -136,7 +127,7 @@ class Player extends MovingEntity {
 
 		}
 
-		// handle death
+		//
 
 		if ( this.status === STATUS_DEAD ) {
 
@@ -317,6 +308,34 @@ class Player extends MovingEntity {
 	checkProjectileIntersection( ray, intersectionPoint ) {
 
 		return ray.intersectAABB( this.bounds, intersectionPoint );
+
+	}
+
+	/**
+	* Ensures the player never leaves the level.
+	*
+	* @return {Player} A reference to this game entity.
+	*/
+	stayInLevel() {
+
+		// "currentPosition" represents the final position after the movement for a single
+		// simualation step. it's now necessary to check if this point is still on
+		// the navMesh
+
+		this.currentPosition.copy( this.position );
+
+		this.currentRegion = this.world.navMesh.clampMovement(
+			this.currentRegion,
+			this.previousPosition,
+			this.currentPosition,
+			this.position // this is the result vector that gets clamped
+		);
+
+		// save this position for the next method invocation
+
+		this.previousPosition.copy( this.position );
+
+		return this;
 
 	}
 
