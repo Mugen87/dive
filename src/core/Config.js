@@ -48,7 +48,7 @@ const CONFIG = {
 		},
 		WEAPON: {
 			UPDATE_FREQUENCY: 4, // number per seconds
-			REACTION_TIME: 0.2, // seconds
+			REACTION_TIME: 0.5, // seconds
 			AIM_ACCURACY: 2.5, // world units
 			CHANGE_COST: 0.5 // desirability
 		},
