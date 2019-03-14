@@ -27,7 +27,7 @@ class UIManager {
 		};
 
 		this.debugParameter = {
-			showRegions: true,
+			showRegions: false,
 			showAxes: true,
 			showPaths: true,
 			showGraph: false,
