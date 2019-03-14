@@ -63,7 +63,7 @@ class Player extends MovingEntity {
 		//
 
 		this.bounds = new AABB();
-		this.boundsDefinition = new AABB( new Vector3( - 0.5, 0, - 0.5 ), new Vector3( 0.5, 1.8, 0.5 ) );
+		this.boundsDefinition = new AABB( new Vector3( - 0.25, 0, - 0.25 ), new Vector3( 0.25, 1.8, 0.25 ) );
 
 		//
 
