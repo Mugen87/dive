@@ -251,7 +251,7 @@ class AssetManager {
 		const planeMaterial = new MeshBasicMaterial( { map: shadowTexture, transparent: true, opacity: 0.4 } );
 
 		const shadowPlane = new Mesh( planeGeometry, planeMaterial );
-		shadowPlane.position.set( 0, 0.1, 0 );
+		shadowPlane.position.set( 0, 0.05, 0 );
 		shadowPlane.rotation.set( - Math.PI * 0.5, 0, 0 );
 		shadowPlane.scale.multiplyScalar( 2 );
 		shadowPlane.matrixAutoUpdate = false;
