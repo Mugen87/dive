@@ -18,8 +18,8 @@ const CONFIG = {
 	CONTROLS: {
 		LOOKING_SPEED: 2, // unitless
 		BRAKING_POWER: 10, // unitless
-		HEAD_MOVEMENT: 1.4, // unitless
-		WEAPON_MOVEMENT: 1.4, // unitless
+		HEAD_MOVEMENT: 1.7, // unitless
+		WEAPON_MOVEMENT: 1.7, // unitless
 		ACCELERATION: 0.7 // unitless
 	},
 	BOT: {
