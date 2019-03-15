@@ -372,6 +372,7 @@ class AssetManager {
 		// muzzle sprite
 
 		const muzzleTexture = textureLoader.load( './textures/muzzle.png' );
+		muzzleTexture.matrixAutoUpdate = false;
 
 		const muzzleMaterial = new SpriteMaterial( { map: muzzleTexture } );
 		const muzzle = new Sprite( muzzleMaterial );
@@ -405,11 +406,25 @@ class AssetManager {
 
 		const textureLoader = this.textureLoader;
 
-		this.textures.set( 'crosshairs', textureLoader.load( './textures/crosshairs.png' ) );
-		this.textures.set( 'damageIndicatorFront', textureLoader.load( './textures/damageIndicatorFront.png' ) );
-		this.textures.set( 'damageIndicatorRight', textureLoader.load( './textures/damageIndicatorRight.png' ) );
-		this.textures.set( 'damageIndicatorLeft', textureLoader.load( './textures/damageIndicatorLeft.png' ) );
-		this.textures.set( 'damageIndicatorBack', textureLoader.load( './textures/damageIndicatorBack.png' ) );
+		let texture = textureLoader.load( './textures/crosshairs.png' );
+		texture.matrixAutoUpdate = false;
+		this.textures.set( 'crosshairs', texture );
+
+		texture = textureLoader.load( './textures/damageIndicatorFront.png' );
+		texture.matrixAutoUpdate = false;
+		this.textures.set( 'damageIndicatorFront', texture );
+
+		texture = textureLoader.load( './textures/damageIndicatorRight.png' );
+		texture.matrixAutoUpdate = false;
+		this.textures.set( 'damageIndicatorRight', texture );
+
+		texture = textureLoader.load( './textures/damageIndicatorLeft.png' );
+		texture.matrixAutoUpdate = false;
+		this.textures.set( 'damageIndicatorLeft', texture );
+
+		texture = textureLoader.load( './textures/damageIndicatorBack.png' );
+		texture.matrixAutoUpdate = false;
+		this.textures.set( 'damageIndicatorBack', texture );
 
 		return this;
 
