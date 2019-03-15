@@ -8,6 +8,9 @@ import { STATUS_ALIVE, WEAPON_TYPES_ASSAULT_RIFLE, MESSAGE_HIT, MESSAGE_DEAD, ST
 const intersectionPoint = new Vector3();
 const targetPosition = new Vector3();
 const projectile = new Projectile();
+const attackDirection = new Vector3();
+const lookDirection = new Vector3();
+const cross = new Vector3();
 
 /**
 * Class for representing the human player of the game.
@@ -415,6 +418,11 @@ class Player extends MovingEntity {
 
 					}
 
+				} else {
+
+					const angle = this.computeAngleToAttacker( telegram.data.direction );
+					this.world.uiManager.showDamageIndication( angle );
+
 				}
 
 				break;
@@ -422,6 +430,38 @@ class Player extends MovingEntity {
 		}
 
 		return true;
+
+	}
+
+	/**
+	* Computes the angle between the current look direction and the attack direction in
+	* the range of [-π, π].
+	*
+	* @param {Vector3} projectileDirection - The direction of the projectile.
+	* @return {Number} The angle in radians.
+	*/
+	computeAngleToAttacker( projectileDirection ) {
+
+		attackDirection.copy( projectileDirection ).multiplyScalar( - 1 );
+		attackDirection.y = 0; // project plane on (0,1,0) plane
+		attackDirection.normalize();
+
+		this.head.getWorldDirection( lookDirection );
+		lookDirection.y = 0;
+		lookDirection.normalize();
+
+		// since both direction vectors lie in the same plane, use the following formula
+		//
+		// dot = a * b
+		// det = n * (a x b)
+		// angle = atan2(det, dot)
+		//
+		// Note: We can't use Vector3.angleTo() since the result is always in the range [0,π]
+
+		const dot = attackDirection.dot( lookDirection );
+		const det = this.up.dot( cross.crossVectors( attackDirection, lookDirection ) ); // triple product
+
+		return Math.atan2( det, dot );
 
 	}
 

@@ -105,7 +105,16 @@ const CONFIG = {
 		DAMAGE: 20 // health points
 	},
 	UI: {
-		HIT_INDICATION_TIME: 0.3 //seconds
+		CROSSHAIRS: {
+			HIT_TIME: 0.3, // seconds
+			OPACITY: 0.5, // number
+			SCALE: 40 // number
+		},
+		DAMAGE_INDICATOR: {
+			OPACITY: 0.5, // number
+			SCALE: 256, // number
+			TIME: 0.5, //seconds
+		}
 	}
 };
 

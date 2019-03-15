@@ -1,6 +1,9 @@
-import { AudioContext } from '../lib/three.module.js';
+import { AudioContext, OrthographicCamera, Scene, Sprite, SpriteMaterial } from '../lib/three.module.js';
 import { CONFIG } from './Config.js';
 import * as DAT from '../lib/dat.gui.module.js';
+
+const PI25 = Math.PI * 0.25;
+const PI75 = Math.PI * 0.75;
 
 /**
 * Used to manage the state of the user interface.
@@ -19,12 +22,34 @@ class UIManager {
 		this.world = world;
 		this.currentTime = 0;
 
-		this.hitIndicationTime = CONFIG.UI.HIT_INDICATION_TIME;
+		this.hitIndicationTime = CONFIG.UI.CROSSHAIRS.HIT_TIME;
 		this.endTimeHitIndication = Infinity;
 
+		this.damageIndicationTime = CONFIG.UI.DAMAGE_INDICATOR.TIME;
+		this.endTimeDamageIndicationFront = Infinity;
+		this.endTimeDamageIndicationRight = Infinity;
+		this.endTimeDamageIndicationLeft = Infinity;
+		this.endTimeDamageIndicationBack = Infinity;
+
 		this.uiElements = {
-			crosshairs: null
+			crosshairs: null,
+			frontIndicator: null,
+			rightIndicator: null,
+			leftIndicator: null,
+			backIndicator: null
 		};
+
+		// for rendering HUD sprites
+
+		const width = window.innerWidth;
+		const height = window.innerHeight;
+
+		this.camera = new OrthographicCamera( - width / 2, width / 2, height / 2, - height / 2, 1, 10 );
+		this.camera.position.z = 10;
+
+		this.scene = new Scene();
+
+		// debugging
 
 		this.debugParameter = {
 			showRegions: false,
@@ -47,10 +72,6 @@ class UIManager {
 			}
 		};
 
-		//
-
-		this._buildFPSInterface();
-
 	}
 
 	/**
@@ -59,6 +80,10 @@ class UIManager {
 	* @return {UIManager} A reference to this UI manager.
 	*/
 	init() {
+
+		this._buildFPSInterface();
+
+		//
 
 		const world = this.world;
 
@@ -143,6 +168,8 @@ class UIManager {
 
 		}
 
+		return this;
+
 	}
 
 	/**
@@ -161,6 +188,38 @@ class UIManager {
 
 		}
 
+		// damage indicators
+
+		if ( this.currentTime >= this.endTimeDamageIndicationFront ) {
+
+			this.uiElements.frontIndicator.visible = false;
+
+		}
+
+		if ( this.currentTime >= this.endTimeDamageIndicationRight ) {
+
+			this.uiElements.rightIndicator.visible = false;
+
+		}
+
+		if ( this.currentTime >= this.endTimeDamageIndicationLeft ) {
+
+			this.uiElements.leftIndicator.visible = false;
+
+		}
+
+		if ( this.currentTime >= this.endTimeDamageIndicationBack ) {
+
+			this.uiElements.backIndicator.visible = false;
+
+		}
+
+		// render UI
+
+		this._render();
+
+		return this;
+
 	}
 
 	/**
@@ -171,8 +230,7 @@ class UIManager {
 	*/
 	showHitIndication() {
 
-		this.uiElements.crosshairs.classList.add( 'hit' );
-
+		this.uiElements.crosshairs.material.color.set( 0xff0000 );
 		this.endTimeHitIndication = this.currentTime + this.hitIndicationTime;
 
 		return this;
@@ -187,9 +245,43 @@ class UIManager {
 	*/
 	hideHitIndication() {
 
-		this.uiElements.crosshairs.classList.remove( 'hit' );
-
+		this.uiElements.crosshairs.material.color.set( 0xffffff );
 		this.endTimeHitIndication = Infinity;
+
+		return this;
+
+	}
+
+	/**
+	* Shows radial elements around the crosshairs to visualize the attack direction
+	* for a certain amount of time.
+	*
+	* @param {Number} angle - The angle that determines the radial element.
+	* @return {UIManager} A reference to this UI manager.
+	*/
+	showDamageIndication( angle ) {
+
+		if ( angle >= - PI25 && angle <= PI25 ) {
+
+			this.uiElements.frontIndicator.visible = true;
+			this.endTimeDamageIndicationFront = this.currentTime + this.damageIndicationTime;
+
+		} else if ( angle > PI25 && angle <= PI75 ) {
+
+			this.uiElements.rightIndicator.visible = true;
+			this.endTimeDamageIndicationRight = this.currentTime + this.damageIndicationTime;
+
+		} else if ( angle >= - PI75 && angle < - PI25 ) {
+
+			this.uiElements.leftIndicator.visible = true;
+			this.endTimeDamageIndicationLeft = this.currentTime + this.damageIndicationTime;
+
+		} else {
+
+			this.uiElements.backIndicator.visible = true;
+			this.endTimeDamageIndicationBack = this.currentTime + this.damageIndicationTime;
+
+		}
 
 		return this;
 
@@ -202,7 +294,7 @@ class UIManager {
 	*/
 	showFPSInterface() {
 
-		this.uiElements.crosshairs.classList.remove( 'hidden' );
+		this.uiElements.crosshairs.visible = true;
 
 		return this;
 
@@ -215,7 +307,30 @@ class UIManager {
 	*/
 	hideFPSInterface() {
 
-		this.uiElements.crosshairs.classList.add( 'hidden' );
+		this.uiElements.crosshairs.visible = false;
+		this.uiElements.frontIndicator.visible = false;
+		this.uiElements.rightIndicator.visible = false;
+		this.uiElements.leftIndicator.visible = false;
+		this.uiElements.backIndicator.visible = false;
+
+		return this;
+
+	}
+
+	/**
+	* Sets the size of the UI manager.
+	*
+	* @param {Number} width - The width in pixels.
+	* @param {Number} height - The height in pixels.
+	* @return {UIManager} A reference to this UI manager.
+	*/
+	setSize( width, height ) {
+
+		this.camera.left = - width / 2;
+		this.camera.right = width / 2;
+		this.camera.top = height / 2;
+		this.camera.bottom = - height / 2;
+		this.camera.updateProjectionMatrix();
 
 		return this;
 
@@ -230,14 +345,87 @@ class UIManager {
 
 		// crosshairs
 
-		const crosshairsContainer = document.createElement( 'section' );
-		crosshairsContainer.id = 'crosshairs';
-		crosshairsContainer.classList.add( 'hidden' );
+		const crosshairsTexture = this.world.assetManager.textures.get( 'crosshairs' );
+		const crosshairsMaterial = new SpriteMaterial( { map: crosshairsTexture, opacity: CONFIG.UI.CROSSHAIRS.OPACITY } );
 
-		crosshairsContainer.appendChild( document.createElement( 'div' ) );
-		document.body.appendChild( crosshairsContainer );
+		const crosshairs = new Sprite( crosshairsMaterial );
+		crosshairs.matrixAutoUpdate = false;
+		crosshairs.visible = false;
+		crosshairs.position.set( 0, 0, 1 );
+		crosshairs.scale.set( CONFIG.UI.CROSSHAIRS.SCALE, CONFIG.UI.CROSSHAIRS.SCALE, 1 );
+		crosshairs.updateMatrix();
+		this.scene.add( crosshairs );
 
-		this.uiElements.crosshairs = crosshairsContainer;
+		this.uiElements.crosshairs = crosshairs;
+
+		// damage indication
+
+		// front
+
+		const frontIndicatorTexture = this.world.assetManager.textures.get( 'damageIndicatorFront' );
+		const frontIndicatorMaterial = new SpriteMaterial( { map: frontIndicatorTexture, opacity: CONFIG.UI.DAMAGE_INDICATOR.OPACITY } );
+
+		const frontIndicator = new Sprite( frontIndicatorMaterial );
+		frontIndicator.visible = false;
+		frontIndicator.position.set( 0, 0, 1 );
+		frontIndicator.scale.set( CONFIG.UI.DAMAGE_INDICATOR.SCALE, CONFIG.UI.DAMAGE_INDICATOR.SCALE, 1 );
+		this.scene.add( frontIndicator );
+
+		this.uiElements.frontIndicator = frontIndicator;
+
+		// right
+
+		const rigthIndicatorTexture = this.world.assetManager.textures.get( 'damageIndicatorRight' );
+		const rightIndicatorMaterial = new SpriteMaterial( { map: rigthIndicatorTexture, opacity: CONFIG.UI.DAMAGE_INDICATOR.OPACITY } );
+
+		const rightIndicator = new Sprite( rightIndicatorMaterial );
+		rightIndicator.visible = false;
+		rightIndicator.position.set( 0, 0, 1 );
+		rightIndicator.scale.set( CONFIG.UI.DAMAGE_INDICATOR.SCALE, CONFIG.UI.DAMAGE_INDICATOR.SCALE, 1 );
+		this.scene.add( rightIndicator );
+
+		this.uiElements.rightIndicator = rightIndicator;
+
+		// left
+
+		const leftIndicatorTexture = this.world.assetManager.textures.get( 'damageIndicatorLeft' );
+		const leftIndicatorMaterial = new SpriteMaterial( { map: leftIndicatorTexture, opacity: CONFIG.UI.DAMAGE_INDICATOR.OPACITY } );
+
+		const leftIndicator = new Sprite( leftIndicatorMaterial );
+		leftIndicator.visible = false;
+		leftIndicator.position.set( 0, 0, 1 );
+		leftIndicator.scale.set( CONFIG.UI.DAMAGE_INDICATOR.SCALE, CONFIG.UI.DAMAGE_INDICATOR.SCALE, 1 );
+		this.scene.add( leftIndicator );
+
+		this.uiElements.leftIndicator = leftIndicator;
+
+		// right
+
+		const backIndicatorTexture = this.world.assetManager.textures.get( 'damageIndicatorBack' );
+		const backIndicatorMaterial = new SpriteMaterial( { map: backIndicatorTexture, opacity: CONFIG.UI.DAMAGE_INDICATOR.OPACITY } );
+
+		const backIndicator = new Sprite( backIndicatorMaterial );
+		backIndicator.visible = false;
+		backIndicator.position.set( 0, 0, 1 );
+		backIndicator.scale.set( CONFIG.UI.DAMAGE_INDICATOR.SCALE, CONFIG.UI.DAMAGE_INDICATOR.SCALE, 1 );
+		this.scene.add( backIndicator );
+
+		this.uiElements.backIndicator = backIndicator;
+
+		return this;
+
+	}
+
+	/**
+	* Renders the HUD sprites. This is done after rendering the actual 3D scene.
+	*
+	* @return {UIManager} A reference to this UI manager.
+	*/
+	_render() {
+
+		this.world.renderer.clearDepth();
+
+		this.world.renderer.render( this.scene, this.camera );
 
 		return this;
 

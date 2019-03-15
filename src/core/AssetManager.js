@@ -1,4 +1,4 @@
-import { LoadingManager, AnimationLoader, AudioLoader, TextureLoader, Mesh, MultiplyBlending, AdditiveBlending, NormalBlending } from '../lib/three.module.js';
+import { LoadingManager, AnimationLoader, AudioLoader, TextureLoader, Mesh } from '../lib/three.module.js';
 import { Sprite, SpriteMaterial, DoubleSide, AudioListener, PositionalAudio } from '../lib/three.module.js';
 import { LineSegments, LineBasicMaterial, MeshBasicMaterial, BufferGeometry, Vector3, PlaneBufferGeometry } from '../lib/three.module.js';
 import { GLTFLoader } from '../lib/GLTFLoader.module.js';
@@ -32,6 +32,7 @@ class AssetManager {
 		this.animations = new Map();
 		this.audios = new Map();
 		this.models = new Map();
+		this.textures = new Map();
 
 		this.navMesh = null;
 
@@ -48,6 +49,7 @@ class AssetManager {
 		this._loadAnimations();
 		this._loadAudios();
 		this._loadModels();
+		this._loadTextures();
 		this._loadNavMesh();
 
 		return new Promise( ( resolve ) => {
@@ -389,6 +391,25 @@ class AssetManager {
 		bulletLine.matrixAutoUpdate = false;
 
 		models.set( 'bulletLine', bulletLine );
+
+		return this;
+
+	}
+
+	/**
+	* Loads all textures from the backend.
+	*
+	* @return {AssetManager} A reference to this asset manager.
+	*/
+	_loadTextures() {
+
+		const textureLoader = this.textureLoader;
+
+		this.textures.set( 'crosshairs', textureLoader.load( './textures/crosshairs.png' ) );
+		this.textures.set( 'damageIndicatorFront', textureLoader.load( './textures/damageIndicatorFront.png' ) );
+		this.textures.set( 'damageIndicatorRight', textureLoader.load( './textures/damageIndicatorRight.png' ) );
+		this.textures.set( 'damageIndicatorLeft', textureLoader.load( './textures/damageIndicatorLeft.png' ) );
+		this.textures.set( 'damageIndicatorBack', textureLoader.load( './textures/damageIndicatorBack.png' ) );
 
 		return this;
 

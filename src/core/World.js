@@ -262,6 +262,7 @@ class World {
 
 		this.renderer = new WebGLRenderer( { antialias: true } );
 		this.renderer.setSize( window.innerWidth, window.innerHeight );
+		this.renderer.autoClear = false;
 		this.renderer.shadowMap.enabled = true;
 		this.renderer.gammaOutput = true;
 		this.renderer.gammaFactor = 2.2;
@@ -562,10 +563,14 @@ function syncCamera( entity, camera ) {
 
 function onWindowResize() {
 
-	this.camera.aspect = window.innerWidth / window.innerHeight;
+	const width = window.innerWidth;
+	const height = window.innerHeight;
+
+	this.camera.aspect = width / height;
 	this.camera.updateProjectionMatrix();
 
-	this.renderer.setSize( window.innerWidth, window.innerHeight );
+	this.renderer.setSize( width, height );
+	this.uiManager.setSize( width, height );
 
 }
 
@@ -598,6 +603,8 @@ function animate() {
 	this.entityManager.update( delta );
 
 	this.pathPlanner.update();
+
+	this.renderer.clear();
 
 	this.renderer.render( this.scene, this.camera );
 
