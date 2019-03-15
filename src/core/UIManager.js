@@ -366,9 +366,11 @@ class UIManager {
 		const frontIndicatorMaterial = new SpriteMaterial( { map: frontIndicatorTexture, opacity: CONFIG.UI.DAMAGE_INDICATOR.OPACITY } );
 
 		const frontIndicator = new Sprite( frontIndicatorMaterial );
+		frontIndicator.matrixAutoUpdate = false;
 		frontIndicator.visible = false;
 		frontIndicator.position.set( 0, 0, 1 );
 		frontIndicator.scale.set( CONFIG.UI.DAMAGE_INDICATOR.SCALE, CONFIG.UI.DAMAGE_INDICATOR.SCALE, 1 );
+		frontIndicator.updateMatrix();
 		this.scene.add( frontIndicator );
 
 		this.uiElements.frontIndicator = frontIndicator;
@@ -379,9 +381,11 @@ class UIManager {
 		const rightIndicatorMaterial = new SpriteMaterial( { map: rigthIndicatorTexture, opacity: CONFIG.UI.DAMAGE_INDICATOR.OPACITY } );
 
 		const rightIndicator = new Sprite( rightIndicatorMaterial );
+		rightIndicator.matrixAutoUpdate = false;
 		rightIndicator.visible = false;
 		rightIndicator.position.set( 0, 0, 1 );
 		rightIndicator.scale.set( CONFIG.UI.DAMAGE_INDICATOR.SCALE, CONFIG.UI.DAMAGE_INDICATOR.SCALE, 1 );
+		rightIndicator.updateMatrix();
 		this.scene.add( rightIndicator );
 
 		this.uiElements.rightIndicator = rightIndicator;
@@ -392,9 +396,11 @@ class UIManager {
 		const leftIndicatorMaterial = new SpriteMaterial( { map: leftIndicatorTexture, opacity: CONFIG.UI.DAMAGE_INDICATOR.OPACITY } );
 
 		const leftIndicator = new Sprite( leftIndicatorMaterial );
+		leftIndicator.matrixAutoUpdate = false;
 		leftIndicator.visible = false;
 		leftIndicator.position.set( 0, 0, 1 );
 		leftIndicator.scale.set( CONFIG.UI.DAMAGE_INDICATOR.SCALE, CONFIG.UI.DAMAGE_INDICATOR.SCALE, 1 );
+		leftIndicator.updateMatrix();
 		this.scene.add( leftIndicator );
 
 		this.uiElements.leftIndicator = leftIndicator;
@@ -405,9 +411,11 @@ class UIManager {
 		const backIndicatorMaterial = new SpriteMaterial( { map: backIndicatorTexture, opacity: CONFIG.UI.DAMAGE_INDICATOR.OPACITY } );
 
 		const backIndicator = new Sprite( backIndicatorMaterial );
+		backIndicator.matrixAutoUpdate = false;
 		backIndicator.visible = false;
 		backIndicator.position.set( 0, 0, 1 );
 		backIndicator.scale.set( CONFIG.UI.DAMAGE_INDICATOR.SCALE, CONFIG.UI.DAMAGE_INDICATOR.SCALE, 1 );
+		backIndicator.updateMatrix();
 		this.scene.add( backIndicator );
 
 		this.uiElements.backIndicator = backIndicator;
