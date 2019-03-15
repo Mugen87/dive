@@ -14,7 +14,7 @@ class HealthPack extends GameEntity {
 		this.health = CONFIG.HEALTHPACK.HEALTH;
 		this.currentTime = 0;
 		this.nextSpawnTime = 0;
-		this.displayed = true; //rename
+		this.needsRespawn = true; //rename
 
 		this.dontTrigger = true; //remove after update lib
 
@@ -27,11 +27,11 @@ class HealthPack extends GameEntity {
 
 		this.currentTime += delta;
 
-		if ( ! this.displayed ) {
+		if ( ! this.needsRespawn ) {
 
 			if ( this.currentTime >= this.nextSpawnTime ) {
 
-				this.world.spawningManager.reSpawnHealthPack( this );
+				this.world.spawningManager.respawnHealthPack( this );
 
 			}
 

@@ -14,4 +14,4 @@ export const MESSAGE_DEAD = 'DEAD';
 export const STATUS_ALIVE = 0;
 export const STATUS_DYING = 1;
 export const STATUS_DEAD = 2;
-
+export const ITEM_HEALTH_PACK = 0;

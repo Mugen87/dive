@@ -25,13 +25,12 @@ class HealthGiver extends Trigger {
 		}
 
 		this.active = false;
-		this.healthPack.displayed = false;
+		this.healthPack.needsRespawn = false;
 		this.healthPack._renderComponent.visible = false;
 
 		this.healthPack.nextSpawnTime = this.healthPack.currentTime + CONFIG.HEALTHPACK.TIME;
 
-		entity.health += this.healthPack.health;
-		( entity.health > CONFIG.BOT.MAX_HEALTH ) ? entity.health = CONFIG.BOT.MAX_HEALTH : entity.health; // prevent health to excel max health
+		entity.giveHealth( this.healthPack.health );
 
 		if ( this.healthPack.world.debug ) {
 

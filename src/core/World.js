@@ -16,6 +16,7 @@ import { FirstPersonControls } from '../entities/FirstPersonControls.js';
 import { Bullet } from '../weapons/Bullet.js';
 import { PathPlanner } from '../etc/PathPlanner.js';
 import { CONFIG } from './Config.js';
+import { ITEM_HEALTH_PACK } from './Constants.js';
 
 const currentIntersectionPoint = new Vector3();
 
@@ -221,6 +222,48 @@ class World {
 
 	}
 
+	getNearestItemPosition( entity, itemType ) {
+
+		let itemList = null;
+
+		switch ( itemType ) {
+
+			case ITEM_HEALTH_PACK:
+
+				itemList = this.spawningManager.healthPackPoints;
+				break;
+
+		}
+
+		const position = entity.position;
+
+		let index = - 1;
+		let shortestDistance = Infinity;
+
+		for ( let i = 0, l = itemList.length; i < l; i ++ ) {
+
+			const distance = position.squaredDistanceTo( itemList[ i ] );//pathPlanner
+
+			if ( distance < shortestDistance ) {
+
+				index = i;
+				shortestDistance = distance;
+
+			}
+
+		}
+		if ( index !== - 1 ) {
+
+			return itemList[ index ];
+
+		} else {
+
+			return null;
+
+		}
+
+	}
+
 	/**
 	* Inits all basic objects of the scene like the scene graph itself, the camera, lights
 	* or the renderer.
@@ -380,7 +423,7 @@ class World {
 
 		}
 
-		this.spawningManager.spawnHealthPacks();
+		this.spawningManager.initHealthPacks();
 
 		return this;
 

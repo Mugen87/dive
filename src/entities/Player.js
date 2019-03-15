@@ -198,6 +198,15 @@ class Player extends MovingEntity {
 
 	}
 
+	giveHealth( amount ) {
+
+		this.health += amount;
+		( this.health > CONFIG.PLAYER.MAX_HEALTH ) ? this.health = CONFIG.PLAYER.MAX_HEALTH : this.health; // prevent health to excel max health
+
+		return this;
+
+	}
+
 }
 
 

@@ -6,6 +6,7 @@ import { CharacterBounds } from './CharacterBounds.js';
 import { WeaponSystem } from './WeaponSystem.js';
 import { TargetSystem } from './TargetSystem.js';
 import { CONFIG } from '../core/Config.js';
+import { GetHealthEvaluator } from '../evaluators/GetHealthEvaluator.js';
 
 const positiveWeightings = new Array();
 const weightings = [ 0, 0, 0, 0 ];
@@ -95,6 +96,7 @@ class Enemy extends Vehicle {
 		this.brain = new Think( this );
 		this.brain.addEvaluator( new AttackEvaluator() );
 		this.brain.addEvaluator( new ExploreEvaluator() );
+		this.brain.addEvaluator( new GetHealthEvaluator() );
 
 		this.goalArbitrationRegulator = new Regulator( CONFIG.BOT.GOAL.UPDATE_FREQUENCY );
 
@@ -420,6 +422,15 @@ class Enemy extends Vehicle {
 		}
 
 		this.mixer.update( delta );
+
+		return this;
+
+	}
+
+	giveHealth( amount ) {
+
+		this.health += amount;
+		( this.health > CONFIG.BOT.MAX_HEALTH ) ? this.health = CONFIG.BOT.MAX_HEALTH : this.health; // prevent health to excel max health
 
 		return this;
 

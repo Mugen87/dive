@@ -29,7 +29,7 @@ class SpawningManager {
 		this.spawningPoints.push( new Vector3( - 40, 0, 15 ) );
 
 		this.healthPackPoints = new Array();
-		this.healthPackPoints.push( new Vector3( - 40, 0, 15 ) );
+		this.healthPackPoints.push( new Vector3( - 40, 0, 0 ) );
 		this.healthPackMap = new Map();
 		this.world = world;
 
@@ -106,7 +106,7 @@ class SpawningManager {
 
 	}
 
-	spawnHealthPacks() {
+	initHealthPacks() {
 
 		const sphereGeometry = new SphereBufferGeometry( CONFIG.HEALTHPACK.RADIUS, 16, 16 );
 		const boxGeometry = new BoxBufferGeometry( 0.5, 2, 0.5, 1, 1, 1 );
@@ -144,7 +144,7 @@ class SpawningManager {
 
 	}
 
-	reSpawnHealthPack( healthPack ) {
+	respawnHealthPack( healthPack ) {
 
 		const trigger = this.healthPackMap.get( healthPack );
 		trigger.active = true;
