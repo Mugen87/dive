@@ -198,6 +198,11 @@ class Player extends MovingEntity {
 
 	}
 
+	/**
+	 * Adds the amount ot the health points of this entity.
+	 * @param {Number} amount - The amount of health to add.
+	 * @return {Player} A reference to this game entity.
+	 */
 	giveHealth( amount ) {
 
 		this.health += amount;

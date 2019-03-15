@@ -222,6 +222,12 @@ class World {
 
 	}
 
+	/**
+	 * Finds the nearest item of the given item type for the given entity.
+	 * @param entity - The entity which searches for the item.
+	 * @param itemType - The searched item type.
+	 * @return {Vector3} - The position of the item or null if no item was found.
+	 */
 	getNearestItemPosition( entity, itemType ) {
 
 		let itemList = null;

@@ -106,6 +106,9 @@ class SpawningManager {
 
 	}
 
+	/**
+	 * Initialize the healthPacks.
+	 */
 	initHealthPacks() {
 
 		const sphereGeometry = new SphereBufferGeometry( CONFIG.HEALTHPACK.RADIUS, 16, 16 );
@@ -144,6 +147,10 @@ class SpawningManager {
 
 	}
 
+	/**
+	 * Respawns the given health pack
+	 * @param healthPack - The health pack to respawn.
+	 */
 	respawnHealthPack( healthPack ) {
 
 		const trigger = this.healthPackMap.get( healthPack );

@@ -427,6 +427,11 @@ class Enemy extends Vehicle {
 
 	}
 
+	/**
+	 * Adds the amount ot the health points of this entity.
+	 * @param {Number} amount - The amount of health to add.
+	 * @return {Enemy} A reference to this game entity.
+	 */
 	giveHealth( amount ) {
 
 		this.health += amount;

@@ -34,9 +34,7 @@ class GetHealthEvaluator extends GoalEvaluator {
 
 		// bias the value according to the personality of the bot
 
-		const desirability = healthScore * this.characterBias;
-
-		return desirability;
+		return healthScore * this.characterBias;
 
 	}
 
