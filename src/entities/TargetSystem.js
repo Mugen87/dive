@@ -1,4 +1,5 @@
 import { STATUS_ALIVE } from '../core/Constants.js';
+import { CONFIG } from '../core/Config.js';
 
 /**
 * Class to select a target from the opponents currently in a bot's perceptive memory.
@@ -18,6 +19,17 @@ class TargetSystem {
 
 		this._currentRecord = null; // represents the memory record of the current target
 
+		// create a fix amount of candidate objects used for picking the best current target.
+		// we are doing this so we can reuse the objects and avoid the creation of new ones per update
+
+		this._candidates = new Array();
+
+		for ( let i = 0; i < CONFIG.BOT.COUNT; i ++ ) {
+
+			this._candidates.push( { distance: 0, visibility: 0, record: null } );
+
+		}
+
 	}
 
 	/**
@@ -28,9 +40,24 @@ class TargetSystem {
 	update() {
 
 		const records = this.owner.memoryRecords;
-		let closestDistance = Infinity;
+		const candidates = this._candidates;
 
-		this._currentRecord = null; // reset
+		// reset
+
+		this._currentRecord = null;
+
+		for ( let i = 0, l = candidates.length; i < l; i ++ ) {
+
+			const candidate = candidates[ i ];
+
+			candidate.distance = 0;
+			candidate.visibility = 0;
+			candidate.record = null;
+
+		}
+
+		// now gather for each memory record data so we are able to sort them.
+		// the best record will be used as the current target.
 
 		for ( let i = 0, l = records.length; i < l; i ++ ) {
 
@@ -39,22 +66,28 @@ class TargetSystem {
 			if ( record.entity.status === STATUS_ALIVE ) {
 
 				const distance = this.owner.position.squaredDistanceTo( record.lastSensedPosition );
+				const visibility = record.visible ? 1 : 0;
 
-				if ( distance < closestDistance ) {
+				const candidate = candidates[ i ];
 
-					closestDistance = distance;
-					this._currentRecord = record;
-
-				}
+				candidate.distance = distance;
+				candidate.visibility = visibility;
+				candidate.record = record;
 
 			}
 
 		}
 
+		// sort and pick the best record
+
+		candidates.sort( sortMemoryRecords );
+		const bestCandidate = candidates[ 0 ];
+
+		if ( bestCandidate.record ) this._currentRecord = bestCandidate.record;
+
 		return this;
 
 	}
-
 
 	/**
 	* Resets the internal data structures.
@@ -137,4 +170,23 @@ class TargetSystem {
 	}
 
 }
+
+//
+
+function sortMemoryRecords( a, b ) {
+
+	// visibility of an opponent is more important than the distance to it
+
+	if ( a.visibility !== b.visibility ) {
+
+		return b.visibility - a.visibility;
+
+	} else {
+
+		return b.distance - a.distance;
+
+	}
+
+}
+
 export { TargetSystem };
