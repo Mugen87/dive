@@ -75,22 +75,18 @@ class AttackGoal extends CompositeGoal {
 
 		} else {
 
-			if ( this.active() ) {
+			const currentSubgoal = this.currentSubgoal();
+			const status = this.executeSubgoals();
 
-				const currentSubgoal = this.currentSubgoal();
-				const status = this.executeSubgoals();
+			if ( currentSubgoal instanceof DodgeGoal && currentSubgoal.inactive() ) {
 
-				if ( currentSubgoal instanceof DodgeGoal && currentSubgoal.inactive() ) {
+				// inactive dogde goals should be reactivated but without reactivating the enire attack goal
 
-					// inactive dogde goals should be reactivated but without reactivating the enire attack goal
+				this.status = Goal.STATUS.ACTIVE;
 
-					this.status = Goal.STATUS.ACTIVE;
+			} else {
 
-				} else {
-
-					this.status = status;
-
-				}
+				this.status = status;
 
 				this.replanIfFailed();
 

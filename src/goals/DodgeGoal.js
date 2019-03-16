@@ -80,6 +80,10 @@ class DodgeGoal extends CompositeGoal {
 
 				this.status = this.executeSubgoals();
 
+				this.replanIfFailed();
+
+				// if completed, set the status to inactive in order to repeat the goal
+
 				if ( this.completed() ) this.status = Goal.STATUS.INACTIVE;
 
 			}
