@@ -1,5 +1,3 @@
-import { STATUS_ALIVE } from '../core/Constants.js';
-
 const visibleRecords = new Array();
 const invisibleRecords = new Array();
 
@@ -31,7 +29,6 @@ class TargetSystem {
 	update() {
 
 		const records = this.owner.memoryRecords;
-		const candidates = this._candidates;
 
 		// reset
 
@@ -97,7 +94,6 @@ class TargetSystem {
 					this._currentRecord = record;
 
 				}
-
 
 			}
 
