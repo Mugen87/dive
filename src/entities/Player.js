@@ -81,10 +81,6 @@ class Player extends MovingEntity {
 		this.mixer = null;
 		this.animations = new Map();
 
-		// TODO: Only for dev
-
-		this.deactivate();
-
 	}
 
 	/**

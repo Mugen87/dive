@@ -443,11 +443,21 @@ class World {
 
 		player.setAnimations( mixer, clips );
 
-		//
+		// add the player to the world
 
 		this.add( player );
 		this.competitors.push( player );
 		this.spawningManager.respawnCompetitor( player );
+
+		// in dev mode we start with orbit controls
+
+		if ( this.debug ) {
+
+			player.deactivate();
+
+		}
+
+		//
 
 		this.player = player;
 
