@@ -50,22 +50,18 @@ class HuntGoal extends CompositeGoal {
 
 		} else {
 
-			const targetPosition = owner.targetSystem.getLastSensedPosition();
+			this.status = this.executeSubgoals();
 
-			if ( owner.atPosition( targetPosition ) ) {
+			// if the enemy is at the last sensed position, forget about
+			// the bot, update the target system and consider this goal as completed
 
-				// if the enemy is at the last sensed positition, forget about
-				// the bot, update the target system and consider this goal as completed
+			if ( this.completed() ) {
 
 				const target = owner.targetSystem.getTarget();
 				owner.memorySystem.deleteRecord( target );
 				owner.targetSystem.update();
 
-				this.status = Goal.STATUS.COMPLETED;
-
 			} else {
-
-				this.status = this.executeSubgoals();
 
 				this.replanIfFailed();
 
