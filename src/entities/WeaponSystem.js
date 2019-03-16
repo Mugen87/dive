@@ -623,7 +623,8 @@ class WeaponSystem {
 		offset.y = MathUtils.randFloat( - this.aimAccuracy, this.aimAccuracy );
 		offset.z = MathUtils.randFloat( - this.aimAccuracy, this.aimAccuracy );
 
-		const f = Math.min( distance, 100 ) / 100; // 100 world units produces the maximum amount of offset
+		const maxDistance = CONFIG.BOT.WEAPON.NOISE_MAX_DISTANCE; // this distance produces the maximum amount of offset/noise
+		const f = Math.min( distance, maxDistance ) / maxDistance;
 
 		targetPosition.add( offset.multiplyScalar( f ) );
 
