@@ -138,6 +138,9 @@ class Player extends MovingEntity {
 
 			this.world.spawningManager.respawnCompetitor( this );
 
+			const animation = this.animations.get( 'player_death' );
+			animation.stop();
+
 			this.reset();
 
 		}
@@ -153,11 +156,12 @@ class Player extends MovingEntity {
 	/**
 	* Resets the player after a death.
 	*
-	* @return {Enemy} A reference to this game entity.
+	* @return {Player} A reference to this game entity.
 	*/
 	reset() {
 
 		this.rotation.set( 0, 0, 0, 1 );
+		this.head.rotation.set( 0, 0, 0, 1 );
 
 		this.health = CONFIG.PLAYER.MAX_HEALTH;
 		this.status = STATUS_ALIVE;
@@ -185,7 +189,6 @@ class Player extends MovingEntity {
 		this.velocity.set( 0, 0, 0 );
 
 		const animation = this.animations.get( 'player_death' );
-		animation.stop();
 		animation.play();
 
 		this.weaponSystem.hideCurrentWeapon();
