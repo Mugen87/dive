@@ -1,5 +1,7 @@
 import { STATUS_ALIVE } from '../core/Constants.js';
-import { CONFIG } from '../core/Config.js';
+
+const visibleRecords = new Array();
+const invisibleRecords = new Array();
 
 /**
 * Class to select a target from the opponents currently in a bot's perceptive memory.
@@ -19,17 +21,6 @@ class TargetSystem {
 
 		this._currentRecord = null; // represents the memory record of the current target
 
-		// create a fix amount of candidate objects used for picking the best current target.
-		// we are doing this so we can reuse the objects and avoid the creation of new ones per update
-
-		this._candidates = new Array();
-
-		for ( let i = 0; i < CONFIG.BOT.COUNT; i ++ ) {
-
-			this._candidates.push( { distance: 0, visibility: 0, record: null } );
-
-		}
-
 	}
 
 	/**
@@ -46,44 +37,71 @@ class TargetSystem {
 
 		this._currentRecord = null;
 
-		for ( let i = 0, l = candidates.length; i < l; i ++ ) {
+		visibleRecords.length = 0;
+		invisibleRecords.length = 0;
 
-			const candidate = candidates[ i ];
-
-			candidate.distance = Infinity;
-			candidate.visibility = 0;
-			candidate.record = null;
-
-		}
-
-		// now gather for each memory record data so we are able to sort them.
-		// the best record will be used as the current target.
+		// sort records according to their visibility
 
 		for ( let i = 0, l = records.length; i < l; i ++ ) {
 
 			const record = records[ i ];
 
-			if ( record.entity.status === STATUS_ALIVE ) {
+			if ( record.visible ) {
 
-				const distance = this.owner.position.squaredDistanceTo( record.lastSensedPosition );
-				const visibility = record.visible ? 1 : 0;
+				visibleRecords.push( record );
 
-				const candidate = candidates[ i ];
+			} else {
 
-				candidate.distance = distance;
-				candidate.visibility = visibility;
-				candidate.record = record;
+				invisibleRecords.push( record );
 
 			}
 
 		}
 
-		// sort and pick the best record
+		// record selection
 
-		candidates.sort( sortMemoryRecords );
-		const bestCandidate = candidates[ 0 ];
+		if ( visibleRecords.length > 0 ) {
 
-		if ( bestCandidate.record ) this._currentRecord = bestCandidate.record;
+			// if there are visible records, select the closest one
+
+			let minDistance = Infinity;
+
+			for ( let i = 0, l = visibleRecords.length; i < l; i ++ ) {
+
+				const record = visibleRecords[ i ];
+
+				const distance = this.owner.position.squaredDistanceTo( record.lastSensedPosition );
+
+				if ( distance < minDistance ) {
+
+					minDistance = distance;
+					this._currentRecord = record;
+
+				}
+
+			}
+
+		} else if ( invisibleRecords.length > 0 ) {
+
+			// if there are invisible records, select the one that was last sensed
+
+			let maxTimeLastSensed = - Infinity;
+
+			for ( let i = 0, l = invisibleRecords.length; i < l; i ++ ) {
+
+				const record = invisibleRecords[ i ];
+
+				if ( record.timeLastSensed > maxTimeLastSensed ) {
+
+					maxTimeLastSensed = record.timeLastSensed;
+					this._currentRecord = record;
+
+				}
+
+
+			}
+
+		}
 
 		return this;
 
@@ -166,24 +184,6 @@ class TargetSystem {
 	hasTarget() {
 
 		return this._currentRecord !== null;
-
-	}
-
-}
-
-//
-
-function sortMemoryRecords( a, b ) {
-
-	// visibility of an opponent is more important than the distance to it
-
-	if ( a.visibility !== b.visibility ) {
-
-		return b.visibility - a.visibility;
-
-	} else {
-
-		return a.distance - b.distance;
 
 	}
 
