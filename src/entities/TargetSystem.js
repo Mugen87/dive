@@ -50,7 +50,7 @@ class TargetSystem {
 
 			const candidate = candidates[ i ];
 
-			candidate.distance = 0;
+			candidate.distance = Infinity;
 			candidate.visibility = 0;
 			candidate.record = null;
 
@@ -183,7 +183,7 @@ function sortMemoryRecords( a, b ) {
 
 	} else {
 
-		return b.distance - a.distance;
+		return a.distance - b.distance;
 
 	}
 
