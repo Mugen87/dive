@@ -20,6 +20,7 @@ const moveDirection = new Vector3();
 const quaternion = new Quaternion();
 const transformedDirection = new Vector3();
 const worldPosition = new Vector3();
+const customTarget = new Vector3();
 
 /**
 * Class for representing the opponent bots in this game.
@@ -300,6 +301,12 @@ class Enemy extends Vehicle {
 		// save this position for the next method invocation
 
 		this.previousPosition.copy( this.position );
+
+		// adjust height of the entity according to the ground
+
+		const distance = this.currentRegion.plane.distanceToPoint( this.position );
+
+		this.position.y -= distance * CONFIG.NAVMESH.HEIGHT_CHANGE_FACTOR; // smooth transition
 
 		return this;
 
@@ -608,6 +615,26 @@ class Enemy extends Vehicle {
 		const region = navMesh.getRegionForPoint( position, 1 );
 
 		return region !== null;
+
+	}
+
+	/**
+	* Ensure the enemy only changes it rotation around its y-axis by consider the target
+	* in a logical xz-plane which has the same height as the current position.
+	* In this way, the enemy never "tilts" its body. Necessary for levels with different heights.
+	*
+	* @param {Vector3} target - The target position.
+	* @param {Number} delta - The time delta.
+	* @param {Number} tolerance - A tolerance value in radians to tweak the result
+	* when a game entity is considered to face a target.
+	* @return {Boolean} Whether the entity is faced to the target or not.
+	*/
+	rotateTo( target, delta, tolerance ) {
+
+		customTarget.copy( target );
+		customTarget.y = this.position.y;
+
+		return super.rotateTo( customTarget, delta, tolerance );
 
 	}
 

@@ -338,6 +338,12 @@ class Player extends MovingEntity {
 
 		this.previousPosition.copy( this.position );
 
+		// adjust height of the entity according to the ground
+
+		const distance = this.currentRegion.plane.distanceToPoint( this.position );
+
+		this.position.y -= distance * CONFIG.NAVMESH.HEIGHT_CHANGE_FACTOR; // smooth transition
+
 		return this;
 
 	}

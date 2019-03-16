@@ -116,6 +116,9 @@ const CONFIG = {
 			SCALE: 256, // number
 			TIME: 0.5, //seconds
 		}
+	},
+	NAVMESH: {
+		HEIGHT_CHANGE_FACTOR: 0.2 // unitless
 	}
 };
 
