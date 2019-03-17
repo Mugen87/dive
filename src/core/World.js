@@ -225,23 +225,14 @@ class World {
 	/**
 	* Returns true if the given item type is available.
 	*
-	* @param itemType - The requested item type.
+	* @param {Number} itemType - The requested item type.
 	* @return {Boolean} - Whether an item of the given type is available or not.
 	*/
 	isItemAvailable( itemType ) {
 
-		let itemList = null;
-
 		// pick correct item list
 
-		switch ( itemType ) {
-
-			case ITEM_HEALTH_PACK:
-
-				itemList = this.spawningManager.healthPacks;
-				break;
-
-		}
+		let itemList = this.spawningManager.getItemList( itemType );
 
 		// check availability
 
@@ -262,24 +253,15 @@ class World {
 	/**
 	* Finds the nearest item of the given item type for the given entity.
 	*
-	* @param entity - The entity which searches for the item.
-	* @param itemType - The requested item type.
+	* @param {GameEntity} entity - The entity which searches for the item.
+	* @param {Number} itemType - The requested item type.
 	* @return {Vector3} - The closest item or null (if no item was found).
 	*/
 	getClosestItem( entity, itemType ) {
 
-		let itemList = null;
-
 		// pick correct item list
 
-		switch ( itemType ) {
-
-			case ITEM_HEALTH_PACK:
-
-				itemList = this.spawningManager.healthPacks;
-				break;
-
-		}
+		let itemList = this.spawningManager.getItemList( itemType );
 
 		// determine clostest item
 

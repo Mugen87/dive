@@ -3,6 +3,7 @@ import { HealthPack } from '../entities/HealthPack.js';
 import { HealthGiver } from '../triggers/HealthGiver.js';
 import { CONFIG } from './Config.js';
 import { SceneUtils } from '../etc/SceneUtils.js';
+import { ITEM_HEALTH_PACK } from './Constants.js';
 
 /**
 * This class is responsible for (re)spawning enemies.
@@ -59,6 +60,32 @@ class SpawningManager {
 			}
 
 		}
+
+	}
+
+	/**
+	* Returns an array with items of the given type.
+	*
+	* @param {Number} type - The requested item type.
+	* @return {Array} An array with items (game entities).
+	*/
+	getItemList( type ) {
+
+		let itemList = null;
+
+		switch ( type ) {
+
+			case ITEM_HEALTH_PACK:
+				itemList = this.spawningManager.healthPacks;
+				break;
+
+			default:
+				console.error( 'DIVE.SpawningManager: Invalid item type:', type );
+				break;
+
+		}
+
+		return itemList;
 
 	}
 
