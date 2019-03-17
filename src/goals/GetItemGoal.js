@@ -1,5 +1,5 @@
 
-import { CompositeGoal, Vector3 } from '../lib/yuka.module.js';
+import { CompositeGoal, Vector3, Goal } from '../lib/yuka.module.js';
 import { FindPathGoal } from './FindPathGoal.js';
 import { FollowPathGoal } from './FollowPathGoal.js';
 
@@ -32,19 +32,23 @@ class GetItemGoal extends CompositeGoal {
 
 		this.clearSubgoals();
 
-		const position = owner.world.getNearestItemPosition( owner, this.itemType );
+		const item = owner.world.getClosestItem( owner, this.itemType );
 
-		if ( position === null ) {
-			//todo error
+		if ( item ) {
+
+			const from = new Vector3().copy( owner.position );
+			const to = new Vector3().copy( item.position );
+
+			// setup subgoals
+
+			this.addSubgoal( new FindPathGoal( owner, from, to ) );
+			this.addSubgoal( new FollowPathGoal( owner ) );
+
+		} else {
+
+			this.status = Goal.STATUS.FAILED;
+
 		}
-
-		const from = new Vector3().copy( owner.position );
-		const to = new Vector3().copy( position );
-
-		// setup subgoals
-
-		this.addSubgoal( new FindPathGoal( owner, from, to ) );
-		this.addSubgoal( new FollowPathGoal( owner ) );
 
 	}
 

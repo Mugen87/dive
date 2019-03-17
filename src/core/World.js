@@ -227,9 +227,9 @@ class World {
 	*
 	* @param entity - The entity which searches for the item.
 	* @param itemType - The requested item type.
-	* @return {Vector3} - The position of the item or null if no item was found.
+	* @return {Vector3} - The closest item or null (if no item was found).
 	*/
-	getNearestItemPosition( entity, itemType ) {
+	getClosestItem( entity, itemType ) {
 
 		let itemList = null;
 
@@ -239,7 +239,7 @@ class World {
 
 			case ITEM_HEALTH_PACK:
 
-				itemList = this.spawningManager.healthPackPoints;
+				itemList = this.spawningManager.healthPacks;
 				break;
 
 		}
@@ -253,7 +253,9 @@ class World {
 
 			const item = itemList[ i ];
 
-			const distance = entity.position.squaredDistanceTo( item );
+			// consider to use path finding here and then compute the length of the path
+
+			const distance = entity.position.squaredDistanceTo( item.position );
 
 			if ( distance < minDistance ) {
 

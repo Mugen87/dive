@@ -17,7 +17,8 @@ class HealthPack extends GameEntity {
 
 		super();
 
-		this.world = world; //remove
+		this.world = world;
+		this.isHealthPack = true;
 
 		/**
 		* The amount of health which the health pack gives when it's collected.
@@ -35,17 +36,7 @@ class HealthPack extends GameEntity {
 		* The time for the next respawn of this entity.
 		* @type {Number}
 		*/
-		this.nextSpawnTime = 0;
-
-		/**
-		* Whether the entity needs a respawn or not.
-		* @type {Boolean}
-		*/
-		this.needsRespawn = true;
-
-		// TODO: remove after update lib
-
-		this._dontTrigger = true;
+		this.nextSpawnTime = Infinity;
 
 	}
 
@@ -60,13 +51,9 @@ class HealthPack extends GameEntity {
 
 		this.currentTime += delta;
 
-		if ( ! this.needsRespawn ) {
+		if ( this.currentTime >= this.nextSpawnTime ) {
 
-			if ( this.currentTime >= this.nextSpawnTime ) {
-
-				this.world.spawningManager.respawnHealthPack( this );
-
-			}
+			this.world.spawningManager.respawnHealthPack( this );
 
 		}
 

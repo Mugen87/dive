@@ -38,19 +38,26 @@ class HealthGiver extends Trigger {
 	*/
 	execute( entity ) {
 
-		if ( entity._dontTrigger ) return this; // TODO: Change _dontTrigger
+		if ( entity.isHealthPack ) return this; // TODO: Move this check to EntityManager via GameEntity.canActivateTrigger
 
-		//
+		// deactivate trigger since it's only executed once
 
 		this.active = false;
-		this.healthPack.needsRespawn = false;
-		this.healthPack._renderComponent.visible = false;
 
-		this.healthPack.nextSpawnTime = this.healthPack.currentTime + CONFIG.HEALTHPACK.TIME;
+		// add health points to entity
 
 		entity.addHealth( this.healthPack.health );
 
+		// configure health pack
+
+		this.healthPack._renderComponent.visible = false;
+		this.healthPack.nextSpawnTime = this.healthPack.currentTime + CONFIG.HEALTHPACK.TIME;
+
+		// debugging
+
 		if ( this.healthPack.world.debug ) {
+
+			console.log( 'DIVE.HealthGiver: Entity with ID %s receives %i health points.', this.uuid, this.healthPack.health );
 
 			this.regionHelper.visible = false;
 
