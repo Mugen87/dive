@@ -1,6 +1,6 @@
 import { LoadingManager, AnimationLoader, AudioLoader, TextureLoader, Mesh } from '../lib/three.module.js';
 import { Sprite, SpriteMaterial, DoubleSide, AudioListener, PositionalAudio } from '../lib/three.module.js';
-import { LineSegments, LineBasicMaterial, MeshBasicMaterial, BufferGeometry, Vector3, PlaneBufferGeometry } from '../lib/three.module.js';
+import { LineSegments, LineBasicMaterial, MeshBasicMaterial, BufferGeometry, Vector3, PlaneBufferGeometry, BoxBufferGeometry } from '../lib/three.module.js';
 import { GLTFLoader } from '../lib/GLTFLoader.module.js';
 import { NavMeshLoader } from '../lib/yuka.module.js';
 import { CONFIG } from './Config.js';
@@ -392,6 +392,17 @@ class AssetManager {
 		bulletLine.matrixAutoUpdate = false;
 
 		models.set( 'bulletLine', bulletLine );
+
+		// health pack
+
+		const healthPackGeometry = new BoxBufferGeometry( 0.5, 0.5, 0.5 );
+		healthPackGeometry.translate( 0, 0.25, 0 );
+		const healthPackMaterial = new MeshBasicMaterial( { color: 0x00FF00 } );
+
+		const healthPack = new Mesh( healthPackGeometry, healthPackMaterial );
+		healthPack.matrixAutoUpdate = false;
+
+		models.set( 'healthPack', healthPack );
 
 		return this;
 

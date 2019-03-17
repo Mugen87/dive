@@ -1,5 +1,5 @@
 import { LineSegments, Sprite, SpriteMaterial, LineBasicMaterial, CanvasTexture, BufferGeometry, Float32BufferAttribute } from '../lib/three.module.js';
-import { Mesh, Group, MeshBasicMaterial, CylinderBufferGeometry } from '../lib/three.module.js';
+import { Mesh, Group, MeshBasicMaterial, CylinderBufferGeometry, SphereBufferGeometry } from '../lib/three.module.js';
 
 /**
 * Class with various helper methods.
@@ -151,6 +151,30 @@ class SceneUtils {
 		group.visible = false;
 
 		return group;
+
+	}
+
+	/**
+	 * Creates a trigger helper in order to visualize the position and
+	 * trigger region.
+	 *
+	 * @param {Trigger} trigger - The trigger.
+	 * @return {Group} The helper.
+	 */
+	static createTriggerHelper( trigger ) {
+
+		// assuming trigger.region is of type SphericalTriggerRegion
+
+		const triggerGeometry = new SphereBufferGeometry( trigger.region.radius, 16, 16 );
+		const triggerMaterial = new MeshBasicMaterial( { color: 0x6083c2, wireframe: true } );
+
+		const triggerMesh = new Mesh( triggerGeometry, triggerMaterial );
+		triggerMesh.matrixAutoUpdate = false;
+		triggerMesh.visible = false;
+		triggerMesh.position.copy( trigger.region.position );
+		triggerMesh.updateMatrix(); // triggers are static in this game
+
+		return triggerMesh;
 
 	}
 

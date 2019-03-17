@@ -2,7 +2,7 @@ import { SphericalTriggerRegion, Vector3 } from '../lib/yuka.module.js';
 import { HealthPack } from '../entities/HealthPack.js';
 import { HealthGiver } from '../triggers/HealthGiver.js';
 import { CONFIG } from './Config.js';
-import { Mesh, SphereBufferGeometry, MeshBasicMaterial, BoxBufferGeometry } from '../lib/three.module.js';
+import { SceneUtils } from '../etc/SceneUtils.js';
 
 /**
 * This class is responsible for (re)spawning enemies.
@@ -116,12 +116,6 @@ class SpawningManager {
 	*/
 	initHealthPacks() {
 
-		const sphereGeometry = new SphereBufferGeometry( CONFIG.HEALTH_PACK.RADIUS, 16, 16 );
-		const boxGeometry = new BoxBufferGeometry( 0.5, 0.5, 0.5 );
-		boxGeometry.translate( 0, 0.25, 0 );
-		const sphereMaterial = new MeshBasicMaterial( { color: 0x6083c2, wireframe: true } );
-		const boxMaterial = new MeshBasicMaterial( { color: 0x00FF00 } );
-
 		for ( let spawningPoint of this.healthPackSpawningPoints ) {
 
 			// health pack entity
@@ -129,9 +123,9 @@ class SpawningManager {
 			const healthPack = new HealthPack( this.world );
 			healthPack.position.copy( spawningPoint );
 
-			const boxMesh = new Mesh( boxGeometry, boxMaterial );
-			boxMesh.position.copy( healthPack.position );
-			healthPack.setRenderComponent( boxMesh, sync );
+			const renderComponent = this.world.assetManager.models.get( 'healthPack' ).clone();
+			renderComponent.position.copy( healthPack.position );
+			healthPack.setRenderComponent( renderComponent, sync );
 
 			this.healthPacks.push( healthPack );
 			this.world.add( healthPack );
@@ -150,12 +144,10 @@ class SpawningManager {
 
 			if ( this.world.debug ) {
 
-				const triggerMesh = new Mesh( sphereGeometry, sphereMaterial );
-				triggerMesh.visible = false;
-				triggerMesh.position.copy( sphericalTriggerRegion.position );
+				const triggerHelper = SceneUtils.createTriggerHelper( trigger );
 
-				this.world.helpers.itemHelpers.push( triggerMesh );
-				this.world.scene.add( triggerMesh );
+				this.world.helpers.itemHelpers.push( triggerHelper );
+				this.world.scene.add( triggerHelper );
 
 			}
 
