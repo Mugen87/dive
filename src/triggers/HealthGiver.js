@@ -35,8 +35,6 @@ class HealthGiver extends Trigger {
 
 		const healthPack = this.healthPack;
 
-		if ( entity.isHealthPack ) return this; // TODO: Move this check to EntityManager via GameEntity.canActivateTrigger
-
 		// deactivate trigger since it's only executed once
 
 		this.active = false;

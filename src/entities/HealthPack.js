@@ -17,7 +17,7 @@ class HealthPack extends GameEntity {
 
 		super();
 
-		this.isHealthPack = true;
+		this.canAcitivateTrigger = false;
 
 		/**
 		* The amount of health which the health pack gives when it's collected.

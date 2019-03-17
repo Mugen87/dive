@@ -17,6 +17,7 @@ class Level extends GameEntity {
 		super();
 
 		this.geometry = geometry;
+		this.canAcitivateTrigger = false;
 
 	}
 
