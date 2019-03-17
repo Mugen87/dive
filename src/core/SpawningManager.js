@@ -1,14 +1,8 @@
 import { SphericalTriggerRegion, Vector3 } from '../lib/yuka.module.js';
 import { HealthPack } from '../entities/HealthPack.js';
-import { HealthGiver } from '../entities/trigger/HealthGiver.js';
+import { HealthGiver } from '../triggers/HealthGiver.js';
 import { CONFIG } from './Config.js';
-import {
-	Mesh,
-	SphereBufferGeometry,
-	MeshBasicMaterial,
-	BufferGeometry,
-	BoxBufferGeometry
-} from '../lib/three.module.js';
+import { Mesh, SphereBufferGeometry, MeshBasicMaterial, BoxBufferGeometry } from '../lib/three.module.js';
 
 /**
 * This class is responsible for (re)spawning enemies.
@@ -51,11 +45,11 @@ class SpawningManager {
 	}
 
 	/**
-	 * Gets a suitable respawn point for the given enemy.
-	 *
-	 * @param {Enemy} enemy - The enemy for which a suitable point is searched.
-	 * @returns {Vector3} The spawning point.
-	 */
+	* Gets a suitable respawn point for the given enemy.
+	*
+	* @param {Enemy} enemy - The enemy for which a suitable point is searched.
+	* @returns {Vector3} The spawning point.
+	*/
 	getSpawnPoint( enemy ) {
 
 		let maxDistance = - Infinity;
@@ -107,8 +101,10 @@ class SpawningManager {
 	}
 
 	/**
-	 * Initialize the healthPacks.
-	 */
+	* Inits the health packs.
+	*
+	* @return {SpawningManager} A reference to this spawning manager.
+	*/
 	initHealthPacks() {
 
 		const sphereGeometry = new SphereBufferGeometry( CONFIG.HEALTHPACK.RADIUS, 16, 16 );
@@ -124,8 +120,6 @@ class SpawningManager {
 			const sphericalTriggerRegion = new SphericalTriggerRegion();
 			sphericalTriggerRegion.position.set( point.x, point.y, point.z );
 			sphericalTriggerRegion.radius = CONFIG.HEALTHPACK.RADIUS;
-
-
 
 			const trigger = new HealthGiver( sphericalTriggerRegion, healthPack );
 			this.world.entityManager.addTrigger( trigger );
@@ -148,12 +142,14 @@ class SpawningManager {
 	}
 
 	/**
-	 * Respawns the given health pack
-	 * @param healthPack - The health pack to respawn.
-	 */
+	* Respawns the given health packs.
+	*
+	* @return {SpawningManager} A reference to this spawning manager.
+	*/
 	respawnHealthPack( healthPack ) {
 
 		const trigger = this.healthPackMap.get( healthPack );
+
 		trigger.active = true;
 
 		if ( this.world.debug && this.world.uiManager.debugParameter.showItemRadius ) {

@@ -199,14 +199,16 @@ class Player extends MovingEntity {
 	}
 
 	/**
-	 * Adds the amount ot the health points of this entity.
-	 * @param {Number} amount - The amount of health to add.
-	 * @return {Player} A reference to this game entity.
-	 */
-	giveHealth( amount ) {
+	* Adds the given health points to this entity.
+	*
+	* @param {Number} amount - The amount of health to add.
+	* @return {Player} A reference to this game entity.
+	*/
+	addHealth( amount ) {
 
 		this.health += amount;
-		( this.health > CONFIG.PLAYER.MAX_HEALTH ) ? this.health = CONFIG.PLAYER.MAX_HEALTH : this.health; // prevent health to excel max health
+
+		this.health = Math.min( this.health, CONFIG.PLAYER.MAX_HEALTH ); // ensure that health does not exceed MAX_HEALTH
 
 		return this;
 

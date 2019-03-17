@@ -7,6 +7,7 @@
 const CONFIG = {
 	PLAYER: {
 		HEAD_HEIGHT: 1.7, // meter
+		MAX_HEALTH: 100, // health points
 		MAX_SPEED: 4 // meter/seconds
 	},
 	CONTROLS: {

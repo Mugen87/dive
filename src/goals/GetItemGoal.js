@@ -2,21 +2,24 @@
 import { CompositeGoal, Vector3 } from '../lib/yuka.module.js';
 import { FindPathGoal } from './FindPathGoal.js';
 import { FollowPathGoal } from './FollowPathGoal.js';
+
 /**
- * Goal to get an item of the given item type.
- * @author {@link https://github.com/robp94|robp94}
- */
+* Goal to get an item of the given item type.
+*
+* @author {@link https://github.com/robp94|robp94}
+*/
 class GetItemGoal extends CompositeGoal {
 
 	/**
-	 * Constructs a ne GetItemGoal with the given values.
-	 *
-	 * @param owner - The owner of this goal.
-	 * @param itemType - The type of the item.
-	 */
+	* Constructs a new GetItemGoal with the given values.
+	*
+	* @param owner - The owner of this goal.
+	* @param itemType - The type of the item.
+	*/
 	constructor( owner, itemType ) {
 
 		super( owner );
+
 		this.itemType = itemType;
 
 	}

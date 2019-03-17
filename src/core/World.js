@@ -223,14 +223,17 @@ class World {
 	}
 
 	/**
-	 * Finds the nearest item of the given item type for the given entity.
-	 * @param entity - The entity which searches for the item.
-	 * @param itemType - The searched item type.
-	 * @return {Vector3} - The position of the item or null if no item was found.
-	 */
+	* Finds the nearest item of the given item type for the given entity.
+	*
+	* @param entity - The entity which searches for the item.
+	* @param itemType - The requested item type.
+	* @return {Vector3} - The position of the item or null if no item was found.
+	*/
 	getNearestItemPosition( entity, itemType ) {
 
 		let itemList = null;
+
+		// pick correct item list
 
 		switch ( itemType ) {
 
@@ -241,32 +244,27 @@ class World {
 
 		}
 
-		const position = entity.position;
+		// determine clostest item
 
-		let index = - 1;
-		let shortestDistance = Infinity;
+		let closestItem = null;
+		let minDistance = Infinity;
 
 		for ( let i = 0, l = itemList.length; i < l; i ++ ) {
 
-			const distance = position.squaredDistanceTo( itemList[ i ] );//pathPlanner
+			const item = itemList[ i ];
 
-			if ( distance < shortestDistance ) {
+			const distance = entity.position.squaredDistanceTo( item );
 
-				index = i;
-				shortestDistance = distance;
+			if ( distance < minDistance ) {
+
+				minDistance = distance;
+				closestItem = item;
 
 			}
 
 		}
-		if ( index !== - 1 ) {
 
-			return itemList[ index ];
-
-		} else {
-
-			return null;
-
-		}
+		return closestItem;
 
 	}
 
