@@ -36,6 +36,7 @@ class Player extends MovingEntity {
 		this.updateOrientation = false;
 		this.maxSpeed = CONFIG.PLAYER.MAX_SPEED;
 		this.health = CONFIG.PLAYER.MAX_HEALTH;
+		this.maxHealth = CONFIG.PLAYER.MAX_HEALTH;
 		this.isPlayer = true;
 
 		this.status = STATUS_ALIVE;
@@ -159,7 +160,7 @@ class Player extends MovingEntity {
 		this.rotation.set( 0, 0, 0, 1 );
 		this.head.rotation.set( 0, 0, 0, 1 );
 
-		this.health = CONFIG.PLAYER.MAX_HEALTH;
+		this.health = this.maxHealth;
 		this.status = STATUS_ALIVE;
 
 		this.weaponSystem.reset();
@@ -357,7 +358,7 @@ class Player extends MovingEntity {
 
 		this.health += amount;
 
-		this.health = Math.min( this.health, CONFIG.PLAYER.MAX_HEALTH ); // ensure that health does not exceed MAX_HEALTH
+		this.health = Math.min( this.health, this.maxHealth ); // ensure that health does not exceed maxHealth
 
 		if ( this.world.debug ) {
 

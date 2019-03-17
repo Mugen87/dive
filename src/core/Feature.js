@@ -39,7 +39,7 @@ class Feature {
 	*/
 	static health( enemy ) {
 
-		return enemy.health / CONFIG.BOT.MAX_HEALTH;
+		return enemy.health / enemy.maxHealth;
 
 	}
 

@@ -21,6 +21,7 @@ class GetItemGoal extends CompositeGoal {
 		super( owner );
 
 		this.itemType = itemType;
+		this.item = null;
 
 	}
 
@@ -32,12 +33,14 @@ class GetItemGoal extends CompositeGoal {
 
 		this.clearSubgoals();
 
-		const item = owner.world.getClosestItem( owner, this.itemType );
+		// get closest item of the given type
 
-		if ( item ) {
+		this.item = owner.world.getClosestItem( owner, this.itemType );
+
+		if ( this.item ) {
 
 			const from = new Vector3().copy( owner.position );
-			const to = new Vector3().copy( item.position );
+			const to = new Vector3().copy( this.item.position );
 
 			// setup subgoals
 
@@ -46,7 +49,10 @@ class GetItemGoal extends CompositeGoal {
 
 		} else {
 
-			this.status = Goal.STATUS.FAILED;
+			// if no item was returned, there is nothing to pick up.
+			// mark the goal as completed
+
+			this.status = Goal.STATUS.COMPLETED;
 
 		}
 
@@ -56,11 +62,21 @@ class GetItemGoal extends CompositeGoal {
 
 		if ( this.active() ) {
 
-			this.status = this.executeSubgoals();
+			// if the requested item becomes inactive, it was picked up by somebody else
+
+			if ( this.item.active === false ) {
+
+				this.status = Goal.STATUS.COMPLETED;
+
+			} else {
+
+				this.status = this.executeSubgoals();
+
+				this.replanIfFailed();
+
+			}
 
 		}
-
-		this.replanIfFailed();
 
 	}
 

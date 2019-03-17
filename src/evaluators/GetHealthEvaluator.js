@@ -30,11 +30,19 @@ class GetHealthEvaluator extends GoalEvaluator {
 	*/
 	calculateDesirability( owner ) {
 
-		const healthScore = 1 - Feature.health( owner );
+		let desirability = 0;
 
-		// bias the value according to the personality of the bot
+		if ( owner.health < owner.maxHealth && owner.world.isItemAvailable( ITEM_HEALTH_PACK ) ) {
 
-		return healthScore * this.characterBias;
+			desirability = 1 - Feature.health( owner );
+
+			// bias the value according to the personality of the bot
+
+			desirability *= this.characterBias;
+
+		}
+
+		return desirability;
 
 	}
 

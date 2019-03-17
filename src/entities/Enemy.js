@@ -45,8 +45,8 @@ class Enemy extends Vehicle {
 		this.boundingRadius = CONFIG.BOT.BOUNDING_RADIUS;
 		this.maxSpeed = CONFIG.BOT.MOVEMENT.MAX_SPEED;
 		this.updateOrientation = false;
-
 		this.health = CONFIG.BOT.MAX_HEALTH;
+		this.maxHealth = CONFIG.PLAYER.MAX_HEALTH;
 		this.status = STATUS_ALIVE;
 
 		// current convex region of the navmesh the entity is in
@@ -443,7 +443,7 @@ class Enemy extends Vehicle {
 
 		this.health += amount;
 
-		this.health = Math.min( this.health, CONFIG.BOT.MAX_HEALTH ); // ensure that health does not exceed MAX_HEALTH
+		this.health = Math.min( this.health, this.maxHealth ); // ensure that health does not exceed maxHealth
 
 		if ( this.world.debug ) {
 
@@ -493,7 +493,7 @@ class Enemy extends Vehicle {
 
 		this.rotation.set( 0, 0, 0, 1 );
 
-		this.health = CONFIG.BOT.MAX_HEALTH;
+		this.health = this.maxHealth;
 		this.status = STATUS_ALIVE;
 
 		// reset search for attacker

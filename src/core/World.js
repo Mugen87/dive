@@ -223,6 +223,43 @@ class World {
 	}
 
 	/**
+	* Returns true if the given item type is available.
+	*
+	* @param itemType - The requested item type.
+	* @return {Boolean} - Whether an item of the given type is available or not.
+	*/
+	isItemAvailable( itemType ) {
+
+		let itemList = null;
+
+		// pick correct item list
+
+		switch ( itemType ) {
+
+			case ITEM_HEALTH_PACK:
+
+				itemList = this.spawningManager.healthPacks;
+				break;
+
+		}
+
+		// check availability
+
+		for ( let i = 0, l = itemList.length; i < l; i ++ ) {
+
+			const item = itemList[ i ];
+
+			// consider only active items
+
+			if ( item.active ) return true;
+
+		}
+
+		return false;
+
+	}
+
+	/**
 	* Finds the nearest item of the given item type for the given entity.
 	*
 	* @param entity - The entity which searches for the item.
@@ -253,14 +290,20 @@ class World {
 
 			const item = itemList[ i ];
 
-			// consider to use path finding here and then compute the length of the path
+			// consider only active items
 
-			const distance = entity.position.squaredDistanceTo( item.position );
+			if ( item.active ) {
 
-			if ( distance < minDistance ) {
+				// consider to use path finding here and then compute the length of the path
 
-				minDistance = distance;
-				closestItem = item;
+				const distance = entity.position.squaredDistanceTo( item.position );
+
+				if ( distance < minDistance ) {
+
+					minDistance = distance;
+					closestItem = item;
+
+				}
 
 			}
 
