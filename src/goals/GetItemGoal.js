@@ -54,7 +54,11 @@ class GetItemGoal extends CompositeGoal {
 
 	execute() {
 
-		this.status = this.executeSubgoals();
+		if ( this.active() ) {
+
+			this.status = this.executeSubgoals();
+
+		}
 
 		this.replanIfFailed();
 
