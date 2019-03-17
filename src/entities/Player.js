@@ -359,6 +359,14 @@ class Player extends MovingEntity {
 
 		this.health = Math.min( this.health, CONFIG.PLAYER.MAX_HEALTH ); // ensure that health does not exceed MAX_HEALTH
 
+		if ( this.world.debug ) {
+
+			console.log( 'DIVE.Player: Entity with ID %s receives %i health points.', this.uuid, amount );
+
+		}
+
+		return this;
+
 	}
 
 	/**

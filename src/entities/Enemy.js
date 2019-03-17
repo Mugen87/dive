@@ -445,6 +445,12 @@ class Enemy extends Vehicle {
 
 		this.health = Math.min( this.health, CONFIG.BOT.MAX_HEALTH ); // ensure that health does not exceed MAX_HEALTH
 
+		if ( this.world.debug ) {
+
+			console.log( 'DIVE.Enemy: Entity with ID %s receives %i health points.', this.uuid, amount );
+
+		}
+
 		return this;
 
 	}

@@ -37,6 +37,32 @@ class SpawningManager {
 	}
 
 	/**
+	* Update method of this manager. Called per simluation step.
+	*
+	* @param {Number} delta - The time delta.
+	* @return {SpawningManager} A reference to this spawning manager.
+	*/
+	update( delta ) {
+
+		const healthPacks = this.healthPacks;
+
+		for ( let i = 0, il = healthPacks.length; i < il; i ++ ) {
+
+			const healthPack = healthPacks[ i ];
+
+			healthPack.currentTime += delta;
+
+			if ( healthPack.currentTime >= healthPack.nextSpawnTime ) {
+
+				this._respawnHealthPack( healthPack );
+
+			}
+
+		}
+
+	}
+
+	/**
 	* Respawns the given competitor.
 	*
 	* @param {GameEntity} competitor - The entity to respawn.
@@ -120,7 +146,7 @@ class SpawningManager {
 
 			// health pack entity
 
-			const healthPack = new HealthPack( this.world );
+			const healthPack = new HealthPack();
 			healthPack.position.copy( spawningPoint );
 
 			const renderComponent = this.world.assetManager.models.get( 'healthPack' ).clone();
@@ -160,13 +186,18 @@ class SpawningManager {
 	*
 	* @return {SpawningManager} A reference to this spawning manager.
 	*/
-	respawnHealthPack( healthPack ) {
+	_respawnHealthPack( healthPack ) {
+
+		// reactivate trigger
 
 		const trigger = this.healthPackTriggerMap.get( healthPack );
-
 		trigger.active = true;
 
-		healthPack._renderComponent.visible = true;
+		// reactivate health pack
+
+		healthPack.finishRespawn();
+
+		return this;
 
 	}
 

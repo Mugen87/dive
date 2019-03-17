@@ -662,6 +662,8 @@ function animate() {
 
 	}
 
+	this.spawningManager.update( delta );
+
 	this.entityManager.update( delta );
 
 	this.pathPlanner.update();

@@ -1,5 +1,4 @@
 import { Trigger } from '../lib/yuka.module.js';
-import { CONFIG } from '../core/Config.js';
 
 /**
 * Gives an entity health if it touches the trigger region.
@@ -34,6 +33,8 @@ class HealthGiver extends Trigger {
 	*/
 	execute( entity ) {
 
+		const healthPack = this.healthPack;
+
 		if ( entity.isHealthPack ) return this; // TODO: Move this check to EntityManager via GameEntity.canActivateTrigger
 
 		// deactivate trigger since it's only executed once
@@ -42,12 +43,11 @@ class HealthGiver extends Trigger {
 
 		// add health points to entity
 
-		entity.addHealth( this.healthPack.health );
+		entity.addHealth( healthPack.health );
 
-		// configure health pack
+		// prepare respawn
 
-		this.healthPack._renderComponent.visible = false;
-		this.healthPack.nextSpawnTime = this.healthPack.currentTime + CONFIG.HEALTH_PACK.RESPAWN_TIME;
+		healthPack.prepareRespawn();
 
 		return this;
 

@@ -13,11 +13,10 @@ class HealthPack extends GameEntity {
 	*
 	* @param {World} world - A reference to the world.
 	*/
-	constructor( world ) {
+	constructor() {
 
 		super();
 
-		this.world = world;
 		this.isHealthPack = true;
 
 		/**
@@ -27,7 +26,7 @@ class HealthPack extends GameEntity {
 		this.health = CONFIG.HEALTH_PACK.HEALTH;
 
 		/**
-		* THe current time.
+		* The current time.
 		* @type {Number}
 		*/
 		this.currentTime = 0;
@@ -41,21 +40,34 @@ class HealthPack extends GameEntity {
 	}
 
 	/**
-	* Updates the internal state of this game entity. Normally called by {@link EntityManager#update}
-	* in each simulation step.
+	* Prepares the respawn of this health pack.
 	*
-	* @param {Number} delta - The time delta.
 	* @return {HealthPack} A reference to this game entity.
 	*/
-	update( delta ) {
+	prepareRespawn() {
 
-		this.currentTime += delta;
+		this.active = false;
+		this._renderComponent.visible = false;
 
-		if ( this.currentTime >= this.nextSpawnTime ) {
+		this.nextSpawnTime = this.currentTime + CONFIG.HEALTH_PACK.RESPAWN_TIME;
 
-			this.world.spawningManager.respawnHealthPack( this );
+		return this;
 
-		}
+	}
+
+	/**
+	* Finishes the respawn of this health pack.
+	*
+	* @return {HealthPack} A reference to this game entity.
+	*/
+	finishRespawn() {
+
+		this.active = true;
+		this._renderComponent.visible = true;
+
+		this.nextSpawnTime = Infinity;
+
+		return this;
 
 	}
 
