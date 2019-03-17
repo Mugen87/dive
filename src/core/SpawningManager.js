@@ -76,7 +76,7 @@ class SpawningManager {
 		switch ( type ) {
 
 			case ITEM_HEALTH_PACK:
-				itemList = this.spawningManager.healthPacks;
+				itemList = this.healthPacks;
 				break;
 
 			default:
