@@ -23,9 +23,9 @@ const CONFIG = {
 		ACCELERATION: 0.7 // unitless
 	},
 	HEALTHPACK: {
-		HEALTH: 50, //health
-		TIME: 5, //seconds
-		RADIUS: 0.5 //world units
+		HEALTH: 50, // health
+		RESPAWN_TIME: 10, // seconds
+		RADIUS: 0.5 // world units
 	},
 	BOT: {
 		MOVEMENT: {

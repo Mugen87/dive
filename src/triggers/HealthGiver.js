@@ -51,13 +51,13 @@ class HealthGiver extends Trigger {
 		// configure health pack
 
 		this.healthPack._renderComponent.visible = false;
-		this.healthPack.nextSpawnTime = this.healthPack.currentTime + CONFIG.HEALTHPACK.TIME;
+		this.healthPack.nextSpawnTime = this.healthPack.currentTime + CONFIG.HEALTHPACK.RESPAWN_TIME;
 
 		// debugging
 
 		if ( this.healthPack.world.debug ) {
 
-			console.log( 'DIVE.HealthGiver: Entity with ID %s receives %i health points.', this.uuid, this.healthPack.health );
+			console.log( 'DIVE.HealthGiver: Entity with ID %s receives %i health points.', entity.uuid, this.healthPack.health );
 
 			this.regionHelper.visible = false;
 

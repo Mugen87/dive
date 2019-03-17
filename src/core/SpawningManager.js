@@ -117,8 +117,8 @@ class SpawningManager {
 	initHealthPacks() {
 
 		const sphereGeometry = new SphereBufferGeometry( CONFIG.HEALTHPACK.RADIUS, 16, 16 );
-		const boxGeometry = new BoxBufferGeometry( 0.5, 1, 0.5 );
-		boxGeometry.translate( 0, 0.5, 0 );
+		const boxGeometry = new BoxBufferGeometry( 0.5, 0.5, 0.5 );
+		boxGeometry.translate( 0, 0.25, 0 );
 		const sphereMaterial = new MeshBasicMaterial( { color: 0x6083c2, wireframe: true } );
 		const boxMaterial = new MeshBasicMaterial( { color: 0x00FF00 } );
 
@@ -151,6 +151,7 @@ class SpawningManager {
 			if ( this.world.debug ) {
 
 				const triggerMesh = new Mesh( sphereGeometry, sphereMaterial );
+				triggerMesh.visible = false;
 				triggerMesh.position.copy( sphericalTriggerRegion.position );
 				trigger.regionHelper = triggerMesh;
 

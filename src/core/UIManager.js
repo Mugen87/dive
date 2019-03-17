@@ -59,7 +59,7 @@ class UIManager {
 			showSpawnPoints: false,
 			showUUIDHelpers: false,
 			showSkeletons: false,
-			showItemRadius: true,
+			showItemRadius: false,
 			enableFPSControls: () => {
 
 				this.world.fpsControls.connect();
