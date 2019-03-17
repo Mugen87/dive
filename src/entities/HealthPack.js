@@ -24,7 +24,7 @@ class HealthPack extends GameEntity {
 		* The amount of health which the health pack gives when it's collected.
 		* @type {Number}
 		*/
-		this.health = CONFIG.HEALTHPACK.HEALTH;
+		this.health = CONFIG.HEALTH_PACK.HEALTH;
 
 		/**
 		* THe current time.

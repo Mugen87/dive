@@ -116,7 +116,7 @@ class SpawningManager {
 	*/
 	initHealthPacks() {
 
-		const sphereGeometry = new SphereBufferGeometry( CONFIG.HEALTHPACK.RADIUS, 16, 16 );
+		const sphereGeometry = new SphereBufferGeometry( CONFIG.HEALTH_PACK.RADIUS, 16, 16 );
 		const boxGeometry = new BoxBufferGeometry( 0.5, 0.5, 0.5 );
 		boxGeometry.translate( 0, 0.25, 0 );
 		const sphereMaterial = new MeshBasicMaterial( { color: 0x6083c2, wireframe: true } );
@@ -140,7 +140,7 @@ class SpawningManager {
 
 			const sphericalTriggerRegion = new SphericalTriggerRegion();
 			sphericalTriggerRegion.position.copy( spawningPoint );
-			sphericalTriggerRegion.radius = CONFIG.HEALTHPACK.RADIUS;
+			sphericalTriggerRegion.radius = CONFIG.HEALTH_PACK.RADIUS;
 
 			const trigger = new HealthGiver( sphericalTriggerRegion, healthPack );
 			this.world.entityManager.addTrigger( trigger );
@@ -153,7 +153,6 @@ class SpawningManager {
 				const triggerMesh = new Mesh( sphereGeometry, sphereMaterial );
 				triggerMesh.visible = false;
 				triggerMesh.position.copy( sphericalTriggerRegion.position );
-				trigger.regionHelper = triggerMesh;
 
 				this.world.helpers.itemHelpers.push( triggerMesh );
 				this.world.scene.add( triggerMesh );
@@ -175,13 +174,6 @@ class SpawningManager {
 
 		trigger.active = true;
 
-		if ( this.world.debug && this.world.uiManager.debugParameter.showItemRadius ) {
-
-			trigger.regionHelper.visible = true;
-
-		}
-
-		healthPack.displayed = true;
 		healthPack._renderComponent.visible = true;
 
 	}

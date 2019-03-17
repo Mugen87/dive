@@ -22,7 +22,7 @@ const CONFIG = {
 		WEAPON_MOVEMENT: 1.7, // unitless
 		ACCELERATION: 0.7 // unitless
 	},
-	HEALTHPACK: {
+	HEALTH_PACK: {
 		HEALTH: 50, // health
 		RESPAWN_TIME: 10, // seconds
 		RADIUS: 0.5 // world units
