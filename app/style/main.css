@@ -8,21 +8,3 @@ body {
 	margin:0;
 	overflow:hidden;
 }
-#crosshairs {
-	position: absolute;
-	height: 100%;
-	width: 100%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-#crosshairs.hidden {
-	display: none;
-}
-#crosshairs>div {
-	width: 10px;
-	height: 10px;
-	border-radius: 66px;
-	border: 2px solid #cccccc;
-	opacity: 0.5;
-}

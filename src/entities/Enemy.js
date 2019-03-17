@@ -21,6 +21,7 @@ const moveDirection = new Vector3();
 const quaternion = new Quaternion();
 const transformedDirection = new Vector3();
 const worldPosition = new Vector3();
+const customTarget = new Vector3();
 
 /**
 * Class for representing the opponent bots in this game.
@@ -41,9 +42,9 @@ class Enemy extends Vehicle {
 		this.world = world;
 
 		this.currentTime = 0;
+		this.boundingRadius = CONFIG.BOT.BOUNDING_RADIUS;
 		this.maxSpeed = CONFIG.BOT.MOVEMENT.MAX_SPEED;
 		this.updateOrientation = false;
-		this.isEnemy = true;
 
 		this.health = CONFIG.BOT.MAX_HEALTH;
 		this.status = STATUS_ALIVE;
@@ -53,7 +54,6 @@ class Enemy extends Vehicle {
 		this.currentRegion = null;
 		this.currentPosition = new Vector3();
 		this.previousPosition = new Vector3();
-
 
 		// searching for attackers
 
@@ -267,7 +267,7 @@ class Enemy extends Vehicle {
 
 			}
 
-			this.world.spawningManager.respawnEnemy( this );
+			this.world.spawningManager.respawnCompetitor( this );
 			this.reset();
 
 		}
@@ -304,6 +304,12 @@ class Enemy extends Vehicle {
 
 		this.previousPosition.copy( this.position );
 
+		// adjust height of the entity according to the ground
+
+		const distance = this.currentRegion.plane.distanceToPoint( this.position );
+
+		this.position.y -= distance * CONFIG.NAVMESH.HEIGHT_CHANGE_FACTOR; // smooth transition
+
 		return this;
 
 	}
@@ -319,30 +325,30 @@ class Enemy extends Vehicle {
 		const memorySystem = this.memorySystem;
 		const vision = this.vision;
 
-		const enemies = this.world.enemies;
+		const competitors = this.world.competitors;
 
-		for ( let i = 0, l = enemies.length; i < l; i ++ ) {
+		for ( let i = 0, l = competitors.length; i < l; i ++ ) {
 
-			const enemy = enemies[ i ];
+			const competitor = competitors[ i ];
 
 			// ignore own entity and consider only living enemies
 
-			if ( enemy === this || enemy.status !== STATUS_ALIVE ) continue;
+			if ( competitor === this || competitor.status !== STATUS_ALIVE ) continue;
 
-			if ( memorySystem.hasRecord( enemy ) === false ) {
+			if ( memorySystem.hasRecord( competitor ) === false ) {
 
-				memorySystem.createRecord( enemy );
+				memorySystem.createRecord( competitor );
 
 			}
 
-			const record = memorySystem.getRecord( enemy );
+			const record = memorySystem.getRecord( competitor );
 
-			enemy.head.getWorldPosition( worldPosition );
+			competitor.head.getWorldPosition( worldPosition );
 
-			if ( vision.visible( worldPosition ) === true ) {
+			if ( vision.visible( worldPosition ) === true && competitor.active ) {
 
 				record.timeLastSensed = this.currentTime;
-				record.lastSensedPosition.copy( enemy.position ); // it's intended to use the body's position here
+				record.lastSensedPosition.copy( competitor.position ); // it's intended to use the body's position here
 				if ( record.visible === false ) record.timeBecameVisible = this.currentTime;
 				record.visible = true;
 
@@ -631,6 +637,26 @@ class Enemy extends Vehicle {
 	}
 
 	/**
+	* Ensure the enemy only changes it rotation around its y-axis by consider the target
+	* in a logical xz-plane which has the same height as the current position.
+	* In this way, the enemy never "tilts" its body. Necessary for levels with different heights.
+	*
+	* @param {Vector3} target - The target position.
+	* @param {Number} delta - The time delta.
+	* @param {Number} tolerance - A tolerance value in radians to tweak the result
+	* when a game entity is considered to face a target.
+	* @return {Boolean} Whether the entity is faced to the target or not.
+	*/
+	rotateTo( target, delta, tolerance ) {
+
+		customTarget.copy( target );
+		customTarget.y = this.position.y;
+
+		return super.rotateTo( customTarget, delta, tolerance );
+
+	}
+
+	/**
 	* Holds the implementation for the message handling of this game entity.
 	*
 	* @param {Telegram} telegram - The telegram with the message data.
@@ -654,21 +680,29 @@ class Enemy extends Vehicle {
 
 				}
 
+				// if the player is the sender and if the enemy still lives, change the style of the crosshairs
+
+				if ( telegram.sender.isPlayer && this.status === STATUS_ALIVE ) {
+
+					this.world.uiManager.showHitIndication();
+
+				}
+
 				// check if the enemy is death
 
 				if ( this.health <= 0 && this.status === STATUS_ALIVE ) {
 
 					this.initDeath();
 
-					// inform all other enemies about its death
+					// inform all other competitors about its death
 
-					const enemies = this.world.enemies;
+					const competitors = this.world.competitors;
 
-					for ( let i = 0, l = enemies.length; i < l; i ++ ) {
+					for ( let i = 0, l = competitors.length; i < l; i ++ ) {
 
-						const enemy = enemies[ i ];
+						const competitor = competitors[ i ];
 
-						if ( this !== enemy ) this.sendMessage( enemies[ i ], MESSAGE_DEAD );
+						if ( this !== competitor ) this.sendMessage( competitor, MESSAGE_DEAD );
 
 					}
 

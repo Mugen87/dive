@@ -1,8 +1,10 @@
-import { Ray } from '../lib/yuka.module.js';
+import { Ray, Vector3 } from '../lib/yuka.module.js';
 import { AnimationMixer, LoopOnce } from '../lib/three.module.js';
 import { Weapon } from './Weapon.js';
 import { WEAPON_STATUS_READY, WEAPON_STATUS_SHOT, WEAPON_STATUS_RELOAD, WEAPON_STATUS_EMPTY, WEAPON_STATUS_OUT_OF_AMMO, WEAPON_TYPES_BLASTER } from '../core/Constants.js';
 import { CONFIG } from '../core/Config.js';
+
+const spread = new Vector3();
 
 /**
 * Class for representing a blaster.
@@ -181,6 +183,16 @@ class Blaster extends Weapon {
 
 		this.getWorldPosition( ray.origin );
 		ray.direction.subVectors( targetPosition, ray.origin ).normalize();
+
+		// add spread
+
+		spread.x = ( 1 - Math.random() * 2 ) * 0.01;
+		spread.y = ( 1 - Math.random() * 2 ) * 0.01;
+		spread.z = ( 1 - Math.random() * 2 ) * 0.01;
+
+		ray.direction.add( spread ).normalize();
+
+		// add bullet to world
 
 		this.owner.world.addBullet( this.owner, ray );
 

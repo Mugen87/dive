@@ -27,6 +27,7 @@ class NavMeshUtils {
 		const mesh = new Mesh( geometry, material );
 		mesh.matrixAutoUpdate = false;
 		mesh.renderOrder = 1;
+		mesh.visible = false;
 
 		const positions = [];
 		const colors = [];

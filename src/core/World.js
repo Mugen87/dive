@@ -59,7 +59,7 @@ class World {
 		//
 
 		this.enemyCount = CONFIG.BOT.COUNT;
-		this.enemies = new Array();
+		this.competitors = new Array();
 
 		//
 
@@ -94,10 +94,10 @@ class World {
 		this.assetManager.init().then( () => {
 
 			this._initScene();
-			this._initPlayer();
-			this._initEnemies();
 			this._initLevel();
 			this._initNavMesh();
+			this._initEnemies();
+			this._initPlayer();
 			this._initControls();
 			this._initUI();
 
@@ -196,7 +196,7 @@ class World {
 
 			// do not test with the owner entity and only process entities with the correct interface
 
-			if ( entity !== owner && entity.checkProjectileIntersection ) {
+			if ( entity !== owner && entity.active && entity.checkProjectileIntersection ) {
 
 				if ( entity.checkProjectileIntersection( ray, currentIntersectionPoint ) !== null ) {
 
@@ -312,6 +312,7 @@ class World {
 
 		this.renderer = new WebGLRenderer( { antialias: true } );
 		this.renderer.setSize( window.innerWidth, window.innerHeight );
+		this.renderer.autoClear = false;
 		this.renderer.shadowMap.enabled = true;
 		this.renderer.gammaOutput = true;
 		this.renderer.gammaFactor = 2.2;
@@ -363,7 +364,8 @@ class World {
 			//
 
 			this.add( enemy );
-			this.enemies.push( enemy );
+			this.competitors.push( enemy );
+			this.spawningManager.respawnCompetitor( enemy );
 
 			//
 
@@ -444,34 +446,72 @@ class World {
 
 		const assetManager = this.assetManager;
 
-		this.player = new Player( this );
+		const player = new Player( this );
 
 		// render component
 
 		const body = new Object3D(); // dummy 3D object for adding spatial audios
 		body.matrixAutoUpdate = false;
-		this.player.setRenderComponent( body, sync );
+		player.setRenderComponent( body, sync );
 
 		// audio
 
 		const step1 = assetManager.cloneAudio( assetManager.audios.get( 'step1' ) );
 		const step2 = assetManager.cloneAudio( assetManager.audios.get( 'step2' ) );
 
-		step1.setRolloffFactor( 3 );
-		step1.setVolume( 0.5 );
+		// the following audios are unique and will be used only for the player (no cloning needed)
 
-		step2.setRolloffFactor( 3 );
+		const impact1 = assetManager.audios.get( 'impact1' );
+		const impact2 = assetManager.audios.get( 'impact2' );
+		const impact3 = assetManager.audios.get( 'impact3' );
+		const impact4 = assetManager.audios.get( 'impact4' );
+		const impact5 = assetManager.audios.get( 'impact5' );
+		const impact6 = assetManager.audios.get( 'impact6' );
+		const impact7 = assetManager.audios.get( 'impact7' );
+
+		step1.setVolume( 0.5 );
 		step2.setVolume( 0.5 );
 
-		body.add( step1 );
-		body.add( step2 );
+		body.add( step1, step2 );
+		body.add( impact1, impact2, impact3, impact4, impact5, impact6, impact7 );
 
-		this.player.audios.set( 'step1', step1 );
-		this.player.audios.set( 'step2', step2 );
+		player.audios.set( 'step1', step1 );
+		player.audios.set( 'step2', step2 );
+		player.audios.set( 'impact1', impact1 );
+		player.audios.set( 'impact2', impact2 );
+		player.audios.set( 'impact3', impact3 );
+		player.audios.set( 'impact4', impact4 );
+		player.audios.set( 'impact5', impact5 );
+		player.audios.set( 'impact6', impact6 );
+		player.audios.set( 'impact7', impact7 );
+
+		// animation
+
+		const mixer = new AnimationMixer( player.head );
+
+		const deathClip = this.assetManager.animations.get( 'player_death' );
+
+		const clips = [ deathClip ];
+
+		player.setAnimations( mixer, clips );
+
+		// add the player to the world
+
+		this.add( player );
+		this.competitors.push( player );
+		this.spawningManager.respawnCompetitor( player );
+
+		// in dev mode we start with orbit controls
+
+		if ( this.debug ) {
+
+			player.deactivate();
+
+		}
 
 		//
 
-		this.add( this.player );
+		this.player = player;
 
 		return this;
 
@@ -585,10 +625,14 @@ function syncCamera( entity, camera ) {
 
 function onWindowResize() {
 
-	this.camera.aspect = window.innerWidth / window.innerHeight;
+	const width = window.innerWidth;
+	const height = window.innerHeight;
+
+	this.camera.aspect = width / height;
 	this.camera.updateProjectionMatrix();
 
-	this.renderer.setSize( window.innerWidth, window.innerHeight );
+	this.renderer.setSize( width, height );
+	this.uiManager.setSize( width, height );
 
 }
 
@@ -622,7 +666,11 @@ function animate() {
 
 	this.pathPlanner.update();
 
+	this.renderer.clear();
+
 	this.renderer.render( this.scene, this.camera );
+
+	this.uiManager.update( delta );
 
 }
 

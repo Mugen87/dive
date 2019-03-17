@@ -5,7 +5,12 @@
 */
 
 const CONFIG = {
+	AUDIO: {
+		VOLUME_IMPACT: 0.2 // volume
+	},
 	PLAYER: {
+		BOUNDING_RADIUS: 0.5, // meter
+		DYING_TIME: 3, // seconds
 		HEAD_HEIGHT: 1.7, // meter
 		MAX_HEALTH: 100, // health points
 		MAX_SPEED: 4 // meter/seconds
@@ -13,8 +18,8 @@ const CONFIG = {
 	CONTROLS: {
 		LOOKING_SPEED: 2, // unitless
 		BRAKING_POWER: 10, // unitless
-		HEAD_MOVEMENT: 1.4, // unitless
-		WEAPON_MOVEMENT: 1.4, // unitless
+		HEAD_MOVEMENT: 1.7, // unitless
+		WEAPON_MOVEMENT: 1.7, // unitless
 		ACCELERATION: 0.7 // unitless
 	},
 	HEALTHPACK: {
@@ -48,10 +53,12 @@ const CONFIG = {
 		},
 		WEAPON: {
 			UPDATE_FREQUENCY: 4, // number per seconds
-			REACTION_TIME: 0.2, // seconds
-			AIM_ACCURACY: 3, // world units
-			CHANGE_COST: 0.5 // desirability
+			REACTION_TIME: 1, // seconds
+			AIM_ACCURACY: 3, // meter
+			CHANGE_COST: 0.5, // desirability
+			NOISE_MAX_DISTANCE: 100 // meter
 		},
+		BOUNDING_RADIUS: 0.5, // meter
 		COUNT: 2, // number
 		HEAD_HEIGHT: 1.5, // meter
 		MAX_HEALTH: 100, // health points
@@ -67,7 +74,8 @@ const CONFIG = {
 		RELOAD_TIME: 1.6, // seconds
 		MUZZLE_TIME: 0.04, // seconds
 		EQUIP_TIME: 0.5, // seconds
-		HIDE_TIME: 0.5 // seconds
+		HIDE_TIME: 0.5, // seconds
+		SPREAD: 0.01, // unitless
 
 	},
 	SHOTGUN: {
@@ -79,10 +87,10 @@ const CONFIG = {
 		RELOAD_TIME: 1.6, // seconds
 		SHOT_RELOAD_TIME: 0.5, // seconds
 		MUZZLE_TIME: 0.04, // seconds
-		SPREAD: 0.08, // unitless
-		BULLETS_PER_SHOT: 6, // number
 		EQUIP_TIME: 1, // seconds
-		HIDE_TIME: 1 // seconds
+		HIDE_TIME: 1, // seconds
+		SPREAD: 0.08, // unitless
+		BULLETS_PER_SHOT: 6 // number
 	},
 	ASSAULT_RIFLE: {
 		ROUNDS_LEFT: 30, // number
@@ -93,13 +101,29 @@ const CONFIG = {
 		RELOAD_TIME: 1.6, // seconds
 		MUZZLE_TIME: 0.04, // seconds
 		EQUIP_TIME: 1, // seconds
-		HIDE_TIME: 1 // seconds
+		HIDE_TIME: 1, // seconds
+		SPREAD: 0.01, // unitless
 
 	},
 	BULLET: {
 		MAX_SPEED: 400, // meter/seconds
 		LIFETIME: 1, // seconds
 		DAMAGE: 20 // health points
+	},
+	UI: {
+		CROSSHAIRS: {
+			HIT_TIME: 0.3, // seconds
+			OPACITY: 0.5, // number
+			SCALE: 40 // number
+		},
+		DAMAGE_INDICATOR: {
+			OPACITY: 0.5, // number
+			SCALE: 256, // number
+			TIME: 0.5, //seconds
+		}
+	},
+	NAVMESH: {
+		HEIGHT_CHANGE_FACTOR: 0.2 // unitless
 	}
 };
 

@@ -1,8 +1,9 @@
-import { LoadingManager, AnimationLoader, AudioLoader, TextureLoader } from '../lib/three.module.js';
+import { LoadingManager, AnimationLoader, AudioLoader, TextureLoader, Mesh } from '../lib/three.module.js';
 import { Sprite, SpriteMaterial, DoubleSide, AudioListener, PositionalAudio } from '../lib/three.module.js';
-import { LineSegments, LineBasicMaterial, BufferGeometry, Vector3 } from '../lib/three.module.js';
+import { LineSegments, LineBasicMaterial, MeshBasicMaterial, BufferGeometry, Vector3, PlaneBufferGeometry } from '../lib/three.module.js';
 import { GLTFLoader } from '../lib/GLTFLoader.module.js';
 import { NavMeshLoader } from '../lib/yuka.module.js';
+import { CONFIG } from './Config.js';
 
 /**
 * Class for representing the global asset manager. It is responsible
@@ -31,6 +32,7 @@ class AssetManager {
 		this.animations = new Map();
 		this.audios = new Map();
 		this.models = new Map();
+		this.textures = new Map();
 
 		this.navMesh = null;
 
@@ -47,6 +49,7 @@ class AssetManager {
 		this._loadAnimations();
 		this._loadAudios();
 		this._loadModels();
+		this._loadTextures();
 		this._loadNavMesh();
 
 		return new Promise( ( resolve ) => {
@@ -62,8 +65,7 @@ class AssetManager {
 	}
 
 	/**
-	* Clones the given audio source. This method should be ideally part
-	* of three.js.
+	* Clones the given audio source.
 	*
 	* @param {PositionalAudio} source - A positional audio.
 	* @return {PositionalAudio} A clone of the given audio.
@@ -72,8 +74,6 @@ class AssetManager {
 
 		const audio = new source.constructor( source.listener );
 		audio.buffer = source.buffer;
-		audio.setRolloffFactor( source.getRolloffFactor() );
-		audio.setVolume( source.getVolume() );
 
 		return audio;
 
@@ -88,11 +88,23 @@ class AssetManager {
 
 		const animationLoader = this.animationLoader;
 
+		// player
+
+		animationLoader.load( './animations/player.json', ( clips ) => {
+
+			for ( const clip of clips ) {
+
+				this.animations.set( clip.name, clip );
+
+			}
+
+		} );
+
 		// blaster
 
 		animationLoader.load( './animations/blaster.json', ( clips ) => {
 
-			for ( let clip of clips ) {
+			for ( const clip of clips ) {
 
 				this.animations.set( clip.name, clip );
 
@@ -104,7 +116,7 @@ class AssetManager {
 
 		animationLoader.load( './animations/shotgun.json', ( clips ) => {
 
-			for ( let clip of clips ) {
+			for ( const clip of clips ) {
 
 				this.animations.set( clip.name, clip );
 
@@ -116,7 +128,7 @@ class AssetManager {
 
 		animationLoader.load( './animations/assaultRifle.json', ( clips ) => {
 
-			for ( let clip of clips ) {
+			for ( const clip of clips ) {
 
 				this.animations.set( clip.name, clip );
 
@@ -160,6 +172,34 @@ class AssetManager {
 		const step2 = new PositionalAudio( listener );
 		step2.matrixAutoUpdate = false;
 
+		const impact1 = new PositionalAudio( listener );
+		impact1.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact1.matrixAutoUpdate = false;
+
+		const impact2 = new PositionalAudio( listener );
+		impact2.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact2.matrixAutoUpdate = false;
+
+		const impact3 = new PositionalAudio( listener );
+		impact3.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact3.matrixAutoUpdate = false;
+
+		const impact4 = new PositionalAudio( listener );
+		impact4.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact4.matrixAutoUpdate = false;
+
+		const impact5 = new PositionalAudio( listener );
+		impact5.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact5.matrixAutoUpdate = false;
+
+		const impact6 = new PositionalAudio( listener );
+		impact6.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact6.matrixAutoUpdate = false;
+
+		const impact7 = new PositionalAudio( listener );
+		impact7.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
+		impact7.matrixAutoUpdate = false;
+
 		audioLoader.load( './audios/blaster_shot.ogg', buffer => blasterShot.setBuffer( buffer ) );
 		audioLoader.load( './audios/shotgun_shot.ogg', buffer => shotgunShot.setBuffer( buffer ) );
 		audioLoader.load( './audios/assault_rifle_shot.ogg', buffer => assaultRifleShot.setBuffer( buffer ) );
@@ -167,6 +207,13 @@ class AssetManager {
 		audioLoader.load( './audios/shotgun_shot_reload.ogg', buffer => shotgunShotReload.setBuffer( buffer ) );
 		audioLoader.load( './audios/step1.ogg', buffer => step1.setBuffer( buffer ) );
 		audioLoader.load( './audios/step2.ogg', buffer => step2.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact1.ogg', buffer => impact1.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact2.ogg', buffer => impact2.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact3.ogg', buffer => impact3.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact4.ogg', buffer => impact4.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact5.ogg', buffer => impact5.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact6.ogg', buffer => impact6.setBuffer( buffer ) );
+		audioLoader.load( './audios/impact7.ogg', buffer => impact7.setBuffer( buffer ) );
 
 		audios.set( 'blaster_shot', blasterShot );
 		audios.set( 'shotgun_shot', shotgunShot );
@@ -175,6 +222,13 @@ class AssetManager {
 		audios.set( 'shotgun_shot_reload', shotgunShotReload );
 		audios.set( 'step1', step1 );
 		audios.set( 'step2', step2 );
+		audios.set( 'impact1', impact1 );
+		audios.set( 'impact2', impact2 );
+		audios.set( 'impact3', impact3 );
+		audios.set( 'impact4', impact4 );
+		audios.set( 'impact5', impact5 );
+		audios.set( 'impact6', impact6 );
+		audios.set( 'impact7', impact7 );
 
 		return this;
 
@@ -191,6 +245,19 @@ class AssetManager {
 		const textureLoader = this.textureLoader;
 		const models = this.models;
 		const animations = this.animations;
+
+		// shadow for soldiers
+
+		const shadowTexture = textureLoader.load( './textures/shadow.png' );
+		const planeGeometry = new PlaneBufferGeometry();
+		const planeMaterial = new MeshBasicMaterial( { map: shadowTexture, transparent: true, opacity: 0.4 } );
+
+		const shadowPlane = new Mesh( planeGeometry, planeMaterial );
+		shadowPlane.position.set( 0, 0.05, 0 );
+		shadowPlane.rotation.set( - Math.PI * 0.5, 0, 0 );
+		shadowPlane.scale.multiplyScalar( 2 );
+		shadowPlane.matrixAutoUpdate = false;
+		shadowPlane.updateMatrix();
 
 		// soldier
 
@@ -213,6 +280,8 @@ class AssetManager {
 				}
 
 			} );
+
+			renderComponent.add( shadowPlane );
 
 			models.set( 'soldier', renderComponent );
 
@@ -303,6 +372,7 @@ class AssetManager {
 		// muzzle sprite
 
 		const muzzleTexture = textureLoader.load( './textures/muzzle.png' );
+		muzzleTexture.matrixAutoUpdate = false;
 
 		const muzzleMaterial = new SpriteMaterial( { map: muzzleTexture } );
 		const muzzle = new Sprite( muzzleMaterial );
@@ -322,6 +392,39 @@ class AssetManager {
 		bulletLine.matrixAutoUpdate = false;
 
 		models.set( 'bulletLine', bulletLine );
+
+		return this;
+
+	}
+
+	/**
+	* Loads all textures from the backend.
+	*
+	* @return {AssetManager} A reference to this asset manager.
+	*/
+	_loadTextures() {
+
+		const textureLoader = this.textureLoader;
+
+		let texture = textureLoader.load( './textures/crosshairs.png' );
+		texture.matrixAutoUpdate = false;
+		this.textures.set( 'crosshairs', texture );
+
+		texture = textureLoader.load( './textures/damageIndicatorFront.png' );
+		texture.matrixAutoUpdate = false;
+		this.textures.set( 'damageIndicatorFront', texture );
+
+		texture = textureLoader.load( './textures/damageIndicatorRight.png' );
+		texture.matrixAutoUpdate = false;
+		this.textures.set( 'damageIndicatorRight', texture );
+
+		texture = textureLoader.load( './textures/damageIndicatorLeft.png' );
+		texture.matrixAutoUpdate = false;
+		this.textures.set( 'damageIndicatorLeft', texture );
+
+		texture = textureLoader.load( './textures/damageIndicatorBack.png' );
+		texture.matrixAutoUpdate = false;
+		this.textures.set( 'damageIndicatorBack', texture );
 
 		return this;
 

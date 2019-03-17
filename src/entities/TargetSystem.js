@@ -1,4 +1,5 @@
-import { STATUS_ALIVE } from '../core/Constants.js';
+const visibleRecords = new Array();
+const invisibleRecords = new Array();
 
 /**
 * Class to select a target from the opponents currently in a bot's perceptive memory.
@@ -28,21 +29,68 @@ class TargetSystem {
 	update() {
 
 		const records = this.owner.memoryRecords;
-		let closestDistance = Infinity;
 
-		this._currentRecord = null; // reset
+		// reset
+
+		this._currentRecord = null;
+
+		visibleRecords.length = 0;
+		invisibleRecords.length = 0;
+
+		// sort records according to their visibility
 
 		for ( let i = 0, l = records.length; i < l; i ++ ) {
 
 			const record = records[ i ];
 
-			if ( record.entity.status === STATUS_ALIVE ) {
+			if ( record.visible ) {
+
+				visibleRecords.push( record );
+
+			} else {
+
+				invisibleRecords.push( record );
+
+			}
+
+		}
+
+		// record selection
+
+		if ( visibleRecords.length > 0 ) {
+
+			// if there are visible records, select the closest one
+
+			let minDistance = Infinity;
+
+			for ( let i = 0, l = visibleRecords.length; i < l; i ++ ) {
+
+				const record = visibleRecords[ i ];
 
 				const distance = this.owner.position.squaredDistanceTo( record.lastSensedPosition );
 
-				if ( distance < closestDistance ) {
+				if ( distance < minDistance ) {
 
-					closestDistance = distance;
+					minDistance = distance;
+					this._currentRecord = record;
+
+				}
+
+			}
+
+		} else if ( invisibleRecords.length > 0 ) {
+
+			// if there are invisible records, select the one that was last sensed
+
+			let maxTimeLastSensed = - Infinity;
+
+			for ( let i = 0, l = invisibleRecords.length; i < l; i ++ ) {
+
+				const record = invisibleRecords[ i ];
+
+				if ( record.timeLastSensed > maxTimeLastSensed ) {
+
+					maxTimeLastSensed = record.timeLastSensed;
 					this._currentRecord = record;
 
 				}
@@ -54,7 +102,6 @@ class TargetSystem {
 		return this;
 
 	}
-
 
 	/**
 	* Resets the internal data structures.
@@ -137,4 +184,5 @@ class TargetSystem {
 	}
 
 }
+
 export { TargetSystem };

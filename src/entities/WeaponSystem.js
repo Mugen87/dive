@@ -392,6 +392,72 @@ class WeaponSystem {
 	}
 
 	/**
+	* Ensures that the current equiped weapon is rendered.
+	*
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	showCurrentWeapon() {
+
+		const type = this.currentWeapon.type;
+
+		switch ( type ) {
+
+			case WEAPON_TYPES_BLASTER:
+				this.renderComponents.blaster.mesh.visible = true;
+				break;
+
+			case WEAPON_TYPES_SHOTGUN:
+				this.renderComponents.shotgun.mesh.visible = true;
+				break;
+
+			case WEAPON_TYPES_ASSAULT_RIFLE:
+				this.renderComponents.assaultRifle.mesh.visible = true;
+				break;
+
+			default:
+				console.error( 'DIVE.WeaponSystem: Invalid weapon type:', type );
+				break;
+
+		}
+
+		return this;
+
+	}
+
+	/**
+	* Ensures that the current equiped weapon is not rendered.
+	*
+	* @return {WeaponSystem} A reference to this weapon system.
+	*/
+	hideCurrentWeapon() {
+
+		const type = this.currentWeapon.type;
+
+		switch ( type ) {
+
+			case WEAPON_TYPES_BLASTER:
+				this.renderComponents.blaster.mesh.visible = false;
+				break;
+
+			case WEAPON_TYPES_SHOTGUN:
+				this.renderComponents.shotgun.mesh.visible = false;
+				break;
+
+			case WEAPON_TYPES_ASSAULT_RIFLE:
+				this.renderComponents.assaultRifle.mesh.visible = false;
+				break;
+
+			default:
+				console.error( 'DIVE.WeaponSystem: Invalid weapon type:', type );
+				break;
+
+		}
+
+		return this;
+
+	}
+
+	/**
 	* Returns the amount of ammo remaining for the specified weapon.
 	*
 	* @param {WEAPON_TYPES} type - The weapon type.
@@ -557,7 +623,8 @@ class WeaponSystem {
 		offset.y = MathUtils.randFloat( - this.aimAccuracy, this.aimAccuracy );
 		offset.z = MathUtils.randFloat( - this.aimAccuracy, this.aimAccuracy );
 
-		const f = Math.min( distance, 100 ) / 100; // 100 world units produces the maximum amount of offset
+		const maxDistance = CONFIG.BOT.WEAPON.NOISE_MAX_DISTANCE; // this distance produces the maximum amount of offset/noise
+		const f = Math.min( distance, maxDistance ) / maxDistance;
 
 		targetPosition.add( offset.multiplyScalar( f ) );
 
@@ -675,11 +742,10 @@ class WeaponSystem {
 		// add positional audios
 
 		const shot = assetManager.cloneAudio( assetManager.audios.get( 'blaster_shot' ) );
-		shot.setRolloffFactor( 3 );
+		shot.setRolloffFactor( 0.5 );
 		shot.setVolume( 0.4 );
 		blasterMesh.add( shot );
 		const reload = assetManager.cloneAudio( assetManager.audios.get( 'reload' ) );
-		reload.setRolloffFactor( 3 );
 		reload.setVolume( 0.1 );
 		blasterMesh.add( reload );
 
@@ -737,15 +803,13 @@ class WeaponSystem {
 		// add positional audios
 
 		const shot = assetManager.cloneAudio( assetManager.audios.get( 'shotgun_shot' ) );
-		shot.setRolloffFactor( 3 );
+		shot.setRolloffFactor( 0.5 );
 		shot.setVolume( 0.4 );
 		shotgunMesh.add( shot );
 		const reload = assetManager.cloneAudio( assetManager.audios.get( 'reload' ) );
-		reload.setRolloffFactor( 3 );
 		reload.setVolume( 0.1 );
 		shotgunMesh.add( reload );
 		const shotReload = assetManager.cloneAudio( assetManager.audios.get( 'shotgun_shot_reload' ) );
-		shotReload.setRolloffFactor( 3 );
 		shotReload.setVolume( 0.1 );
 		shotgunMesh.add( shotReload );
 
@@ -804,11 +868,10 @@ class WeaponSystem {
 		// add positional audios
 
 		const shot = assetManager.cloneAudio( assetManager.audios.get( 'assault_rifle_shot' ) );
-		shot.setRolloffFactor( 3 );
+		shot.setRolloffFactor( 0.5 );
 		shot.setVolume( 0.8 );
 		assaultRifleMesh.add( shot );
 		const reload = assetManager.cloneAudio( assetManager.audios.get( 'reload' ) );
-		reload.setRolloffFactor( 3 );
 		reload.setVolume( 0.1 );
 		assaultRifleMesh.add( reload );
 

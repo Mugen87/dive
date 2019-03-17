@@ -1,8 +1,8 @@
 import { Goal, CompositeGoal, Vector3 } from '../lib/yuka.module.js';
 import { SeekToPositionGoal } from './SeekToPositionGoal.js';
 
-const left = new Vector3( - 1, 0, 0 );
 const right = new Vector3( 1, 0, 0 );
+const left = new Vector3( - 1, 0, 0 );
 
 /**
 * Sub-goal which makes the enemy dodge from side to side.
@@ -79,6 +79,10 @@ class DodgeGoal extends CompositeGoal {
 			} else {
 
 				this.status = this.executeSubgoals();
+
+				this.replanIfFailed();
+
+				// if completed, set the status to inactive in order to repeat the goal
 
 				if ( this.completed() ) this.status = Goal.STATUS.INACTIVE;
 
