@@ -50,9 +50,9 @@ class GetItemGoal extends CompositeGoal {
 		} else {
 
 			// if no item was returned, there is nothing to pick up.
-			// mark the goal as completed
+			// mark the goal as failed
 
-			this.status = Goal.STATUS.COMPLETED;
+			this.status = Goal.STATUS.FAILED;
 
 		}
 
@@ -66,7 +66,7 @@ class GetItemGoal extends CompositeGoal {
 
 			if ( this.item.active === false ) {
 
-				this.status = Goal.STATUS.COMPLETED;
+				this.status = Goal.STATUS.FAILED;
 
 			} else {
 
