@@ -169,6 +169,8 @@ class SpawningManager {
 	*/
 	initHealthPacks() {
 
+		const assetManager = this.world.assetManager;
+
 		for ( let spawningPoint of this.healthPackSpawningPoints ) {
 
 			// health pack entity
@@ -182,6 +184,10 @@ class SpawningManager {
 
 			this.healthPacks.push( healthPack );
 			this.world.add( healthPack );
+
+			const audio = assetManager.cloneAudio( assetManager.audios.get( 'health' ) );
+			healthPack.audio = audio;
+			renderComponent.add( audio );
 
 			// trigger
 

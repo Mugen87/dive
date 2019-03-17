@@ -37,6 +37,10 @@ class HealthPack extends GameEntity {
 		*/
 		this.nextSpawnTime = Infinity;
 
+		//
+
+		this._audio = null;
+
 	}
 
 	/**
@@ -48,6 +52,15 @@ class HealthPack extends GameEntity {
 
 		this.active = false;
 		this._renderComponent.visible = false;
+
+		//
+
+		const audio = this.audio;
+
+		if ( audio.isPlaying === true ) audio.stop();
+		audio.play();
+
+		//
 
 		this.nextSpawnTime = this.currentTime + CONFIG.HEALTH_PACK.RESPAWN_TIME;
 

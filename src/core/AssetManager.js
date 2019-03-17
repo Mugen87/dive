@@ -200,6 +200,9 @@ class AssetManager {
 		impact7.setVolume( CONFIG.AUDIO.VOLUME_IMPACT );
 		impact7.matrixAutoUpdate = false;
 
+		const health = new PositionalAudio( listener );
+		health.matrixAutoUpdate = false;
+
 		audioLoader.load( './audios/blaster_shot.ogg', buffer => blasterShot.setBuffer( buffer ) );
 		audioLoader.load( './audios/shotgun_shot.ogg', buffer => shotgunShot.setBuffer( buffer ) );
 		audioLoader.load( './audios/assault_rifle_shot.ogg', buffer => assaultRifleShot.setBuffer( buffer ) );
@@ -214,6 +217,7 @@ class AssetManager {
 		audioLoader.load( './audios/impact5.ogg', buffer => impact5.setBuffer( buffer ) );
 		audioLoader.load( './audios/impact6.ogg', buffer => impact6.setBuffer( buffer ) );
 		audioLoader.load( './audios/impact7.ogg', buffer => impact7.setBuffer( buffer ) );
+		audioLoader.load( './audios/health.ogg', buffer => health.setBuffer( buffer ) );
 
 		audios.set( 'blaster_shot', blasterShot );
 		audios.set( 'shotgun_shot', shotgunShot );
@@ -229,6 +233,7 @@ class AssetManager {
 		audios.set( 'impact5', impact5 );
 		audios.set( 'impact6', impact6 );
 		audios.set( 'impact7', impact7 );
+		audios.set( 'health', health );
 
 		return this;
 
