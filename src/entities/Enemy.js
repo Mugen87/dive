@@ -48,6 +48,7 @@ class Enemy extends Vehicle {
 		this.health = CONFIG.BOT.MAX_HEALTH;
 		this.maxHealth = CONFIG.PLAYER.MAX_HEALTH;
 		this.status = STATUS_ALIVE;
+		this.isPlayer = false;
 
 		// current convex region of the navmesh the entity is in
 

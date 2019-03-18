@@ -59,7 +59,7 @@ class Player extends MovingEntity {
 
 		// the player uses the weapon system, too
 
-		this.weaponSystem = new WeaponSystem( this, true );
+		this.weaponSystem = new WeaponSystem( this );
 		this.weaponSystem.init();
 
 		// the player's bounds (using a single AABB is sufficient for now)

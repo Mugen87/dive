@@ -22,12 +22,10 @@ class WeaponSystem {
 	* Constructs a new weapon system with the given values.
 	*
 	* @param {GameEntity} owner - The owner of this weapon system.
-	* @param {Boolean} isPlayer - Whether this weapon system is used by the human player or not.
 	*/
-	constructor( owner, isPlayer = false ) {
+	constructor( owner ) {
 
 		this.owner = owner;
-		this.isPlayer = isPlayer;
 
 		// this is the minimum amount of time in seconds an enemy needs to
 		// see an opponent before it can react to it. This variable is used
@@ -108,7 +106,7 @@ class WeaponSystem {
 
 		// init fuzzy modules (only necessary for bots)
 
-		if ( this.isPlayer === false ) {
+		if ( this.owner.isPlayer === false ) {
 
 			this._initFuzzyModules();
 
@@ -236,21 +234,21 @@ class WeaponSystem {
 					this.renderComponents.blaster.mesh.visible = true;
 					this.renderComponents.shotgun.mesh.visible = false;
 					this.renderComponents.assaultRifle.mesh.visible = false;
-					if ( this.isPlayer ) weapon.setRenderComponent( this.renderComponents.blaster.mesh, sync );
+					if ( this.owner.isPlayer ) weapon.setRenderComponent( this.renderComponents.blaster.mesh, sync );
 					break;
 
 				case WEAPON_TYPES_SHOTGUN:
 					this.renderComponents.blaster.mesh.visible = false;
 					this.renderComponents.shotgun.mesh.visible = true;
 					this.renderComponents.assaultRifle.mesh.visible = false;
-					if ( this.isPlayer ) weapon.setRenderComponent( this.renderComponents.shotgun.mesh, sync );
+					if ( this.owner.isPlayer ) weapon.setRenderComponent( this.renderComponents.shotgun.mesh, sync );
 					break;
 
 				case WEAPON_TYPES_ASSAULT_RIFLE:
 					this.renderComponents.blaster.mesh.visible = false;
 					this.renderComponents.shotgun.mesh.visible = false;
 					this.renderComponents.assaultRifle.mesh.visible = true;
-					if ( this.isPlayer ) weapon.setRenderComponent( this.renderComponents.assaultRifle.mesh, sync );
+					if ( this.owner.isPlayer ) weapon.setRenderComponent( this.renderComponents.assaultRifle.mesh, sync );
 					break;
 
 				default:
@@ -329,7 +327,7 @@ class WeaponSystem {
 
 			owner.weaponContainer.add( weapon );
 
-			if ( this.isPlayer ) {
+			if ( owner.isPlayer ) {
 
 				weapon.scale.set( 2, 2, 2 );
 				weapon.position.set( 0.3, - 0.3, - 1 );
@@ -712,7 +710,7 @@ class WeaponSystem {
 
 		const blasterMesh = assetManager.models.get( 'blaster' ).clone();
 
-		if ( this.isPlayer === false ) {
+		if ( this.owner.isPlayer === false ) {
 
 			blasterMesh.scale.set( 100, 100, 100 );
 			blasterMesh.rotation.set( Math.PI * 0.5, Math.PI, 0 );
@@ -773,7 +771,7 @@ class WeaponSystem {
 
 		const shotgunMesh = assetManager.models.get( 'shotgun' ).clone();
 
-		if ( this.isPlayer === false ) {
+		if ( this.owner.isPlayer === false ) {
 
 			shotgunMesh.scale.set( 100, 100, 100 );
 			shotgunMesh.rotation.set( Math.PI * 0.5, Math.PI * 1.05, 0 );
@@ -838,7 +836,7 @@ class WeaponSystem {
 
 		const assaultRifleMesh = assetManager.models.get( 'assault-rifle' ).clone();
 
-		if ( this.isPlayer === false ) {
+		if ( this.owner.isPlayer === false ) {
 
 			assaultRifleMesh.scale.set( 100, 100, 100 );
 			assaultRifleMesh.rotation.set( Math.PI * 0.5, Math.PI * 1, 0 );
