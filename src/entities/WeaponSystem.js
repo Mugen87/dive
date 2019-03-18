@@ -111,6 +111,7 @@ class WeaponSystem {
 			this._initFuzzyModules();
 
 		}
+
 		// reset the system to its initial state
 
 		this.reset();
