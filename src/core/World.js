@@ -16,7 +16,6 @@ import { FirstPersonControls } from '../entities/FirstPersonControls.js';
 import { Bullet } from '../weapons/Bullet.js';
 import { PathPlanner } from '../etc/PathPlanner.js';
 import { CONFIG } from './Config.js';
-import { ITEM_HEALTH_PACK } from './Constants.js';
 
 const currentIntersectionPoint = new Vector3();
 
