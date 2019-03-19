@@ -46,7 +46,7 @@ class Enemy extends Vehicle {
 		this.maxSpeed = CONFIG.BOT.MOVEMENT.MAX_SPEED;
 		this.updateOrientation = false;
 		this.health = CONFIG.BOT.MAX_HEALTH;
-		this.maxHealth = CONFIG.PLAYER.MAX_HEALTH;
+		this.maxHealth = CONFIG.BOT.MAX_HEALTH;
 		this.status = STATUS_ALIVE;
 		this.isPlayer = false;
 
