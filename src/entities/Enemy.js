@@ -556,6 +556,8 @@ class Enemy extends Vehicle {
 		this.attackDirection.set( 0, 0, 0 );
 		this.endTimeSearch = Infinity;
 
+		return this;
+
 	}
 
 	/**
