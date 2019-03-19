@@ -35,10 +35,6 @@ class AttackEvaluator extends GoalEvaluator {
 
 			desirability = Feature.totalWeaponStrength( owner ) * Feature.health( owner );
 
-			// bias the value according to the personality of the bot
-
-			desirability *= this.characterBias;
-
 			// TODO: set desirability to 1 for testing
 
 			desirability = 1;

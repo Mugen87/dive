@@ -30,10 +30,6 @@ class ExploreEvaluator extends GoalEvaluator {
 
 		let desirability = 0.5;
 
-		// bias the value according to the personality of the bot
-
-		desirability *= this.characterBias;
-
 		return desirability;
 
 	}
