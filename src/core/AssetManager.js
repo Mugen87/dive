@@ -317,9 +317,9 @@ class AssetManager {
 
 		} );
 
-		// blaster
+		// blaster, high poly
 
-		gltfLoader.load( './models/blaster.glb', ( gltf ) => {
+		gltfLoader.load( './models/blaster_high.glb', ( gltf ) => {
 
 			const renderComponent = gltf.scene;
 			renderComponent.matrixAutoUpdate = false;
@@ -332,13 +332,13 @@ class AssetManager {
 
 			} );
 
-			models.set( 'blaster', renderComponent );
+			models.set( 'blaster_high', renderComponent );
 
 		} );
 
-		// shotgun
+		// blaster, low poly
 
-		gltfLoader.load( './models/shotgun.glb', ( gltf ) => {
+		gltfLoader.load( './models/blaster_low.glb', ( gltf ) => {
 
 			const renderComponent = gltf.scene;
 			renderComponent.matrixAutoUpdate = false;
@@ -351,13 +351,13 @@ class AssetManager {
 
 			} );
 
-			models.set( 'shotgun', renderComponent );
+			models.set( 'blaster_low', renderComponent );
 
 		} );
 
-		// assault rifle
+		// shotgun, high poly
 
-		gltfLoader.load( './models/assaultRifle.glb', ( gltf ) => {
+		gltfLoader.load( './models/shotgun_high.glb', ( gltf ) => {
 
 			const renderComponent = gltf.scene;
 			renderComponent.matrixAutoUpdate = false;
@@ -370,7 +370,64 @@ class AssetManager {
 
 			} );
 
-			models.set( 'assault-rifle', renderComponent );
+			models.set( 'shotgun_high', renderComponent );
+
+		} );
+
+		// shotgun, low poly
+
+		gltfLoader.load( './models/shotgun_low.glb', ( gltf ) => {
+
+			const renderComponent = gltf.scene;
+			renderComponent.matrixAutoUpdate = false;
+			renderComponent.updateMatrix();
+
+			renderComponent.traverse( ( object ) => {
+
+				object.matrixAutoUpdate = false;
+				object.updateMatrix();
+
+			} );
+
+			models.set( 'shotgun_low', renderComponent );
+
+		} );
+
+		// assault rifle, high poly
+
+		gltfLoader.load( './models/assaultRifle_high.glb', ( gltf ) => {
+
+			const renderComponent = gltf.scene;
+			renderComponent.matrixAutoUpdate = false;
+			renderComponent.updateMatrix();
+
+			renderComponent.traverse( ( object ) => {
+
+				object.matrixAutoUpdate = false;
+				object.updateMatrix();
+
+			} );
+
+			models.set( 'assaultRifle_high', renderComponent );
+
+		} );
+
+		// assault rifle, low poly
+
+		gltfLoader.load( './models/assaultRifle_low.glb', ( gltf ) => {
+
+			const renderComponent = gltf.scene;
+			renderComponent.matrixAutoUpdate = false;
+			renderComponent.updateMatrix();
+
+			renderComponent.traverse( ( object ) => {
+
+				object.matrixAutoUpdate = false;
+				object.updateMatrix();
+
+			} );
+
+			models.set( 'assaultRifle_low', renderComponent );
 
 		} );
 

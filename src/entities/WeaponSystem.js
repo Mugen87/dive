@@ -709,9 +709,13 @@ class WeaponSystem {
 
 		// setup copy of blaster mesh
 
-		const blasterMesh = assetManager.models.get( 'blaster' ).clone();
+		let blasterMesh;
 
 		if ( this.owner.isPlayer === false ) {
+
+			// pick the low poly model for the enemies
+
+			blasterMesh = assetManager.models.get( 'blaster_low' ).clone();
 
 			blasterMesh.scale.set( 100, 100, 100 );
 			blasterMesh.rotation.set( Math.PI * 0.5, Math.PI, 0 );
@@ -724,6 +728,8 @@ class WeaponSystem {
 			rightHand.add( blasterMesh );
 
 		} else {
+
+			blasterMesh = assetManager.models.get( 'blaster_high' );
 
 			this.owner.world.scene.add( blasterMesh );
 
@@ -770,9 +776,13 @@ class WeaponSystem {
 
 		// setup copy of shotgun mesh
 
-		const shotgunMesh = assetManager.models.get( 'shotgun' ).clone();
+		let shotgunMesh;
 
 		if ( this.owner.isPlayer === false ) {
+
+			// pick the low poly model for the enemies
+
+			shotgunMesh = assetManager.models.get( 'shotgun_low' ).clone();
 
 			shotgunMesh.scale.set( 100, 100, 100 );
 			shotgunMesh.rotation.set( Math.PI * 0.5, Math.PI * 1.05, 0 );
@@ -785,6 +795,8 @@ class WeaponSystem {
 			rightHand.add( shotgunMesh );
 
 		} else {
+
+			shotgunMesh = assetManager.models.get( 'shotgun_high' );
 
 			this.owner.world.scene.add( shotgunMesh );
 
@@ -835,9 +847,13 @@ class WeaponSystem {
 
 		// setup copy of assault rifle mesh
 
-		const assaultRifleMesh = assetManager.models.get( 'assault-rifle' ).clone();
+		let assaultRifleMesh;
 
 		if ( this.owner.isPlayer === false ) {
+
+			// pick the low poly model for the enemies
+
+			assaultRifleMesh = assetManager.models.get( 'assaultRifle_low' ).clone();
 
 			assaultRifleMesh.scale.set( 100, 100, 100 );
 			assaultRifleMesh.rotation.set( Math.PI * 0.5, Math.PI * 1, 0 );
@@ -850,6 +866,8 @@ class WeaponSystem {
 			rightHand.add( assaultRifleMesh );
 
 		} else {
+
+			assaultRifleMesh = assetManager.models.get( 'assaultRifle_high' );
 
 			this.owner.world.scene.add( assaultRifleMesh );
 
