@@ -26,7 +26,6 @@ class NavMeshUtils {
 
 		const mesh = new Mesh( geometry, material );
 		mesh.matrixAutoUpdate = false;
-		mesh.renderOrder = 1;
 		mesh.visible = false;
 
 		const positions = [];
@@ -93,7 +92,6 @@ class NavMeshUtils {
 
 		const pathHelper = new Line( new BufferGeometry(), new LineBasicMaterial( { color: 0xff0000 } ) );
 		pathHelper.matrixAutoUpdate = false;
-		pathHelper.renderOrder = 3;
 		pathHelper.visible = false;
 		return pathHelper;
 
@@ -111,7 +109,6 @@ class NavMeshUtils {
 	static createGraphHelper( graph, nodeSize = 1, nodeColor = 0x4e84c4, edgeColor = 0xffffff ) {
 
 		const group = new Group();
-		group.renderOrder = 2;
 
 		// nodes
 
@@ -125,7 +122,6 @@ class NavMeshUtils {
 		for ( let node of nodes ) {
 
 			const nodeMesh = new Mesh( nodeGeometry, nodeMaterial );
-			nodeMesh.renderOrder = 2;
 			nodeMesh.position.copy( node.position );
 			nodeMesh.userData.nodeIndex = node.index;
 
@@ -164,7 +160,6 @@ class NavMeshUtils {
 		edgesGeometry.addAttribute( 'position', new Float32BufferAttribute( position, 3 ) );
 
 		const lines = new LineSegments( edgesGeometry, edgesMaterial );
-		lines.renderOrder = 2;
 		lines.matrixAutoUpdate = false;
 
 		group.add( lines );
