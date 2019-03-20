@@ -89,7 +89,7 @@ const CONFIG = {
 		MUZZLE_TIME: 0.04, // seconds
 		EQUIP_TIME: 1, // seconds
 		HIDE_TIME: 1, // seconds
-		SPREAD: 0.08, // unitless
+		SPREAD: 0.05, // unitless
 		BULLETS_PER_SHOT: 6 // number
 	},
 	ASSAULT_RIFLE: {
