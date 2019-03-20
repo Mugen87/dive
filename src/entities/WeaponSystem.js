@@ -713,7 +713,7 @@ class WeaponSystem {
 
 		if ( this.owner.isPlayer === false ) {
 
-			// pick the low poly model for the enemies
+			// pick the low resolution model for the enemies
 
 			blasterMesh = assetManager.models.get( 'blaster_low' ).clone();
 
@@ -780,7 +780,7 @@ class WeaponSystem {
 
 		if ( this.owner.isPlayer === false ) {
 
-			// pick the low poly model for the enemies
+			// pick the low resolution model for the enemies
 
 			shotgunMesh = assetManager.models.get( 'shotgun_low' ).clone();
 
@@ -851,7 +851,7 @@ class WeaponSystem {
 
 		if ( this.owner.isPlayer === false ) {
 
-			// pick the low poly model for the enemies
+			// pick the low resolution model for the enemies
 
 			assaultRifleMesh = assetManager.models.get( 'assaultRifle_low' ).clone();
 
