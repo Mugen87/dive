@@ -1,27 +1,27 @@
 import { Trigger } from '../lib/yuka.module.js';
 
 /**
-* Gives an entity health if it touches the trigger region.
+* Gives an entity an item if it touches the trigger region.
 *
 * @author {@link https://github.com/robp94|robp94}
 */
-class HealthGiver extends Trigger {
+class ItemGiver extends Trigger {
 
 	/**
 	* Constructs a new trigger with the given values.
 	*
 	* @param {TriggerRegion} region - The region of the trigger.
-	* @param {HealthPack} healthPack - The connected healthPack.
+	* @param {Item} item - The item.
 	*/
-	constructor( region, healthPack ) {
+	constructor( region, item ) {
 
 		super( region );
 
 		/**
-		* The healthPack of the trigger.
-		* @type {HealthPack}
+		* The item of the trigger.
+		* @type {Item}
 		*/
-		this.healthPack = healthPack;
+		this.item = item;
 
 	}
 
@@ -33,23 +33,23 @@ class HealthGiver extends Trigger {
 	*/
 	execute( entity ) {
 
-		const healthPack = this.healthPack;
+		const item = this.item;
 
 		// deactivate trigger since it's only executed once
 
 		this.active = false;
 
-		// add health points to entity
+		// add item to entity
 
-		entity.addHealth( healthPack.health );
+		item.addItemToEntity( entity );
 
 		// prepare respawn
 
-		healthPack.prepareRespawn();
+		item.prepareRespawn();
 
 		return this;
 
 	}
 
 }
-export { HealthGiver };
+export { ItemGiver };

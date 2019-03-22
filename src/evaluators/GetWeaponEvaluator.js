@@ -1,25 +1,26 @@
 import { GoalEvaluator, MathUtils } from '../lib/yuka.module.js';
 import { Feature } from '../core/Feature.js';
 import { GetItemGoal } from '../goals/GetItemGoal.js';
-import { HEALTH_PACK } from '../core/Constants.js';
 
 /**
 * Class for representing the explore goal.
 *
 * @author {@link https://github.com/robp94|robp94}
 */
-class GetHealthEvaluator extends GoalEvaluator {
+class GetWeaponEvaluator extends GoalEvaluator {
 
 	/**
-	* Constructs a new get health goal evaluator.
+	* Constructs a new get weapon goal evaluator.
 	*
 	* @param {Number} characterBias - Can be used to adjust the preferences of the enemy.
+	* @param {Number} weaponType - The weapon type.
 	*/
-	constructor( characterBias = 1 ) {
+	constructor( characterBias = 1, weaponType ) {
 
 		super( characterBias );
 
-		this.tweaker = 0.2; // value used to tweak the desirability
+		this.weaponType = weaponType;
+		this.tweaker = 0.15; // value used to tweak the desirability
 
 	}
 
@@ -34,12 +35,13 @@ class GetHealthEvaluator extends GoalEvaluator {
 
 		let desirability = 0;
 
-		if ( owner.health < owner.maxHealth && owner.world.isItemAvailable( HEALTH_PACK ) ) {
+		if ( owner.world.isItemAvailable( this.weaponType ) === true ) {
 
-			const distanceScore = Feature.distanceToItem( owner, HEALTH_PACK );
+			const distanceScore = Feature.distanceToItem( owner, this.weaponType );
+			const weaponScore = Feature.individualWeaponStrength( owner, this.weaponType );
 			const healthScore = Feature.health( owner );
 
-			desirability = this.tweaker * ( 1 - healthScore ) / distanceScore;
+			desirability = this.tweaker * ( 1 - weaponScore ) * healthScore / distanceScore;
 
 			desirability = MathUtils.clamp( desirability, 0, 1 );
 
@@ -62,7 +64,7 @@ class GetHealthEvaluator extends GoalEvaluator {
 
 			owner.brain.clearSubgoals();
 
-			owner.brain.addSubgoal( new GetItemGoal( owner, HEALTH_PACK ) );
+			owner.brain.addSubgoal( new GetItemGoal( owner, this.weaponType ) );
 
 		}
 
@@ -70,4 +72,4 @@ class GetHealthEvaluator extends GoalEvaluator {
 
 }
 
-export { GetHealthEvaluator };
+export { GetWeaponEvaluator };

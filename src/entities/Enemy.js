@@ -1,5 +1,5 @@
 import { Vehicle, Regulator, Think, FollowPathBehavior, OnPathBehavior, SeekBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, MathUtils } from '../lib/yuka.module.js';
-import { MESSAGE_HIT, MESSAGE_DEAD, STATUS_ALIVE, STATUS_DYING, STATUS_DEAD } from '../core/Constants.js';
+import { MESSAGE_HIT, MESSAGE_DEAD, STATUS_ALIVE, STATUS_DYING, STATUS_DEAD, WEAPON_TYPES_ASSAULT_RIFLE, WEAPON_TYPES_SHOTGUN } from '../core/Constants.js';
 import { AttackEvaluator } from '../evaluators/AttackEvaluator.js';
 import { ExploreEvaluator } from '../evaluators/ExploreEvaluator.js';
 import { CharacterBounds } from './CharacterBounds.js';
@@ -7,6 +7,7 @@ import { WeaponSystem } from './WeaponSystem.js';
 import { TargetSystem } from './TargetSystem.js';
 import { CONFIG } from '../core/Config.js';
 import { GetHealthEvaluator } from '../evaluators/GetHealthEvaluator.js';
+import { GetWeaponEvaluator } from '../evaluators/GetWeaponEvaluator.js';
 
 const positiveWeightings = new Array();
 const weightings = [ 0, 0, 0, 0 ];
@@ -98,6 +99,9 @@ class Enemy extends Vehicle {
 		this.brain.addEvaluator( new AttackEvaluator() );
 		this.brain.addEvaluator( new ExploreEvaluator() );
 		this.brain.addEvaluator( new GetHealthEvaluator() );
+		this.brain.addEvaluator( new GetWeaponEvaluator( 1, WEAPON_TYPES_ASSAULT_RIFLE ) );
+		this.brain.addEvaluator( new GetWeaponEvaluator( 1, WEAPON_TYPES_SHOTGUN ) );
+
 
 		this.goalArbitrationRegulator = new Regulator( CONFIG.BOT.GOAL.UPDATE_FREQUENCY );
 

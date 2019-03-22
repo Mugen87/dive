@@ -353,11 +353,19 @@ function onKeyDown( event ) {
 				break;
 
 			case 50: // 2
-				this.owner.changeWeapon( WEAPON_TYPES_SHOTGUN );
+				if ( this.owner.hasWeapon( WEAPON_TYPES_SHOTGUN ) ) {
+
+					this.owner.changeWeapon( WEAPON_TYPES_SHOTGUN );
+
+				}
 				break;
 
 			case 51: // 3
-				this.owner.changeWeapon( WEAPON_TYPES_ASSAULT_RIFLE );
+				if ( this.owner.hasWeapon( WEAPON_TYPES_ASSAULT_RIFLE ) ) {
+
+					this.owner.changeWeapon( WEAPON_TYPES_ASSAULT_RIFLE );
+
+				}
 				break;
 
 		}

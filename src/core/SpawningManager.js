@@ -1,9 +1,10 @@
 import { SphericalTriggerRegion, Vector3 } from '../lib/yuka.module.js';
 import { HealthPack } from '../entities/HealthPack.js';
-import { HealthGiver } from '../triggers/HealthGiver.js';
-import { CONFIG } from './Config.js';
+import { ItemGiver } from '../triggers/ItemGiver.js';
 import { SceneUtils } from '../etc/SceneUtils.js';
-import { ITEM_HEALTH_PACK } from './Constants.js';
+import { HEALTH_PACK, WEAPON_TYPES_ASSAULT_RIFLE, WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN } from './Constants.js';
+import { WeaponItem } from '../entities/WeaponItem.js';
+import { CONFIG } from './Config.js';
 
 /**
 * This class is responsible for (re)spawning enemies.
@@ -28,12 +29,28 @@ class SpawningManager {
 		this.spawningPoints.push( new Vector3( - 40, 0, 15 ) );
 		this.spawningPoints.push( new Vector3( - 30, 0, - 25 ) );
 
+		//items
+
+		this.itemTriggerMap = new Map(); // for mapping item -> trigger
+
 		// health packs
 
 		this.healthPacks = new Array();
 		this.healthPackSpawningPoints = new Array();
 		this.healthPackSpawningPoints.push( new Vector3( - 40, 0, 0 ) );
-		this.healthPackTriggerMap = new Map(); // for mapping healthPack -> trigger
+
+		// weapons
+
+		this.assaultRilflesSpawningPoints = new Array();
+		this.assaultRilflesSpawningPoints.push( new Vector3( - 41, 0, 5 ) );
+		this.assaultRilfles = new Array();
+
+		this.shotgunSpawningPoints = new Array();
+		this.shotgunSpawningPoints.push( new Vector3( 1, 0, 5 ) );
+		this.shotguns = new Array();
+
+		this.blasterSpawningPoints = new Array();
+		this.blasters = new Array();
 
 	}
 
@@ -45,21 +62,41 @@ class SpawningManager {
 	*/
 	update( delta ) {
 
-		const healthPacks = this.healthPacks;
+		this.updateItemList( this.healthPacks, delta );
+		this.updateItemList( this.blasters, delta );
+		this.updateItemList( this.shotguns, delta );
+		this.updateItemList( this.assaultRilfles, delta );
 
-		for ( let i = 0, il = healthPacks.length; i < il; i ++ ) {
+		return this;
 
-			const healthPack = healthPacks[ i ];
+	}
 
-			healthPack.currentTime += delta;
+	/**
+	* Updates the given item list.
+	*
+	* @param {Array} itemsList - A list of items.
+	* @param {Number} delta - The time delta.
+	* @return {SpawningManager} A reference to this spawning manager.
+	*/
+	updateItemList( itemsList, delta ) {
 
-			if ( healthPack.currentTime >= healthPack.nextSpawnTime ) {
+		// check if a respawn is necessary
 
-				this._respawnHealthPack( healthPack );
+		for ( let i = 0, il = itemsList.length; i < il; i ++ ) {
+
+			const item = itemsList[ i ];
+
+			item.currentTime += delta;
+
+			if ( item.currentTime >= item.nextSpawnTime ) {
+
+				this._respawnItem( item );
 
 			}
 
 		}
+
+		return this;
 
 	}
 
@@ -75,8 +112,20 @@ class SpawningManager {
 
 		switch ( type ) {
 
-			case ITEM_HEALTH_PACK:
+			case HEALTH_PACK:
 				itemList = this.healthPacks;
+				break;
+
+			case WEAPON_TYPES_BLASTER:
+				itemList = this.blasters;
+				break;
+
+			case WEAPON_TYPES_SHOTGUN:
+				itemList = this.shotguns;
+				break;
+
+			case WEAPON_TYPES_ASSAULT_RIFLE:
+				itemList = this.assaultRilfles;
 				break;
 
 			default:
@@ -163,7 +212,21 @@ class SpawningManager {
 	}
 
 	/**
-	* Inits the health packs.
+	* Inits the collectable items of the game.
+	*
+	* @return {SpawningManager} A reference to this spawning manager.
+	*/
+	initItems() {
+
+		this.initHealthPacks();
+		this.initWeapons();
+
+		return this;
+
+	}
+
+	/**
+	* Inits the collectable health packs.
 	*
 	* @return {SpawningManager} A reference to this spawning manager.
 	*/
@@ -191,44 +254,134 @@ class SpawningManager {
 
 			// trigger
 
-			const sphericalTriggerRegion = new SphericalTriggerRegion();
-			sphericalTriggerRegion.position.copy( spawningPoint );
-			sphericalTriggerRegion.radius = CONFIG.HEALTH_PACK.RADIUS;
-
-			const trigger = new HealthGiver( sphericalTriggerRegion, healthPack );
-			this.world.entityManager.addTrigger( trigger );
-			this.healthPackTriggerMap.set( healthPack, trigger );
-
-			// debugging
-
-			if ( this.world.debug ) {
-
-				const triggerHelper = SceneUtils.createTriggerHelper( trigger );
-
-				this.world.helpers.itemHelpers.push( triggerHelper );
-				this.world.scene.add( triggerHelper );
-
-			}
+			this.createTrigger( healthPack, CONFIG.HEALTH_PACK.RADIUS );
 
 		}
+
+		return this;
 
 	}
 
 	/**
-	* Respawns the given health packs.
+	* Inits the collectable weapons.
 	*
 	* @return {SpawningManager} A reference to this spawning manager.
 	*/
-	_respawnHealthPack( healthPack ) {
+	initWeapons() {
+
+		const assetManager = this.world.assetManager;
+
+		for ( let spawningPoint of this.blasterSpawningPoints ) {
+
+			// blaster item
+
+			const blasterItem = new WeaponItem( WEAPON_TYPES_BLASTER, CONFIG.BLASTER.RESPAWN_TIME, CONFIG.BLASTER.AMMO );
+			blasterItem.position.copy( spawningPoint );
+
+			const renderComponent = assetManager.models.get( 'blasterItem' ).clone();
+			renderComponent.position.copy( blasterItem.position );
+			blasterItem.setRenderComponent( renderComponent, sync );
+
+			this.blasters.push( blasterItem );
+			this.world.add( blasterItem );
+
+			// trigger
+
+			this.createTrigger( blasterItem, CONFIG.BLASTER.RADIUS );
+
+		}
+
+		for ( let spawningPoint of this.shotgunSpawningPoints ) {
+
+			// shotgun item
+
+			const shotgunItem = new WeaponItem( WEAPON_TYPES_SHOTGUN, CONFIG.SHOTGUN.RESPAWN_TIME, CONFIG.SHOTGUN.AMMO );
+			shotgunItem.position.copy( spawningPoint );
+
+			const renderComponent = assetManager.models.get( 'shotgunItem' ).clone();
+			renderComponent.position.copy( shotgunItem.position );
+			shotgunItem.setRenderComponent( renderComponent, sync );
+
+			this.shotguns.push( shotgunItem );
+			this.world.add( shotgunItem );
+
+			// trigger
+
+			this.createTrigger( shotgunItem, CONFIG.SHOTGUN.RADIUS );
+
+		}
+
+		for ( let spawningPoint of this.assaultRilflesSpawningPoints ) {
+
+			// assault rifle item
+
+			const assaultRilfleItem = new WeaponItem( WEAPON_TYPES_ASSAULT_RIFLE, CONFIG.ASSAULT_RIFLE.RESPAWN_TIME, CONFIG.ASSAULT_RIFLE.AMMO );
+			assaultRilfleItem.position.copy( spawningPoint );
+
+			const renderComponent = assetManager.models.get( 'assaultRifleItem' ).clone();
+			renderComponent.position.copy( assaultRilfleItem.position );
+			assaultRilfleItem.setRenderComponent( renderComponent, sync );
+
+			this.assaultRilfles.push( assaultRilfleItem );
+			this.world.add( assaultRilfleItem );
+
+			// trigger
+
+			this.createTrigger( assaultRilfleItem, CONFIG.ASSAULT_RIFLE.RADIUS );
+
+		}
+
+		return this;
+
+	}
+
+	/**
+	* Creates a trigger for the given item.
+	*
+	* @param {Item} item - The collectable item.
+	* @param {Number} radius - The radius of the trigger.
+	* @return {SpawningManager} A reference to this spawning manager.
+	*/
+	createTrigger( item, radius ) {
+
+		const sphericalTriggerRegion = new SphericalTriggerRegion();
+		sphericalTriggerRegion.position.copy( item.position );
+		sphericalTriggerRegion.radius = radius;
+
+		const trigger = new ItemGiver( sphericalTriggerRegion, item );
+		this.world.entityManager.addTrigger( trigger );
+		this.itemTriggerMap.set( item, trigger );
+
+		// debugging
+
+		if ( this.world.debug ) {
+
+			const triggerHelper = SceneUtils.createTriggerHelper( trigger );
+
+			this.world.helpers.itemHelpers.push( triggerHelper );
+			this.world.scene.add( triggerHelper );
+
+		}
+
+		return this;
+
+	}
+
+	/**
+	* Respawns the given item.
+	*
+	* @return {SpawningManager} A reference to this spawning manager.
+	*/
+	_respawnItem( item ) {
 
 		// reactivate trigger
 
-		const trigger = this.healthPackTriggerMap.get( healthPack );
+		const trigger = this.itemTriggerMap.get( item );
 		trigger.active = true;
 
-		// reactivate health pack
+		// reactivate item
 
-		healthPack.finishRespawn();
+		item.finishRespawn();
 
 		return this;
 

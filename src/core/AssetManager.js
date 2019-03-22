@@ -466,6 +466,35 @@ class AssetManager {
 
 		models.set( 'healthPack', healthPack );
 
+		// weapon items
+
+		const weaponGeometry = new BoxBufferGeometry( 0.5, 0.5, 0.5 );
+		weaponGeometry.translate( 0, 0.25, 0 );
+		const blasterItemMaterial = new MeshBasicMaterial( { color: 0x000000 } );
+
+		const blasterItem = new Mesh( healthPackGeometry, blasterItemMaterial );
+		blasterItem.matrixAutoUpdate = false;
+
+		models.set( 'blasterItem', blasterItem );
+
+		//
+
+		const shotgunItemMaterial = new MeshBasicMaterial( { color: 0xff0000 } );
+
+		const shotgunItem = new Mesh( healthPackGeometry, shotgunItemMaterial );
+		shotgunItem.matrixAutoUpdate = false;
+
+		models.set( 'shotgunItem', shotgunItem );
+
+		//
+
+		const assaultRifleItemMaterial = new MeshBasicMaterial( { color: 0xffff00 } );
+
+		const assaultRifleItem = new Mesh( weaponGeometry, assaultRifleItemMaterial );
+		assaultRifleItem.matrixAutoUpdate = false;
+
+		models.set( 'assaultRifleItem', assaultRifleItem );
+
 		return this;
 
 	}

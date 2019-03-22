@@ -260,6 +260,18 @@ class Player extends MovingEntity {
 	}
 
 	/**
+	* Returns true if the player has a weapon of the given type.
+	*
+	* @param {WEAPON_TYPES} type - The weapon type.
+	* @return {Boolean} Whether the player has a weapon of the given type or not.
+	*/
+	hasWeapon( type ) {
+
+		return this.weaponSystem.getWeapon( type ) !== null;
+
+	}
+
+	/**
 	* Indicates if the player does currently use an automatic weapon.
 	*
 	* @return {Boolean} Whether an automatic weapon is used or not.

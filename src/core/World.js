@@ -262,7 +262,7 @@ class World {
 
 		let itemList = this.spawningManager.getItemList( itemType );
 
-		// determine clostest item
+		// determine closest item
 
 		let closestItem = null;
 		let minDistance = Infinity;
@@ -455,7 +455,7 @@ class World {
 
 		}
 
-		this.spawningManager.initHealthPacks();
+		this.spawningManager.initItems();
 
 		return this;
 

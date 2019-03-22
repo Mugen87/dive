@@ -15,13 +15,14 @@ class GetItemGoal extends CompositeGoal {
 	*
 	* @param owner - The owner of this goal.
 	* @param itemType - The type of the item.
+	* @param item - The exact item to get.
 	*/
-	constructor( owner, itemType ) {
+	constructor( owner, itemType, item = null ) {
 
 		super( owner );
 
 		this.itemType = itemType;
-		this.item = null;
+		this.item = item;
 
 	}
 

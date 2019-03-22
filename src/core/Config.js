@@ -63,7 +63,9 @@ const CONFIG = {
 		HEAD_HEIGHT: 1.5, // meter
 		MAX_HEALTH: 100, // health points
 		DYING_TIME: 3, // seconds
-		SEARCH_FOR_ATTACKER_TIME: 3 // seconds
+		SEARCH_FOR_ATTACKER_TIME: 3, // seconds
+		MIN_ITEM_RANGE: 2, // meter
+		MAX_ITEM_RANGE: 25 // meter
 	},
 	BLASTER: {
 		ROUNDS_LEFT: 12, // number
@@ -76,6 +78,8 @@ const CONFIG = {
 		EQUIP_TIME: 0.5, // seconds
 		HIDE_TIME: 0.5, // seconds
 		SPREAD: 0.01, // unitless
+		RESPAWN_TIME: 10, // seconds
+		RADIUS: 0.5, // world units
 
 	},
 	SHOTGUN: {
@@ -90,7 +94,10 @@ const CONFIG = {
 		EQUIP_TIME: 1, // seconds
 		HIDE_TIME: 1, // seconds
 		SPREAD: 0.05, // unitless
-		BULLETS_PER_SHOT: 6 // number
+		BULLETS_PER_SHOT: 6, // number
+		RESPAWN_TIME: 10, // seconds
+		RADIUS: 0.5, // world units
+
 	},
 	ASSAULT_RIFLE: {
 		ROUNDS_LEFT: 30, // number
@@ -103,6 +110,8 @@ const CONFIG = {
 		EQUIP_TIME: 1, // seconds
 		HIDE_TIME: 1, // seconds
 		SPREAD: 0.01, // unitless
+		RESPAWN_TIME: 10, // seconds
+		RADIUS: 0.5, // world units
 
 	},
 	BULLET: {

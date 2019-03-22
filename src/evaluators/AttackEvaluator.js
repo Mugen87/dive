@@ -18,6 +18,8 @@ class AttackEvaluator extends GoalEvaluator {
 
 		super( characterBias );
 
+		this.tweaker = 1; // value used to tweak the desirability
+
 	}
 
 	/**
@@ -33,11 +35,7 @@ class AttackEvaluator extends GoalEvaluator {
 
 		if ( owner.targetSystem.hasTarget() ) {
 
-			desirability = Feature.totalWeaponStrength( owner ) * Feature.health( owner );
-
-			// TODO: set desirability to 1 for testing
-
-			desirability = 1;
+			desirability = this.tweaker * Feature.totalWeaponStrength( owner ) * Feature.health( owner );
 
 		}
 

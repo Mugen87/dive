@@ -140,8 +140,6 @@ class WeaponSystem {
 		// add weapons to inventory
 
 		this.addWeapon( WEAPON_TYPES_BLASTER );
-		this.addWeapon( WEAPON_TYPES_SHOTGUN );
-		this.addWeapon( WEAPON_TYPES_ASSAULT_RIFLE );
 
 		// change to initial weapon
 
@@ -391,6 +389,18 @@ class WeaponSystem {
 	}
 
 	/**
+	* Returns the weapon of the given type. If no weapon is present, null is returned.
+	*
+	* @param {WEAPON_TYPES} type - The weapon type.
+	* @return {Weapon} A weapon.
+	*/
+	getWeapon( type ) {
+
+		return this.weaponsMap.get( type );
+
+	}
+
+	/**
 	* Ensures that the current equiped weapon is rendered.
 	*
 	* @return {WeaponSystem} A reference to this weapon system.
@@ -424,7 +434,7 @@ class WeaponSystem {
 	}
 
 	/**
-	* Ensures that the current equiped weapon is not rendered.
+	* Ensures that the current equipped weapon is not rendered.
 	*
 	* @return {WeaponSystem} A reference to this weapon system.
 	*/

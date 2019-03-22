@@ -1,23 +1,20 @@
 import { CONFIG } from '../core/Config.js';
-import { GameEntity } from '../lib/yuka.module.js';
+import { Item } from './Item.js';
+import { HEALTH_PACK } from '../core/Constants.js';
 
 /**
-* A game entity which represents a health pack.
+* A game entity which represents a collectable health pack.
 *
 * @author {@link https://github.com/robp94|robp94}
 */
-class HealthPack extends GameEntity {
+class HealthPack extends Item {
 
 	/**
 	* Constructs a new health pack.
-	*
-	* @param {World} world - A reference to the world.
 	*/
 	constructor() {
 
-		super();
-
-		this.canAcitivateTrigger = false;
+		super( HEALTH_PACK, CONFIG.HEALTH_PACK.RESPAWN_TIME );
 
 		/**
 		* The amount of health which the health pack gives when it's collected.
@@ -25,60 +22,17 @@ class HealthPack extends GameEntity {
 		*/
 		this.health = CONFIG.HEALTH_PACK.HEALTH;
 
-		/**
-		* The current time.
-		* @type {Number}
-		*/
-		this.currentTime = 0;
-
-		/**
-		* The time for the next respawn of this entity.
-		* @type {Number}
-		*/
-		this.nextSpawnTime = Infinity;
-
-		//
-
-		this._audio = null;
-
 	}
 
 	/**
-	* Prepares the respawn of this health pack.
+	* Adds the health to the given entity.
 	*
-	* @return {HealthPack} A reference to this game entity.
+	* @param {GameEntity} entity - The entity that receives this item.
+	* @return {HealthPack} A reference to this item.
 	*/
-	prepareRespawn() {
+	addItemToEntity( entity ) {
 
-		this.active = false;
-		this._renderComponent.visible = false;
-
-		//
-
-		const audio = this.audio;
-
-		if ( audio.isPlaying === true ) audio.stop();
-		audio.play();
-
-		//
-
-		this.nextSpawnTime = this.currentTime + CONFIG.HEALTH_PACK.RESPAWN_TIME;
-
-		return this;
-
-	}
-
-	/**
-	* Finishes the respawn of this health pack.
-	*
-	* @return {HealthPack} A reference to this game entity.
-	*/
-	finishRespawn() {
-
-		this.active = true;
-		this._renderComponent.visible = true;
-
-		this.nextSpawnTime = Infinity;
+		entity.addHealth( this.health ); // we assume .addHealth() is implemented by the game entity
 
 		return this;
 
