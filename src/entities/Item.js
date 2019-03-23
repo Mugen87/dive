@@ -9,7 +9,6 @@ class Item extends GameEntity {
 
 	/**
 	* Constructs a new item.
-	*
 	*/
 	constructor( itemType, respawnTime ) {
 
@@ -22,6 +21,8 @@ class Item extends GameEntity {
 		this.respawnTime = respawnTime;
 
 		this.type = itemType;
+
+		this.currentRegion = null;
 
 		//
 

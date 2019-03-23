@@ -1,4 +1,4 @@
-import { EntityManager, Time, MeshGeometry, Vector3 } from '../lib/yuka.module.js';
+import { EntityManager, Time, MeshGeometry, Vector3, CostTable } from '../lib/yuka.module.js';
 import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer, Object3D, SkeletonHelper } from '../lib/three.module.js';
 import { HemisphereLight, DirectionalLight } from '../lib/three.module.js';
 import { AxesHelper } from '../lib/three.module.js';
@@ -38,6 +38,7 @@ class World {
 
 		this.assetManager = new AssetManager();
 		this.navMesh = null;
+		this.costTable = null;
 		this.pathPlanner = null;
 		this.spawningManager = new SpawningManager( this );
 		this.uiManager = new UIManager( this );
@@ -94,7 +95,6 @@ class World {
 
 			this._initScene();
 			this._initLevel();
-			this._initNavMesh();
 			this._initEnemies();
 			this._initPlayer();
 			this._initControls();
@@ -275,9 +275,15 @@ class World {
 
 			if ( item.active ) {
 
-				// consider to use path finding here and then compute the length of the path
+				const fromRegion = entity.currentRegion;
+				const toRegion = item.currentRegion;
 
-				const distance = entity.position.squaredDistanceTo( item.position );
+				const from = this.navMesh.getNodeIndex( fromRegion );
+				const to = this.navMesh.getNodeIndex( toRegion );
+
+				// use lookup table to find the distance between two nodes
+
+				const distance = this.costTable.get( from, to );
 
 				if ( distance < minDistance ) {
 
@@ -433,6 +439,8 @@ class World {
 	*/
 	_initLevel() {
 
+		// level entity
+
 		const renderComponent = this.assetManager.models.get( 'level' );
 		const mesh = renderComponent.getObjectByName( 'level' );
 
@@ -446,7 +454,29 @@ class World {
 
 		this.add( level );
 
+		// navigation mesh
+
+		this.navMesh = this.assetManager.navMesh;
+
+		this.costTable = new CostTable();
+		this.costTable.init( this.navMesh );
+
+		// spawning points
+
+		this.spawningManager.initItems();
+
+		//
+
 		if ( this.debug ) {
+
+			this.helpers.convexRegionHelper = NavMeshUtils.createConvexRegionHelper( this.navMesh );
+			this.scene.add( this.helpers.convexRegionHelper );
+
+			//
+
+			this.helpers.graphHelper = NavMeshUtils.createGraphHelper( this.navMesh.graph, 0.2 );
+			this.helpers.graphHelper.visible = false;
+			this.scene.add( this.helpers.graphHelper );
 
 			//
 
@@ -454,8 +484,6 @@ class World {
 			this.scene.add( this.helpers.spawnHelpers );
 
 		}
-
-		this.spawningManager.initItems();
 
 		return this;
 
@@ -536,32 +564,6 @@ class World {
 		//
 
 		this.player = player;
-
-		return this;
-
-	}
-
-	/**
-	* Inits the navigation mesh.
-	*
-	* @return {World} A reference to this world object.
-	*/
-	_initNavMesh() {
-
-		this.navMesh = this.assetManager.navMesh;
-
-		if ( this.debug ) {
-
-			this.helpers.convexRegionHelper = NavMeshUtils.createConvexRegionHelper( this.navMesh );
-			this.scene.add( this.helpers.convexRegionHelper );
-
-			//
-
-			this.helpers.graphHelper = NavMeshUtils.createGraphHelper( this.navMesh.graph, 0.2 );
-			this.helpers.graphHelper.visible = false;
-			this.scene.add( this.helpers.graphHelper );
-
-		}
 
 		return this;
 

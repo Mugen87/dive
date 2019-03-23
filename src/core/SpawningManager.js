@@ -232,7 +232,8 @@ class SpawningManager {
 	*/
 	initHealthPacks() {
 
-		const assetManager = this.world.assetManager;
+		const world = this.world;
+		const assetManager = world.assetManager;
 
 		for ( let spawningPoint of this.healthPackSpawningPoints ) {
 
@@ -241,12 +242,18 @@ class SpawningManager {
 			const healthPack = new HealthPack();
 			healthPack.position.copy( spawningPoint );
 
-			const renderComponent = this.world.assetManager.models.get( 'healthPack' ).clone();
+			const renderComponent = world.assetManager.models.get( 'healthPack' ).clone();
 			renderComponent.position.copy( healthPack.position );
 			healthPack.setRenderComponent( renderComponent, sync );
 
 			this.healthPacks.push( healthPack );
-			this.world.add( healthPack );
+			world.add( healthPack );
+
+			// navigation
+
+			healthPack.currentRegion = world.navMesh.getRegionForPoint( healthPack.position );
+
+			// audio
 
 			const audio = assetManager.cloneAudio( assetManager.audios.get( 'health' ) );
 			healthPack.audio = audio;
@@ -269,7 +276,8 @@ class SpawningManager {
 	*/
 	initWeapons() {
 
-		const assetManager = this.world.assetManager;
+		const world = this.world;
+		const assetManager = world.assetManager;
 
 		for ( let spawningPoint of this.blasterSpawningPoints ) {
 
@@ -283,7 +291,11 @@ class SpawningManager {
 			blasterItem.setRenderComponent( renderComponent, sync );
 
 			this.blasters.push( blasterItem );
-			this.world.add( blasterItem );
+			world.add( blasterItem );
+
+			// navigation
+
+			blasterItem.currentRegion = world.navMesh.getRegionForPoint( blasterItem.position );
 
 			// trigger
 
@@ -303,7 +315,11 @@ class SpawningManager {
 			shotgunItem.setRenderComponent( renderComponent, sync );
 
 			this.shotguns.push( shotgunItem );
-			this.world.add( shotgunItem );
+			world.add( shotgunItem );
+
+			// navigation
+
+			shotgunItem.currentRegion = world.navMesh.getRegionForPoint( shotgunItem.position );
 
 			// trigger
 
@@ -324,6 +340,10 @@ class SpawningManager {
 
 			this.assaultRilfles.push( assaultRilfleItem );
 			this.world.add( assaultRilfleItem );
+
+			// navigation
+
+			assaultRilfleItem.currentRegion = world.navMesh.getRegionForPoint( assaultRilfleItem.position );
 
 			// trigger
 
