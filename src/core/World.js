@@ -457,9 +457,7 @@ class World {
 		// navigation mesh
 
 		this.navMesh = this.assetManager.navMesh;
-
-		this.costTable = new CostTable();
-		this.costTable.init( this.navMesh );
+		this.costTable = this.assetManager.costTable;
 
 		// spawning points
 

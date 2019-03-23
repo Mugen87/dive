@@ -2,7 +2,7 @@ import { LoadingManager, AnimationLoader, AudioLoader, TextureLoader, Mesh } fro
 import { Sprite, SpriteMaterial, DoubleSide, AudioListener, PositionalAudio } from '../lib/three.module.js';
 import { LineSegments, LineBasicMaterial, MeshBasicMaterial, BufferGeometry, Vector3, PlaneBufferGeometry, BoxBufferGeometry } from '../lib/three.module.js';
 import { GLTFLoader } from '../lib/GLTFLoader.module.js';
-import { NavMeshLoader } from '../lib/yuka.module.js';
+import { NavMeshLoader, CostTable } from '../lib/yuka.module.js';
 import { CONFIG } from './Config.js';
 
 /**
@@ -35,6 +35,7 @@ class AssetManager {
 		this.textures = new Map();
 
 		this.navMesh = null;
+		this.costTable = null;
 
 	}
 
@@ -551,6 +552,25 @@ class AssetManager {
 			loadingManager.itemEnd( 'navmesh' );
 
 		} );
+
+		//
+
+		loadingManager.itemStart( 'costTable' );
+
+		fetch( './navmeshes/costTable.json' )
+			.then( response => {
+
+				return response.json();
+
+			} )
+			.then( json => {
+
+				this.costTable = new CostTable().fromJSON( json );
+
+				loadingManager.itemEnd( 'costTable' );
+
+			} );
+
 
 		return this;
 
