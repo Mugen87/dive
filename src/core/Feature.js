@@ -2,8 +2,7 @@ import { CONFIG } from './Config.js';
 import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE } from './Constants.js';
 import { MathUtils } from '../lib/yuka.module.js';
 
-const minDistance = CONFIG.BOT.MIN_ITEM_RANGE * CONFIG.BOT.MIN_ITEM_RANGE;
-const maxDistance = CONFIG.BOT.MAX_ITEM_RANGE * CONFIG.BOT.MAX_ITEM_RANGE;
+const result = { distance: Infinity, item: null };
 
 /**
 * Class for calculating influencing factors in context of inference logic.
@@ -74,15 +73,15 @@ class Feature {
 
 		let score = 1;
 
-		const item = enemy.world.getClosestItem( enemy, itemType );
+		enemy.world.getClosestItem( enemy, itemType, result );
 
-		if ( item ) {
+		if ( result.item ) {
 
-			let distance = enemy.position.squaredDistanceTo( item.position );
+			let distance = result.distance;
 
-			distance = MathUtils.clamp( distance, minDistance, maxDistance );
+			distance = MathUtils.clamp( distance, CONFIG.BOT.MIN_ITEM_RANGE, CONFIG.BOT.MAX_ITEM_RANGE );
 
-			score = distance / maxDistance;
+			score = distance / CONFIG.BOT.MAX_ITEM_RANGE;
 
 		}
 

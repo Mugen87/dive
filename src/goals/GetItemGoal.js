@@ -3,6 +3,8 @@ import { CompositeGoal, Vector3, Goal } from '../lib/yuka.module.js';
 import { FindPathGoal } from './FindPathGoal.js';
 import { FollowPathGoal } from './FollowPathGoal.js';
 
+const result = { distance: Infinity, item: null };
+
 /**
 * Goal to get an item of the given item type.
 *
@@ -36,7 +38,9 @@ class GetItemGoal extends CompositeGoal {
 
 		// get closest item of the given type
 
-		this.item = owner.world.getClosestItem( owner, this.itemType );
+		owner.world.getClosestItem( owner, this.itemType, result );
+
+		this.item = result.item;
 
 		if ( this.item ) {
 

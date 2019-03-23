@@ -254,9 +254,10 @@ class World {
 	*
 	* @param {GameEntity} entity - The entity which searches for the item.
 	* @param {Number} itemType - The requested item type.
-	* @return {Vector3} - The closest item or null (if no item was found).
+	* @param {Object} result - The result object containing the item and the distance to it.
+	* @return {Object} - The result object containing the item and the distance to it.
 	*/
-	getClosestItem( entity, itemType ) {
+	getClosestItem( entity, itemType, result ) {
 
 		// pick correct item list
 
@@ -296,7 +297,12 @@ class World {
 
 		}
 
-		return closestItem;
+		//
+
+		result.item = closestItem;
+		result.distance = minDistance;
+
+		return result;
 
 	}
 
