@@ -30,6 +30,9 @@ body {
 	opacity: 0.5;
 	width: 32px;
 }
+#health {
+	width: 64px;
+}
 .ui-container {
 	background-color: #282828;
 	font-size: 28px;
