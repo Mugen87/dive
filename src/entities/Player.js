@@ -397,6 +397,24 @@ class Player extends MovingEntity {
 
 	}
 
+	/*
+	* Adds the given weapon to the internal weapon system.
+	*
+	* @param {Weapon} weapon - The weapon to add.
+	* @return {Player} A reference to this game entity.
+	*/
+	addWeapon( weapon ) {
+
+		this.weaponSystem.addWeapon( weapon );
+
+		// if the entity already has the weapon, increase the ammo
+
+		this.world.uiManager.updateAmmoStatus();
+
+		return this;
+
+	}
+
 	/**
 	* Sets the animations of this game entity by creating a
 	* series of animation actions.

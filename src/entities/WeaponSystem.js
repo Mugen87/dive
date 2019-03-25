@@ -140,6 +140,8 @@ class WeaponSystem {
 		// add weapons to inventory
 
 		this.addWeapon( WEAPON_TYPES_BLASTER );
+		this.addWeapon( WEAPON_TYPES_SHOTGUN );
+		this.addWeapon( WEAPON_TYPES_ASSAULT_RIFLE );
 
 		// change to initial weapon
 

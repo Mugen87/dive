@@ -460,6 +460,33 @@ class Enemy extends Vehicle {
 
 	}
 
+	/*
+	* Adds the given weapon to the internal weapon system.
+	*
+	* @param {Weapon} weapon - The weapon to add.
+	* @return {Enemy} A reference to this game entity.
+	*/
+	addWeapon( weapon ) {
+
+		this.weaponSystem.addWeapon( weapon );
+
+		// if the entity already has the weapon, increase the ammo
+
+		this.world.uiManager.updateAmmoStatus();
+
+		// bots should directly switch to collected weapons if they have
+		// no current target
+
+		if ( this.targetSystem.hasTarget() === false ) {
+
+			this.weaponSystem.setNextWeapon( this.type );
+
+		}
+
+		return this;
+
+	}
+
 	/**
 	* Sets the animations of this game entity by creating a
 	* series of animation actions.

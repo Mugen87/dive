@@ -34,18 +34,7 @@ class WeaponItem extends Item {
 	*/
 	addItemToEntity( entity ) {
 
-		// we assume .addWeapon() is implemented by the game entity
-
-		entity.weaponSystem.addWeapon( this.type );
-
-		// bots should directly switch to collected weapons if they have
-		// no current target
-
-		if ( entity.isPlayer === false && entity.targetSystem.hasTarget() === false ) {
-
-			entity.weaponSystem.setNextWeapon( this.type );
-
-		}
+		entity.addWeapon( this.type ); // we assume .addWeapon() is implemented by the game entity
 
 		return this;
 
