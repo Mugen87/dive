@@ -463,12 +463,12 @@ class Enemy extends Vehicle {
 	/*
 	* Adds the given weapon to the internal weapon system.
 	*
-	* @param {Weapon} weapon - The weapon to add.
+	* @param {WEAPON_TYPES} type - The weapon type.
 	* @return {Enemy} A reference to this game entity.
 	*/
-	addWeapon( weapon ) {
+	addWeapon( type ) {
 
-		this.weaponSystem.addWeapon( weapon );
+		this.weaponSystem.addWeapon( type );
 
 		// if the entity already has the weapon, increase the ammo
 
@@ -479,7 +479,7 @@ class Enemy extends Vehicle {
 
 		if ( this.targetSystem.hasTarget() === false ) {
 
-			this.weaponSystem.setNextWeapon( this.type );
+			this.weaponSystem.setNextWeapon( type );
 
 		}
 
