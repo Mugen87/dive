@@ -43,13 +43,8 @@ class Item extends GameEntity {
 		//
 
 		const audio = this.audio;
-
-		if ( audio ) {
-
-			if ( audio.isPlaying === true ) audio.stop();
-			audio.play();
-
-		}
+		if ( audio.isPlaying === true ) audio.stop();
+		audio.play();
 
 		//
 

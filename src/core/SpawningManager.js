@@ -297,6 +297,13 @@ class SpawningManager {
 
 			blasterItem.currentRegion = world.navMesh.getRegionForPoint( blasterItem.position );
 
+			// audio
+
+			const audio = assetManager.cloneAudio( assetManager.audios.get( 'ammo' ) );
+			blasterItem.audio = audio;
+			audio.setVolume( 0.5 );
+			renderComponent.add( audio );
+
 			// trigger
 
 			this.createTrigger( blasterItem, CONFIG.BLASTER.RADIUS );
@@ -321,6 +328,13 @@ class SpawningManager {
 
 			shotgunItem.currentRegion = world.navMesh.getRegionForPoint( shotgunItem.position );
 
+			// audio
+
+			const audio = assetManager.cloneAudio( assetManager.audios.get( 'ammo' ) );
+			shotgunItem.audio = audio;
+			audio.setVolume( 0.5 );
+			renderComponent.add( audio );
+
 			// trigger
 
 			this.createTrigger( shotgunItem, CONFIG.SHOTGUN.RADIUS );
@@ -344,6 +358,13 @@ class SpawningManager {
 			// navigation
 
 			assaultRilfleItem.currentRegion = world.navMesh.getRegionForPoint( assaultRilfleItem.position );
+
+			// audio
+
+			const audio = assetManager.cloneAudio( assetManager.audios.get( 'ammo' ) );
+			audio.setVolume( 0.5 );
+			assaultRilfleItem.audio = audio;
+			renderComponent.add( audio );
 
 			// trigger
 
