@@ -31,7 +31,15 @@ class UIManager {
 		this.endTimeDamageIndicationLeft = Infinity;
 		this.endTimeDamageIndicationBack = Infinity;
 
-		this.uiElements = {
+		this.html = {
+			hudAmmo: document.getElementById( 'hudAmmo' ),
+			hudHealth: document.getElementById( 'hudHealth' ),
+			roundsLeft: document.getElementById( 'roundsLeft' ),
+			ammo: document.getElementById( 'ammo' ),
+			health: document.getElementById( 'health' )
+		};
+
+		this.sprites = {
 			crosshairs: null,
 			frontIndicator: null,
 			rightIndicator: null,
@@ -203,25 +211,25 @@ class UIManager {
 
 		if ( this.currentTime >= this.endTimeDamageIndicationFront ) {
 
-			this.uiElements.frontIndicator.visible = false;
+			this.sprites.frontIndicator.visible = false;
 
 		}
 
 		if ( this.currentTime >= this.endTimeDamageIndicationRight ) {
 
-			this.uiElements.rightIndicator.visible = false;
+			this.sprites.rightIndicator.visible = false;
 
 		}
 
 		if ( this.currentTime >= this.endTimeDamageIndicationLeft ) {
 
-			this.uiElements.leftIndicator.visible = false;
+			this.sprites.leftIndicator.visible = false;
 
 		}
 
 		if ( this.currentTime >= this.endTimeDamageIndicationBack ) {
 
-			this.uiElements.backIndicator.visible = false;
+			this.sprites.backIndicator.visible = false;
 
 		}
 
@@ -241,7 +249,7 @@ class UIManager {
 	*/
 	showHitIndication() {
 
-		this.uiElements.crosshairs.material.color.set( 0xff0000 );
+		this.sprites.crosshairs.material.color.set( 0xff0000 );
 		this.endTimeHitIndication = this.currentTime + this.hitIndicationTime;
 
 		return this;
@@ -256,7 +264,7 @@ class UIManager {
 	*/
 	hideHitIndication() {
 
-		this.uiElements.crosshairs.material.color.set( 0xffffff );
+		this.sprites.crosshairs.material.color.set( 0xffffff );
 		this.endTimeHitIndication = Infinity;
 
 		return this;
@@ -274,22 +282,22 @@ class UIManager {
 
 		if ( angle >= - PI25 && angle <= PI25 ) {
 
-			this.uiElements.frontIndicator.visible = true;
+			this.sprites.frontIndicator.visible = true;
 			this.endTimeDamageIndicationFront = this.currentTime + this.damageIndicationTime;
 
 		} else if ( angle > PI25 && angle <= PI75 ) {
 
-			this.uiElements.rightIndicator.visible = true;
+			this.sprites.rightIndicator.visible = true;
 			this.endTimeDamageIndicationRight = this.currentTime + this.damageIndicationTime;
 
 		} else if ( angle >= - PI75 && angle < - PI25 ) {
 
-			this.uiElements.leftIndicator.visible = true;
+			this.sprites.leftIndicator.visible = true;
 			this.endTimeDamageIndicationLeft = this.currentTime + this.damageIndicationTime;
 
 		} else {
 
-			this.uiElements.backIndicator.visible = true;
+			this.sprites.backIndicator.visible = true;
 			this.endTimeDamageIndicationBack = this.currentTime + this.damageIndicationTime;
 
 		}
@@ -305,7 +313,13 @@ class UIManager {
 	*/
 	showFPSInterface() {
 
-		this.uiElements.crosshairs.visible = true;
+		this.sprites.crosshairs.visible = true;
+
+		this.html.hudAmmo.classList.remove( 'hidden' );
+		this.html.hudHealth.classList.remove( 'hidden' );
+
+		this.updateAmmoStatus();
+		this.updateHealthStatus();
 
 		return this;
 
@@ -318,11 +332,14 @@ class UIManager {
 	*/
 	hideFPSInterface() {
 
-		this.uiElements.crosshairs.visible = false;
-		this.uiElements.frontIndicator.visible = false;
-		this.uiElements.rightIndicator.visible = false;
-		this.uiElements.leftIndicator.visible = false;
-		this.uiElements.backIndicator.visible = false;
+		this.html.hudAmmo.classList.add( 'hidden' );
+		this.html.hudHealth.classList.add( 'hidden' );
+
+		this.sprites.crosshairs.visible = false;
+		this.sprites.frontIndicator.visible = false;
+		this.sprites.rightIndicator.visible = false;
+		this.sprites.leftIndicator.visible = false;
+		this.sprites.backIndicator.visible = false;
 
 		return this;
 
@@ -335,13 +352,45 @@ class UIManager {
 	* @param {Number} height - The height in pixels.
 	* @return {UIManager} A reference to this UI manager.
 	*/
-	setSize( width, height ) {
+	setSize( width, height ) {
 
 		this.camera.left = - width / 2;
 		this.camera.right = width / 2;
 		this.camera.top = height / 2;
 		this.camera.bottom = - height / 2;
 		this.camera.updateProjectionMatrix();
+
+		return this;
+
+	}
+
+	/**
+	* Updates the UI with current ammo data.
+	*
+	* @return {UIManager} A reference to this UI manager.
+	*/
+	updateAmmoStatus() {
+
+		const player = this.world.player;
+		const weapon = player.weaponSystem.currentWeapon;
+
+		this.html.roundsLeft.textContent = weapon.roundsLeft;
+		this.html.ammo.textContent = weapon.ammo;
+
+		return this;
+
+	}
+
+	/**
+	* Updates the UI with current health data.
+	*
+	* @return {UIManager} A reference to this UI manager.
+	*/
+	updateHealthStatus() {
+
+		const player = this.world.player;
+
+		this.html.health.textContent = player.health;
 
 		return this;
 
@@ -367,7 +416,7 @@ class UIManager {
 		crosshairs.updateMatrix();
 		this.scene.add( crosshairs );
 
-		this.uiElements.crosshairs = crosshairs;
+		this.sprites.crosshairs = crosshairs;
 
 		// damage indication
 
@@ -384,7 +433,7 @@ class UIManager {
 		frontIndicator.updateMatrix();
 		this.scene.add( frontIndicator );
 
-		this.uiElements.frontIndicator = frontIndicator;
+		this.sprites.frontIndicator = frontIndicator;
 
 		// right
 
@@ -399,7 +448,7 @@ class UIManager {
 		rightIndicator.updateMatrix();
 		this.scene.add( rightIndicator );
 
-		this.uiElements.rightIndicator = rightIndicator;
+		this.sprites.rightIndicator = rightIndicator;
 
 		// left
 
@@ -414,7 +463,7 @@ class UIManager {
 		leftIndicator.updateMatrix();
 		this.scene.add( leftIndicator );
 
-		this.uiElements.leftIndicator = leftIndicator;
+		this.sprites.leftIndicator = leftIndicator;
 
 		// right
 
@@ -429,7 +478,7 @@ class UIManager {
 		backIndicator.updateMatrix();
 		this.scene.add( backIndicator );
 
-		this.uiElements.backIndicator = backIndicator;
+		this.sprites.backIndicator = backIndicator;
 
 		return this;
 

@@ -153,8 +153,6 @@ class Player extends MovingEntity {
 
 		this.mixer.update( delta );
 
-		this.updateUi();
-
 		return this;
 
 	}
@@ -236,6 +234,10 @@ class Player extends MovingEntity {
 		// fire
 
 		this.weaponSystem.shoot( targetPosition );
+
+		// update UI
+
+		world.uiManager.updateAmmoStatus();
 
 		return this;
 
@@ -381,6 +383,10 @@ class Player extends MovingEntity {
 
 		this.health = Math.min( this.health, this.maxHealth ); // ensure that health does not exceed maxHealth
 
+		this.world.uiManager.updateHealthStatus();
+
+		//
+
 		if ( this.world.debug ) {
 
 			console.log( 'DIVE.Player: Entity with ID %s receives %i health points.', this.uuid, amount );
@@ -440,6 +446,10 @@ class Player extends MovingEntity {
 				// reduce health
 
 				this.health -= telegram.data.damage;
+
+				// update UI
+
+				this.world.uiManager.updateHealthStatus();
 
 				// logging
 
@@ -511,13 +521,6 @@ class Player extends MovingEntity {
 		const det = this.up.dot( cross.crossVectors( attackDirection, lookDirection ) ); // triple product
 
 		return Math.atan2( det, dot );
-
-	}
-
-	updateUi() {
-
-		this.weaponSystem.updateUi();
-		this.ui.health.textContent = this.health;
 
 	}
 

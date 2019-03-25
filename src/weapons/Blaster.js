@@ -67,6 +67,14 @@ class Blaster extends Weapon {
 
 			}
 
+			// update UI
+
+			if ( this.owner.isPlayer ) {
+
+				this.owner.world.uiManager.updateAmmoStatus();
+
+			}
+
 			this.status = WEAPON_STATUS_READY;
 
 			this.endTimeReload = Infinity;

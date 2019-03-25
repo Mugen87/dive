@@ -158,6 +158,14 @@ class Shotgun extends Weapon {
 
 		}
 
+		// UI
+
+		if ( this.owner.isPlayer ) {
+
+			this.owner.world.uiManager.updateAmmoStatus();
+
+		}
+
 		this.endTimeReload = this.currentTime + this.reloadTime;
 
 		return this;

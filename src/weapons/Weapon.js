@@ -119,6 +119,13 @@ class Weapon extends GameEntity {
 
 		}
 
+		if ( this.owner.isPlayer ) {
+
+			this.owner.world.uiManager.updateAmmoStatus();
+
+
+		}
+
 		return this;
 
 	}

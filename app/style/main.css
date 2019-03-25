@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css?family=Jura');
+
 * {
 	-webkit-user-select: none;
 	-moz-user-select: none;
@@ -7,4 +9,40 @@
 body {
 	margin:0;
 	overflow:hidden;
+	font-family: 'Jura', sans-serif;
+}
+#hudAmmo {
+	position: absolute;
+	bottom: 4%;
+	right: 4%;
+}
+#hudHealth {
+	position: absolute;
+	bottom: 4%;
+	left: 4%;
+}
+#roundsLeft {
+	font-weight: bold;
+	width: 32px;
+}
+#ammo {
+	font-size: 20px;
+	opacity: 0.5;
+	width: 32px;
+}
+.ui-container {
+	background-color: #282828;
+	font-size: 28px;
+	color: #ffffff;
+	text-align: center;
+	line-height: 20px;
+}
+.ui-container>div {
+	padding: 16px;
+}
+.ui-container>div>span {
+	display: inline-block;
+}
+.hidden {
+	display: none;
 }

@@ -90,12 +90,6 @@ class WeaponSystem {
 			assaultRifle: null
 		};
 
-		// ui
-		this.ui = {
-			roundsLeft: document.getElementById( 'roundsLeft' ),
-			ammo: document.getElementById( 'ammo' )
-		};
-
 	}
 
 	/**
@@ -693,13 +687,6 @@ class WeaponSystem {
 		}
 
 		return this;
-
-	}
-
-	updateUi() {
-
-		this.ui.roundsLeft.textContent = this.currentWeapon.roundsLeft;
-		this.ui.ammo.textContent = this.currentWeapon.ammo;
 
 	}
 

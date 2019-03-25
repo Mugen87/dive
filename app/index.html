@@ -4,33 +4,11 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link rel="stylesheet" type="text/css" href="./style/main.css">
-		<style>
-			#hudAmmo {
-			position: absolute;
-			bottom: 4%;
-			right: 4%;
-		}
-			#hudHealth {
-				position: absolute;
-				bottom: 4%;
-				left: 4%;
-			}
-		.ui-container {
-			background-color: #282828;
-			font-size: 28px;
-			color: #ffffff;
-			text-align: center;
-			line-height: 20px;
-		}
-			.ui-container>div {
-				padding: 16px;
-			}
-		</style>
 	</head>
 
 
 <body>
-	<section id="hudAmmo" class="ui-container">
+	<section id="hudAmmo" class="ui-container hidden">
 		<div>
 			<span id="roundsLeft" class="value"></span>
 			<span>|</span>
@@ -38,10 +16,9 @@
 		</div>
 	</section>
 
-	<section id="hudHealth" class="ui-container">
+	<section id="hudHealth" class="ui-container hidden">
 		<div>
 			<span id="health" class="value"></span>
-
 		</div>
 	</section>
 
