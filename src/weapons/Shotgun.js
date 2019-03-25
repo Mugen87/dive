@@ -87,6 +87,14 @@ class Shotgun extends Weapon {
 
 			}
 
+			// update UI
+
+			if ( this.owner.isPlayer ) {
+
+				this.owner.world.uiManager.updateAmmoStatus();
+
+			}
+
 			this.status = WEAPON_STATUS_READY;
 
 			this.endTimeReload = Infinity;
@@ -155,14 +163,6 @@ class Shotgun extends Weapon {
 			const animation = this.animations.get( 'reload' );
 			animation.stop();
 			animation.play();
-
-		}
-
-		// UI
-
-		if ( this.owner.isPlayer ) {
-
-			this.owner.world.uiManager.updateAmmoStatus();
 
 		}
 
