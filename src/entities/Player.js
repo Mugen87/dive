@@ -82,6 +82,13 @@ class Player extends MovingEntity {
 		this.mixer = null;
 		this.animations = new Map();
 
+		// ui
+		this.ui = {
+
+			health: document.getElementById( 'health' ),
+
+		};
+
 	}
 
 	/**
@@ -145,6 +152,8 @@ class Player extends MovingEntity {
 		//
 
 		this.mixer.update( delta );
+
+		this.updateUi();
 
 		return this;
 
@@ -502,6 +511,13 @@ class Player extends MovingEntity {
 		const det = this.up.dot( cross.crossVectors( attackDirection, lookDirection ) ); // triple product
 
 		return Math.atan2( det, dot );
+
+	}
+
+	updateUi() {
+
+		this.weaponSystem.updateUi();
+		this.ui.health.textContent = this.health;
 
 	}
 
