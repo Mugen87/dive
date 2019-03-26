@@ -1,6 +1,6 @@
 import { GameEntity, MovingEntity, Vector3, AABB, MathUtils } from '../lib/yuka.module.js';
 import { LoopOnce } from '../lib/three.module.js';
-import { WeaponSystem } from './WeaponSystem.js';
+import { WeaponSystem } from '../core/WeaponSystem.js';
 import { CONFIG } from '../core/Config.js';
 import { Projectile } from '../weapons/Projectile.js';
 import { STATUS_ALIVE, WEAPON_TYPES_ASSAULT_RIFLE, MESSAGE_HIT, MESSAGE_DEAD, STATUS_DYING, STATUS_DEAD } from '../core/Constants.js';
