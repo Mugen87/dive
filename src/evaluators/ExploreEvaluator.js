@@ -28,9 +28,7 @@ class ExploreEvaluator extends GoalEvaluator {
 	*/
 	calculateDesirability( /* owner */ ) {
 
-		let desirability = 0.1;
-
-		return desirability;
+		return 0.1;
 
 	}
 
