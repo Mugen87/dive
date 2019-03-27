@@ -33,6 +33,19 @@ body {
 #health {
 	width: 64px;
 }
+#killDisplay{
+	list-style-type: none;
+	font-size: 20px;
+	opacity: 0.5;
+	text-align: left;
+}
+
+#hudKillDisplay{
+	position: absolute;
+	top: 4%;
+	left: 4%;
+}
+
 .ui-container {
 	background-color: #282828;
 	font-size: 28px;

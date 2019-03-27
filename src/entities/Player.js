@@ -89,6 +89,8 @@ class Player extends MovingEntity {
 
 		};
 
+		this.name = "Player";
+
 	}
 
 	/**
@@ -477,11 +479,13 @@ class Player extends MovingEntity {
 
 				}
 
-				// check if the player is death
+				// check if the player is dead
 
 				if ( this.health <= 0 && this.status === STATUS_ALIVE ) {
 
 					this.initDeath();
+
+					this.world.uiManager.addKillMessage( telegram.sender, this );
 
 					// inform all other competitors about its death
 

@@ -30,13 +30,16 @@ class UIManager {
 		this.endTimeDamageIndicationRight = Infinity;
 		this.endTimeDamageIndicationLeft = Infinity;
 		this.endTimeDamageIndicationBack = Infinity;
+		this.killMessages = new Array();
 
 		this.html = {
 			hudAmmo: document.getElementById( 'hudAmmo' ),
 			hudHealth: document.getElementById( 'hudHealth' ),
 			roundsLeft: document.getElementById( 'roundsLeft' ),
 			ammo: document.getElementById( 'ammo' ),
-			health: document.getElementById( 'health' )
+			health: document.getElementById( 'health' ),
+			hudKillDisplay: document.getElementById( "hudKillDisplay" ),
+			killDisplay: document.getElementById( 'killDisplay' ),
 		};
 
 		this.sprites = {
@@ -233,6 +236,8 @@ class UIManager {
 
 		}
 
+		this.updateKillDisplay();
+
 		// render UI
 
 		this._render();
@@ -361,6 +366,82 @@ class UIManager {
 		this.camera.updateProjectionMatrix();
 
 		return this;
+
+	}
+
+	/**
+	 * Updates the kill message display.
+	 */
+	updateKillDisplay() {
+
+		const killMessages = this.killMessages;
+		let count = 0;
+
+		//check for expired messages
+		for ( let i = 0, l = killMessages.length; i < l; i ++ ) {
+
+			const message = killMessages[ i ];
+
+			if ( this.currentTime >= message.endTime ) {
+
+				count ++;
+
+			}
+
+		}
+
+		//remove messages if there are expired ones
+		for ( let i = 0; i < count; i ++ ) {
+
+			this.removeKillMessage();
+
+		}
+
+		//hide html element if there are no elements
+		if ( killMessages.length === 0 ) {
+
+			this.html.hudKillDisplay.classList.add( 'hidden' );
+
+		}
+
+	}
+
+	/**
+	 * Adds a kill message to the kill message display.
+	 * @param {GameEntity} killer - The game entity which killed.
+	 * @param {GameEntity} killed - The game entity which got killed.
+	 */
+	addKillMessage( killer, killed ) {
+
+		const list = this.html.killDisplay;
+
+		this.html.hudKillDisplay.classList.remove( 'hidden' );
+
+		const string = killer.name + " killed " + killed.name;
+
+		const listItem = document.createElement( "li" );
+		listItem.textContent = string;
+
+		const message = {
+			text: string,
+			endTime: this.currentTime + CONFIG.UI.KILLING_MESSAGES.TIME
+		};
+
+		this.killMessages.push( message );
+
+		list.appendChild( listItem );
+
+	}
+
+	/**
+	 * Removes the oldest kill message.
+	 */
+	removeKillMessage() {
+
+		const list = this.html.killDisplay;
+		list.removeChild( list.childNodes[ 0 ] );
+
+		this.killMessages.shift();
 
 	}
 

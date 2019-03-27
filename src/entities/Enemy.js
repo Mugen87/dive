@@ -150,6 +150,8 @@ class Enemy extends Vehicle {
 		this.pathHelper = null;
 		this.hitboxHelper = null;
 
+		this.name = this.uuid.substring( 0, 4 );
+
 	}
 
 	/**
@@ -733,6 +735,8 @@ class Enemy extends Vehicle {
 				if ( this.health <= 0 && this.status === STATUS_ALIVE ) {
 
 					this.initDeath();
+
+					this.world.uiManager.addKillMessage( telegram.sender, this );
 
 					// inform all other competitors about its death
 

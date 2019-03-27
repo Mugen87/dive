@@ -129,6 +129,9 @@ const CONFIG = {
 			OPACITY: 0.5, // number
 			SCALE: 256, // number
 			TIME: 0.5, //seconds
+		},
+		KILLING_MESSAGES: {
+			TIME: 5, // seconds
 		}
 	},
 	NAVMESH: {
