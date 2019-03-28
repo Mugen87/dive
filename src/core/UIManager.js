@@ -30,7 +30,7 @@ class UIManager {
 		this.endTimeDamageIndicationRight = Infinity;
 		this.endTimeDamageIndicationLeft = Infinity;
 		this.endTimeDamageIndicationBack = Infinity;
-		this.killMessages = new Array();
+		this.fragMessages = new Array();
 
 		this.html = {
 			hudAmmo: document.getElementById( 'hudAmmo' ),
@@ -38,8 +38,8 @@ class UIManager {
 			roundsLeft: document.getElementById( 'roundsLeft' ),
 			ammo: document.getElementById( 'ammo' ),
 			health: document.getElementById( 'health' ),
-			hudKillDisplay: document.getElementById( "hudKillDisplay" ),
-			killDisplay: document.getElementById( 'killDisplay' ),
+			hudFragList: document.getElementById( 'hudFragList' ),
+			fragList: document.getElementById( 'fragList' ),
 		};
 
 		this.sprites = {
@@ -236,7 +236,9 @@ class UIManager {
 
 		}
 
-		this.updateKillDisplay();
+		// frag list
+
+		this._updateFragList();
 
 		// render UI
 
@@ -370,78 +372,82 @@ class UIManager {
 	}
 
 	/**
-	 * Updates the kill message display.
+	 * Updates the UI element that displays the frags.
+	 *
+	 * @return {UIManager} A reference to this UI manager.
 	 */
-	updateKillDisplay() {
+	_updateFragList() {
 
-		const killMessages = this.killMessages;
-		let count = 0;
+		const fragMessages = this.fragMessages;
 
-		//check for expired messages
-		for ( let i = 0, l = killMessages.length; i < l; i ++ ) {
+		// check for expired messages (new messages are at the end of the array)
 
-			const message = killMessages[ i ];
+		for ( let i = ( fragMessages.length - 1 ); i >= 0; i -- ) {
+
+			const message = fragMessages[ i ];
 
 			if ( this.currentTime >= message.endTime ) {
 
-				count ++;
+				fragMessages.splice( i, 1 );
+
+				// remove the visual representation of the frag message
+
+				const fragList = this.html.fragList;
+				fragList.removeChild( message.html );
 
 			}
 
 		}
 
-		//remove messages if there are expired ones
-		for ( let i = 0; i < count; i ++ ) {
+		// hide html element if there are no elements
 
-			this.removeKillMessage();
+		if ( fragMessages.length === 0 ) {
 
-		}
-
-		//hide html element if there are no elements
-		if ( killMessages.length === 0 ) {
-
-			this.html.hudKillDisplay.classList.add( 'hidden' );
+			this.html.hudFragList.classList.add( 'hidden' );
 
 		}
+
+		return this;
 
 	}
 
 	/**
 	 * Adds a kill message to the kill message display.
-	 * @param {GameEntity} killer - The game entity which killed.
-	 * @param {GameEntity} killed - The game entity which got killed.
+	 * @param {GameEntity} fragger - The fragger.
+	 * @param {GameEntity} victim - The defeated game entity.
+	 * @return {UIManager} A reference to this UI manager.
 	 */
-	addKillMessage( killer, killed ) {
+	addFragMessage( fragger, victim ) {
 
-		const list = this.html.killDisplay;
+		// make the list visible
 
-		this.html.hudKillDisplay.classList.remove( 'hidden' );
+		this.html.hudFragList.classList.remove( 'hidden' );
 
-		const string = killer.name + " killed " + killed.name;
+		// create the frag message
 
-		const listItem = document.createElement( "li" );
-		listItem.textContent = string;
+		const string = fragger.name + ' fragged ' + victim.name;
 
-		const message = {
+		// create the respective HTML
+
+		const frag = document.createElement( 'li' );
+		frag.textContent = string;
+
+		// save everything in a new message object
+
+		const fragMessage = {
 			text: string,
-			endTime: this.currentTime + CONFIG.UI.KILLING_MESSAGES.TIME
+			endTime: this.currentTime + CONFIG.UI.FRAGS.TIME,
+			html: frag
 		};
 
-		this.killMessages.push( message );
+		this.fragMessages.push( fragMessage );
 
-		list.appendChild( listItem );
+		// append the HTML to the list
 
-	}
+		const fragList = this.html.fragList;
+		fragList.appendChild( frag );
 
-	/**
-	 * Removes the oldest kill message.
-	 */
-	removeKillMessage() {
-
-		const list = this.html.killDisplay;
-		list.removeChild( list.childNodes[ 0 ] );
-
-		this.killMessages.shift();
+		return this;
 
 	}
 

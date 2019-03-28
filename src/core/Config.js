@@ -130,7 +130,7 @@ const CONFIG = {
 			SCALE: 256, // number
 			TIME: 0.5, //seconds
 		},
-		KILLING_MESSAGES: {
+		FRAGS: {
 			TIME: 5, // seconds
 		}
 	},

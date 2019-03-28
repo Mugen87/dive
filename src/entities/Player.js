@@ -485,8 +485,6 @@ class Player extends MovingEntity {
 
 					this.initDeath();
 
-					this.world.uiManager.addKillMessage( telegram.sender, this );
-
 					// inform all other competitors about its death
 
 					const competitors = this.world.competitors;
@@ -498,6 +496,10 @@ class Player extends MovingEntity {
 						if ( this !== competitor ) this.sendMessage( competitor, MESSAGE_DEAD );
 
 					}
+
+					// update UI
+
+					this.world.uiManager.addFragMessage( telegram.sender, this );
 
 				} else {
 

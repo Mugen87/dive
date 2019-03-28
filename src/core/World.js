@@ -379,6 +379,7 @@ class World {
 			const renderComponent = SceneUtils.cloneWithSkinning( this.assetManager.models.get( 'soldier' ) );
 
 			const enemy = new Enemy( this );
+			enemy.name = 'Bot' + i;
 			enemy.setRenderComponent( renderComponent, sync );
 
 			// set animations
