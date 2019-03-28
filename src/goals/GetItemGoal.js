@@ -1,7 +1,8 @@
 
-import { CompositeGoal, Vector3, Goal } from '../lib/yuka.module.js';
+import { CompositeGoal, Vector3, Goal, Regulator } from '../lib/yuka.module.js';
 import { FindPathGoal } from './FindPathGoal.js';
 import { FollowPathGoal } from './FollowPathGoal.js';
+import { CONFIG } from '../core/Config.js';
 
 const result = { distance: Infinity, item: null };
 
@@ -25,6 +26,8 @@ class GetItemGoal extends CompositeGoal {
 
 		this.itemType = itemType;
 		this.item = item;
+
+		this.regulator = new Regulator( CONFIG.BOT.GOAL.ITEM_VISIBILITY_UPDATE_FREQUENCY );
 
 	}
 
@@ -59,6 +62,10 @@ class GetItemGoal extends CompositeGoal {
 
 			this.status = Goal.STATUS.FAILED;
 
+			// ensure the bot does not looking for this type of item for a while
+
+			owner.ignoreItem( this.itemType );
+
 		}
 
 	}
@@ -67,19 +74,31 @@ class GetItemGoal extends CompositeGoal {
 
 		if ( this.active() ) {
 
-			// if the requested item becomes inactive, it was picked up by somebody else
+			// only check the availability of the item if it is visible for the enemy
 
-			if ( this.item.active === false ) {
+			if ( this.regulator.ready() && this.owner.vision.visible( this.item.position ) ) {
 
-				this.status = Goal.STATUS.FAILED;
+				// if it was picked up by somebody else, mark the goal as failed
+
+				if ( this.item.active === false ) {
+
+					this.status = Goal.STATUS.FAILED;
+
+				} else {
+
+					this.status = this.executeSubgoals();
+
+				}
 
 			} else {
 
 				this.status = this.executeSubgoals();
 
-				this.replanIfFailed();
-
 			}
+
+			// replan the goal means the bot tries to find another item of the same type
+
+			this.replanIfFailed();
 
 		}
 

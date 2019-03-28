@@ -2,7 +2,8 @@ import { GoalEvaluator } from '../lib/yuka.module.js';
 import { ExploreGoal } from '../goals/ExploreGoal.js';
 
 /**
-* Class for representing the explore goal.
+* Class for representing the explore goal evaluator. Can be used to compute a score that
+* represents the desirability of the respective top-level goal.
 *
 * @author {@link https://github.com/Mugen87|Mugen87}
 */

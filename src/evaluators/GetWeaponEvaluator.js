@@ -3,7 +3,8 @@ import { Feature } from '../core/Feature.js';
 import { GetItemGoal } from '../goals/GetItemGoal.js';
 
 /**
-* Class for representing the explore goal.
+* Class for representing the get-weapon goal evaluator. Can be used to compute a score that
+* represents the desirability of the respective top-level goal.
 *
 * @author {@link https://github.com/robp94|robp94}
 */
@@ -35,7 +36,7 @@ class GetWeaponEvaluator extends GoalEvaluator {
 
 		let desirability = 0;
 
-		if ( owner.world.isItemAvailable( this.weaponType ) === true ) {
+		if ( owner.ignoreWeapons === false ) {
 
 			const distanceScore = Feature.distanceToItem( owner, this.weaponType );
 			const weaponScore = Feature.individualWeaponStrength( owner, this.weaponType );

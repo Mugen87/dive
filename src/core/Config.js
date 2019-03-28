@@ -33,7 +33,8 @@ const CONFIG = {
 			DODGE_SIZE: 4 // meter
 		},
 		GOAL: {
-			UPDATE_FREQUENCY: 5 // number per seconds
+			UPDATE_FREQUENCY: 5, // number per seconds
+			ITEM_VISIBILITY_UPDATE_FREQUENCY: 1 // number per seconds
 		},
 		MEMORY: {
 			SPAN: 20 // seconds
@@ -65,7 +66,8 @@ const CONFIG = {
 		DYING_TIME: 3, // seconds
 		SEARCH_FOR_ATTACKER_TIME: 3, // seconds
 		MIN_ITEM_RANGE: 2, // meter
-		MAX_ITEM_RANGE: 25 // meter
+		MAX_ITEM_RANGE: 25, // meter
+		IGNORE_ITEMS_TIMEOUT: 30 // seconds
 	},
 	BLASTER: {
 		ROUNDS_LEFT: 12, // number

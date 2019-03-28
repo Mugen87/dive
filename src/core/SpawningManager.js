@@ -37,16 +37,16 @@ class SpawningManager {
 
 		this.healthPacks = new Array();
 		this.healthPackSpawningPoints = new Array();
-		this.healthPackSpawningPoints.push( new Vector3( - 40, 0, 0 ) );
+		this.healthPackSpawningPoints.push( new Vector3( - 40, 0.5, 0 ) );
 
 		// weapons
 
 		this.assaultRilflesSpawningPoints = new Array();
-		this.assaultRilflesSpawningPoints.push( new Vector3( - 41, 0, 5 ) );
+		this.assaultRilflesSpawningPoints.push( new Vector3( - 41, 0.5, 5 ) );
 		this.assaultRilfles = new Array();
 
 		this.shotgunSpawningPoints = new Array();
-		this.shotgunSpawningPoints.push( new Vector3( 1, 0, 5 ) );
+		this.shotgunSpawningPoints.push( new Vector3( 1, 0.5, 5 ) );
 		this.shotguns = new Array();
 
 		this.blasterSpawningPoints = new Array();
@@ -251,7 +251,7 @@ class SpawningManager {
 
 			// navigation
 
-			healthPack.currentRegion = world.navMesh.getRegionForPoint( healthPack.position );
+			healthPack.currentRegion = world.navMesh.getRegionForPoint( healthPack.position, 1 );
 
 			// audio
 
@@ -295,7 +295,7 @@ class SpawningManager {
 
 			// navigation
 
-			blasterItem.currentRegion = world.navMesh.getRegionForPoint( blasterItem.position );
+			blasterItem.currentRegion = world.navMesh.getRegionForPoint( blasterItem.position, 1 );
 
 			// audio
 
@@ -326,7 +326,7 @@ class SpawningManager {
 
 			// navigation
 
-			shotgunItem.currentRegion = world.navMesh.getRegionForPoint( shotgunItem.position );
+			shotgunItem.currentRegion = world.navMesh.getRegionForPoint( shotgunItem.position, 1 );
 
 			// audio
 
@@ -357,7 +357,7 @@ class SpawningManager {
 
 			// navigation
 
-			assaultRilfleItem.currentRegion = world.navMesh.getRegionForPoint( assaultRilfleItem.position );
+			assaultRilfleItem.currentRegion = world.navMesh.getRegionForPoint( assaultRilfleItem.position, 1 );
 
 			// audio
 

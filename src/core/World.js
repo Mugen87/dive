@@ -222,34 +222,6 @@ class World {
 	}
 
 	/**
-	* Returns true if the given item type is available.
-	*
-	* @param {Number} itemType - The requested item type.
-	* @return {Boolean} - Whether an item of the given type is available or not.
-	*/
-	isItemAvailable( itemType ) {
-
-		// pick correct item list
-
-		let itemList = this.spawningManager.getItemList( itemType );
-
-		// check availability
-
-		for ( let i = 0, l = itemList.length; i < l; i ++ ) {
-
-			const item = itemList[ i ];
-
-			// consider only active items
-
-			if ( item.active ) return true;
-
-		}
-
-		return false;
-
-	}
-
-	/**
 	* Finds the nearest item of the given item type for the given entity.
 	*
 	* @param {GameEntity} entity - The entity which searches for the item.

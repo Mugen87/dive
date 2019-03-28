@@ -4,7 +4,8 @@ import { GetItemGoal } from '../goals/GetItemGoal.js';
 import { HEALTH_PACK } from '../core/Constants.js';
 
 /**
-* Class for representing the explore goal.
+* Class for representing the get-health goal evaluator. Can be used to compute a score that
+* represents the desirability of the respective top-level goal.
 *
 * @author {@link https://github.com/robp94|robp94}
 */
@@ -34,7 +35,7 @@ class GetHealthEvaluator extends GoalEvaluator {
 
 		let desirability = 0;
 
-		if ( owner.health < owner.maxHealth && owner.world.isItemAvailable( HEALTH_PACK ) ) {
+		if ( owner.ignoreHealth === false && owner.health < owner.maxHealth ) {
 
 			const distanceScore = Feature.distanceToItem( owner, HEALTH_PACK );
 			const healthScore = Feature.health( owner );

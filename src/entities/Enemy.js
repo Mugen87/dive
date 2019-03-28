@@ -1,5 +1,5 @@
 import { Vehicle, Regulator, Think, FollowPathBehavior, OnPathBehavior, SeekBehavior, Vector3, Vision, MemorySystem, GameEntity, Quaternion, MathUtils } from '../lib/yuka.module.js';
-import { MESSAGE_HIT, MESSAGE_DEAD, STATUS_ALIVE, STATUS_DYING, STATUS_DEAD, WEAPON_TYPES_ASSAULT_RIFLE, WEAPON_TYPES_SHOTGUN } from '../core/Constants.js';
+import { MESSAGE_HIT, MESSAGE_DEAD, STATUS_ALIVE, STATUS_DYING, STATUS_DEAD, WEAPON_TYPES_ASSAULT_RIFLE, WEAPON_TYPES_SHOTGUN, HEALTH_PACK } from '../core/Constants.js';
 import { AttackEvaluator } from '../evaluators/AttackEvaluator.js';
 import { ExploreEvaluator } from '../evaluators/ExploreEvaluator.js';
 import { CharacterBounds } from '../etc/CharacterBounds.js';
@@ -63,6 +63,14 @@ class Enemy extends Vehicle {
 		this.attackDirection = new Vector3();
 		this.endTimeSearch = Infinity;
 		this.searchTime = CONFIG.BOT.SEARCH_FOR_ATTACKER_TIME;
+
+		// item related properties
+
+		this.ignoreHealth = false;
+		this.ignoreWeapons = false;
+		this.endTimeIgnoreHealth = Infinity;
+		this.endTimeIgnoreWeapons = Infinity;
+		this.ignoreItemsTimeout = CONFIG.BOT.IGNORE_ITEMS_TIMEOUT;
 
 		// death animation
 
@@ -239,6 +247,20 @@ class Enemy extends Vehicle {
 			if ( this.currentTime >= this.endTimeSearch ) {
 
 				this.resetSearch();
+
+			}
+
+			// reset ignore flags if necessary
+
+			if ( this.currentTime >= this.endTimeIgnoreHealth ) {
+
+				this.ignoreHealth = false;
+
+			}
+
+			if ( this.currentTime >= this.endTimeIgnoreWeapons ) {
+
+				this.ignoreWeapons = false;
 
 			}
 
@@ -532,6 +554,11 @@ class Enemy extends Vehicle {
 
 		this.resetSearch();
 
+		// items
+
+		this.ignoreHealth = false;
+		this.ignoreWeapons = false;
+
 		// clear brain and memory
 
 		this.brain.clearSubgoals();
@@ -653,6 +680,32 @@ class Enemy extends Vehicle {
 		const distance = this.position.squaredDistanceTo( position );
 
 		return distance <= tolerance;
+
+	}
+
+	/**
+	* Ignores the given item type for a certain amount of time.
+	*
+	* @param {Number} type - The item type.
+	* @return {Enemy} A reference to this game entity.
+	*/
+	ignoreItem( type ) {
+
+		if ( type === HEALTH_PACK ) {
+
+			this.ignoreHealth = true;
+			this.endTimeIgnoreHealth = this.currentTime + this.ignoreItemsTimeout;
+
+		} else {
+
+			// all other items are weapons
+
+			this.ignoreWeapons = true;
+			this.endTimeIgnoreWeapons = this.currentTime + this.ignoreItemsTimeout;
+
+		}
+
+		return this;
 
 	}
 

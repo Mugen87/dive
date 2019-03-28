@@ -3,7 +3,8 @@ import { AttackGoal } from '../goals/AttackGoal.js';
 import { Feature } from '../core/Feature.js';
 
 /**
-* Class for representing the attack goal.
+* Class for representing the attack goal evaluator. Can be used to compute a score that
+* represents the desirability of the respective top-level goal.
 *
 * @author {@link https://github.com/Mugen87|Mugen87}
 */
