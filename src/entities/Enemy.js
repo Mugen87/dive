@@ -67,9 +67,11 @@ class Enemy extends Vehicle {
 		// item related properties
 
 		this.ignoreHealth = false;
-		this.ignoreWeapons = false;
+		this.ignoreShotgun = false;
+		this.ignoreAssaultRifle = false;
 		this.endTimeIgnoreHealth = Infinity;
-		this.endTimeIgnoreWeapons = Infinity;
+		this.endTimeIgnoreShotgun = Infinity;
+		this.endTimeIgnoreAssaultRifle = Infinity;
 		this.ignoreItemsTimeout = CONFIG.BOT.IGNORE_ITEMS_TIMEOUT;
 
 		// death animation
@@ -258,9 +260,15 @@ class Enemy extends Vehicle {
 
 			}
 
-			if ( this.currentTime >= this.endTimeIgnoreWeapons ) {
+			if ( this.currentTime >= this.endTimeIgnoreShotgun ) {
 
-				this.ignoreWeapons = false;
+				this.ignoreShotgun = false;
+
+			}
+
+			if ( this.currentTime >= this.endTimeIgnoreAssaultRifle ) {
+
+				this.ignoreAssaultRifle = false;
 
 			}
 
@@ -691,17 +699,26 @@ class Enemy extends Vehicle {
 	*/
 	ignoreItem( type ) {
 
-		if ( type === HEALTH_PACK ) {
+		switch ( type ) {
 
-			this.ignoreHealth = true;
-			this.endTimeIgnoreHealth = this.currentTime + this.ignoreItemsTimeout;
+			case HEALTH_PACK:
+				this.ignoreHealth = true;
+				this.endTimeIgnoreHealth = this.currentTime + this.ignoreItemsTimeout;
+				break;
 
-		} else {
+			case WEAPON_TYPES_SHOTGUN:
+				this.ignoreShotgun = true;
+				this.endTimeIgnoreShotgun = this.currentTime + this.ignoreItemsTimeout;
+				break;
 
-			// all other items are weapons
+			case WEAPON_TYPES_ASSAULT_RIFLE:
+				this.ignoreAssaultRifle = true;
+				this.endTimeIgnoreAssaultRifle = this.currentTime + this.ignoreItemsTimeout;
+				break;
 
-			this.ignoreWeapons = true;
-			this.endTimeIgnoreWeapons = this.currentTime + this.ignoreItemsTimeout;
+			default:
+				console.error( 'DIVE.Enemy: Invalid item type:', type );
+				break;
 
 		}
 

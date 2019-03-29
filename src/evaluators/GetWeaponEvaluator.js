@@ -1,6 +1,7 @@
 import { GoalEvaluator, MathUtils } from '../lib/yuka.module.js';
 import { Feature } from '../core/Feature.js';
 import { GetItemGoal } from '../goals/GetItemGoal.js';
+import { WEAPON_TYPES_SHOTGUN } from '../core/Constants.js';
 
 /**
 * Class for representing the get-weapon goal evaluator. Can be used to compute a score that
@@ -37,7 +38,9 @@ class GetWeaponEvaluator extends GoalEvaluator {
 
 		let desirability = 0;
 
-		if ( owner.ignoreWeapons === false ) {
+		const ignoreFlag = ( this.weaponType === WEAPON_TYPES_SHOTGUN ) ? owner.ignoreShotgun : owner.ignoreAssaultRifle;
+
+		if ( ignoreFlag === false ) {
 
 			const distanceScore = Feature.distanceToItem( owner, this.weaponType );
 			const weaponScore = Feature.individualWeaponStrength( owner, this.weaponType );
