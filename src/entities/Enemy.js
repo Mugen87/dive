@@ -727,6 +727,40 @@ class Enemy extends Vehicle {
 	}
 
 	/**
+	* Returns true if the given item type is currently ignored by the enemy.
+	*
+	* @param {Number} type - The item type.
+	* @return {Boolean} Whether the given item type is ignored or not.
+	*/
+	isItemIgnored( type ) {
+
+		let ignoreItem = false;
+
+		switch ( type ) {
+
+			case HEALTH_PACK:
+				ignoreItem = this.ignoreHealth;
+				break;
+
+			case WEAPON_TYPES_SHOTGUN:
+				ignoreItem = this.ignoreShotgun;
+				break;
+
+			case WEAPON_TYPES_ASSAULT_RIFLE:
+				ignoreItem = this.ignoreAssaultRifle;
+				break;
+
+			default:
+				console.error( 'DIVE.Enemy: Invalid item type:', type );
+				break;
+
+		}
+
+		return ignoreItem;
+
+	}
+
+	/**
 	* Returns true if the enemy can move a step to the given dirction without
 	* leaving the level. The new position vector is stored into the given vector.
 	*

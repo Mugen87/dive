@@ -1,7 +1,6 @@
 import { GoalEvaluator, MathUtils } from '../lib/yuka.module.js';
 import { Feature } from '../core/Feature.js';
 import { GetItemGoal } from '../goals/GetItemGoal.js';
-import { WEAPON_TYPES_SHOTGUN } from '../core/Constants.js';
 
 /**
 * Class for representing the get-weapon goal evaluator. Can be used to compute a score that
@@ -22,7 +21,7 @@ class GetWeaponEvaluator extends GoalEvaluator {
 
 		super( characterBias );
 
-		this.weaponType = weaponType;
+		this.itemType = weaponType;
 		this.tweaker = 0.15; // value used to tweak the desirability
 
 	}
@@ -38,12 +37,10 @@ class GetWeaponEvaluator extends GoalEvaluator {
 
 		let desirability = 0;
 
-		const ignoreFlag = ( this.weaponType === WEAPON_TYPES_SHOTGUN ) ? owner.ignoreShotgun : owner.ignoreAssaultRifle;
+		if ( owner.isItemIgnored( this.itemType ) === false ) {
 
-		if ( ignoreFlag === false ) {
-
-			const distanceScore = Feature.distanceToItem( owner, this.weaponType );
-			const weaponScore = Feature.individualWeaponStrength( owner, this.weaponType );
+			const distanceScore = Feature.distanceToItem( owner, this.itemType );
+			const weaponScore = Feature.individualWeaponStrength( owner, this.itemType );
 			const healthScore = Feature.health( owner );
 
 			desirability = this.tweaker * ( 1 - weaponScore ) * healthScore / distanceScore;
@@ -69,7 +66,7 @@ class GetWeaponEvaluator extends GoalEvaluator {
 
 			owner.brain.clearSubgoals();
 
-			owner.brain.addSubgoal( new GetItemGoal( owner, this.weaponType ) );
+			owner.brain.addSubgoal( new GetItemGoal( owner, this.itemType ) );
 
 		}
 

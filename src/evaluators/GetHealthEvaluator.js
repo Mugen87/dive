@@ -21,6 +21,7 @@ class GetHealthEvaluator extends GoalEvaluator {
 
 		super( characterBias );
 
+		this.itemType = HEALTH_PACK;
 		this.tweaker = 0.2; // value used to tweak the desirability
 
 	}
@@ -36,7 +37,7 @@ class GetHealthEvaluator extends GoalEvaluator {
 
 		let desirability = 0;
 
-		if ( owner.ignoreHealth === false && owner.health < owner.maxHealth ) {
+		if ( owner.isItemIgnored( this.itemType ) === false && owner.health < owner.maxHealth ) {
 
 			const distanceScore = Feature.distanceToItem( owner, HEALTH_PACK );
 			const healthScore = Feature.health( owner );
