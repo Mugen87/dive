@@ -1,7 +1,6 @@
 import { GoalEvaluator, MathUtils } from '../lib/yuka.module.js';
 import { Feature } from '../core/Feature.js';
 import { GetItemGoal } from '../goals/GetItemGoal.js';
-import { HEALTH_PACK } from '../core/Constants.js';
 
 /**
 * Class for representing the get-health goal evaluator. Can be used to compute a score that
@@ -16,12 +15,13 @@ class GetHealthEvaluator extends GoalEvaluator {
 	* Constructs a new get health goal evaluator.
 	*
 	* @param {Number} characterBias - Can be used to adjust the preferences of the enemy.
+	* @param {Number} itemType - The item type.
 	*/
-	constructor( characterBias = 1 ) {
+	constructor( characterBias = 1, itemType = null ) {
 
 		super( characterBias );
 
-		this.itemType = HEALTH_PACK;
+		this.itemType = itemType;
 		this.tweaker = 0.2; // value used to tweak the desirability
 
 	}

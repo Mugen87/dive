@@ -108,7 +108,7 @@ class Enemy extends Vehicle {
 		this.brain = new Think( this );
 		this.brain.addEvaluator( new AttackEvaluator() );
 		this.brain.addEvaluator( new ExploreEvaluator() );
-		this.brain.addEvaluator( new GetHealthEvaluator() );
+		this.brain.addEvaluator( new GetHealthEvaluator( 1, HEALTH_PACK ) );
 		this.brain.addEvaluator( new GetWeaponEvaluator( 1, WEAPON_TYPES_ASSAULT_RIFLE ) );
 		this.brain.addEvaluator( new GetWeaponEvaluator( 1, WEAPON_TYPES_SHOTGUN ) );
 
