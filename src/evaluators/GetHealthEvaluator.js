@@ -39,7 +39,7 @@ class GetHealthEvaluator extends GoalEvaluator {
 
 		if ( owner.isItemIgnored( this.itemType ) === false && owner.health < owner.maxHealth ) {
 
-			const distanceScore = Feature.distanceToItem( owner, HEALTH_PACK );
+			const distanceScore = Feature.distanceToItem( owner, this.itemType );
 			const healthScore = Feature.health( owner );
 
 			desirability = this.tweaker * ( 1 - healthScore ) / distanceScore;
@@ -65,7 +65,7 @@ class GetHealthEvaluator extends GoalEvaluator {
 
 			owner.brain.clearSubgoals();
 
-			owner.brain.addSubgoal( new GetItemGoal( owner, HEALTH_PACK ) );
+			owner.brain.addSubgoal( new GetItemGoal( owner, this.itemType ) );
 
 		}
 
