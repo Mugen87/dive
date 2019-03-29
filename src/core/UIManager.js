@@ -72,6 +72,7 @@ class UIManager {
 			showUUIDHelpers: false,
 			showSkeletons: false,
 			showItemRadius: false,
+			showWireframe: false,
 			enableFPSControls: () => {
 
 				this.world.fpsControls.connect();
@@ -156,6 +157,13 @@ class UIManager {
 					itemHelper.visible = value;
 
 				}
+
+			} );
+
+			folderWorld.add( params, 'showWireframe' ).name( 'show wireframe' ).onChange( ( value ) => {
+
+				const levelMesh = this.world.scene.getObjectByName( 'level' );
+				levelMesh.material.wireframe = value;
 
 			} );
 
