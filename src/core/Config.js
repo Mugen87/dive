@@ -131,6 +131,9 @@ const CONFIG = {
 			OPACITY: 0.5, // number
 			SCALE: 256, // number
 			TIME: 0.5, //seconds
+		},
+		FRAGS: {
+			TIME: 5, // seconds
 		}
 	},
 	NAVMESH: {

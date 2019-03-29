@@ -799,6 +799,10 @@ class Enemy extends Vehicle {
 
 					}
 
+					// update UI
+
+					this.world.uiManager.addFragMessage( telegram.sender, this );
+
 				} else {
 
 					// if not, search for attacker if he is still alive

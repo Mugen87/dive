@@ -30,13 +30,16 @@ class UIManager {
 		this.endTimeDamageIndicationRight = Infinity;
 		this.endTimeDamageIndicationLeft = Infinity;
 		this.endTimeDamageIndicationBack = Infinity;
+		this.fragMessages = new Array();
 
 		this.html = {
 			hudAmmo: document.getElementById( 'hudAmmo' ),
 			hudHealth: document.getElementById( 'hudHealth' ),
 			roundsLeft: document.getElementById( 'roundsLeft' ),
 			ammo: document.getElementById( 'ammo' ),
-			health: document.getElementById( 'health' )
+			health: document.getElementById( 'health' ),
+			hudFragList: document.getElementById( 'hudFragList' ),
+			fragList: document.getElementById( 'fragList' ),
 		};
 
 		this.sprites = {
@@ -233,6 +236,10 @@ class UIManager {
 
 		}
 
+		// frag list
+
+		this._updateFragList();
+
 		// render UI
 
 		this._render();
@@ -359,6 +366,99 @@ class UIManager {
 		this.camera.top = height / 2;
 		this.camera.bottom = - height / 2;
 		this.camera.updateProjectionMatrix();
+
+		return this;
+
+	}
+
+	/**
+	 * Updates the UI element that displays the frags.
+	 *
+	 * @return {UIManager} A reference to this UI manager.
+	 */
+	_updateFragList() {
+
+		const fragMessages = this.fragMessages;
+
+		// check for expired messages (new messages are at the end of the array)
+
+		for ( let i = ( fragMessages.length - 1 ); i >= 0; i -- ) {
+
+			const message = fragMessages[ i ];
+
+			if ( this.currentTime >= message.endTime ) {
+
+				fragMessages.splice( i, 1 );
+
+				// remove the visual representation of the frag message
+
+				const fragList = this.html.fragList;
+				fragList.removeChild( message.html );
+
+			}
+
+		}
+
+		// hide html element if there are no elements
+
+		if ( fragMessages.length === 0 ) {
+
+			this.html.hudFragList.classList.add( 'hidden' );
+
+		}
+
+		return this;
+
+	}
+
+	/**
+	 * Adds a kill message to the kill message display.
+	 * @param {GameEntity} fragger - The fragger.
+	 * @param {GameEntity} victim - The defeated game entity.
+	 * @return {UIManager} A reference to this UI manager.
+	 */
+	addFragMessage( fragger, victim ) {
+
+		// make the list visible
+
+		this.html.hudFragList.classList.remove( 'hidden' );
+
+		// create the frag message
+
+		const string = fragger.name + ' fragged ' + victim.name;
+
+		const fraggerSpan = document.createElement( 'span' );
+		fraggerSpan.style.color = '#00ff00';
+		fraggerSpan.textContent = fragger.name;
+
+		const middleSpan = document.createElement( 'span' );
+		middleSpan.textContent = ' fragged ';
+
+		const victimSpan = document.createElement( 'span' );
+		victimSpan.style.color = '#ff0000';
+		victimSpan.textContent = victim.name;
+
+		// create the respective HTML
+
+		const frag = document.createElement( 'li' );
+		frag.appendChild( fraggerSpan );
+		frag.appendChild( middleSpan );
+		frag.appendChild( victimSpan );
+
+		// save everything in a new message object
+
+		const fragMessage = {
+			text: string,
+			endTime: this.currentTime + CONFIG.UI.FRAGS.TIME,
+			html: frag
+		};
+
+		this.fragMessages.push( fragMessage );
+
+		// append the HTML to the list
+
+		const fragList = this.html.fragList;
+		fragList.appendChild( frag );
 
 		return this;
 

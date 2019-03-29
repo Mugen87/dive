@@ -33,6 +33,18 @@ body {
 #health {
 	width: 64px;
 }
+#fragList{
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	font-size: 16px;
+	text-align: left;
+}
+#hudFragList{
+	position: absolute;
+	top: 4%;
+	left: 4%;
+}
 .ui-container {
 	background-color: #282828;
 	font-size: 28px;
@@ -45,6 +57,12 @@ body {
 }
 .ui-container>div>span {
 	display: inline-block;
+}
+.ui-container>div>ul>li {
+	padding: 4px;
+}
+.ui-container>div>ul>li:not(:first-child) {
+	border-top: 1px solid #cccccc;
 }
 .hidden {
 	display: none;

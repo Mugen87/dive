@@ -89,6 +89,8 @@ class Player extends MovingEntity {
 
 		};
 
+		this.name = "Player";
+
 	}
 
 	/**
@@ -477,7 +479,7 @@ class Player extends MovingEntity {
 
 				}
 
-				// check if the player is death
+				// check if the player is dead
 
 				if ( this.health <= 0 && this.status === STATUS_ALIVE ) {
 
@@ -494,6 +496,10 @@ class Player extends MovingEntity {
 						if ( this !== competitor ) this.sendMessage( competitor, MESSAGE_DEAD );
 
 					}
+
+					// update UI
+
+					this.world.uiManager.addFragMessage( telegram.sender, this );
 
 				} else {
 
