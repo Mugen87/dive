@@ -39,13 +39,15 @@ class GetItemGoal extends CompositeGoal {
 
 		this.clearSubgoals();
 
-		// get closest item of the given type
+		// get closest available item of the given type
 
 		owner.world.getClosestItem( owner, this.itemType, result );
 
 		this.item = result.item;
 
 		if ( this.item ) {
+
+			// if an item was found, try to pick it up
 
 			const from = new Vector3().copy( owner.position );
 			const to = new Vector3().copy( this.item.position );
@@ -62,7 +64,7 @@ class GetItemGoal extends CompositeGoal {
 
 			this.status = Goal.STATUS.FAILED;
 
-			// ensure the bot does not looking for this type of item for a while
+			// ensure the bot does not look for this type of item for a while
 
 			owner.ignoreItem( this.itemType );
 
