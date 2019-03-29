@@ -8,6 +8,7 @@ const result = { distance: Infinity, item: null };
 * Class for calculating influencing factors in context of inference logic.
 *
 * @author {@link https://github.com/Mugen87|Mugen87}
+* @author {@link https://github.com/robp94|robp94}
 */
 class Feature {
 

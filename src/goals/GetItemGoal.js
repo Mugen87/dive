@@ -9,6 +9,7 @@ const result = { distance: Infinity, item: null };
 /**
 * Goal to get an item of the given item type.
 *
+* @author {@link https://github.com/Mugen87|Mugen87}
 * @author {@link https://github.com/robp94|robp94}
 */
 class GetItemGoal extends CompositeGoal {

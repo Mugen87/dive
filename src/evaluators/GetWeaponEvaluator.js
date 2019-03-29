@@ -6,6 +6,7 @@ import { GetItemGoal } from '../goals/GetItemGoal.js';
 * Class for representing the get-weapon goal evaluator. Can be used to compute a score that
 * represents the desirability of the respective top-level goal.
 *
+* @author {@link https://github.com/Mugen87|Mugen87}
 * @author {@link https://github.com/robp94|robp94}
 */
 class GetWeaponEvaluator extends GoalEvaluator {

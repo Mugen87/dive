@@ -24,6 +24,7 @@ const currentIntersectionPoint = new Vector3();
 * the scene and all game entities are created and managed.
 *
 * @author {@link https://github.com/Mugen87|Mugen87}
+* @author {@link https://github.com/robp94|robp94}
 */
 class World {
 

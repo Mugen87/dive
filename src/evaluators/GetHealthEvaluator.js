@@ -7,6 +7,7 @@ import { HEALTH_PACK } from '../core/Constants.js';
 * Class for representing the get-health goal evaluator. Can be used to compute a score that
 * represents the desirability of the respective top-level goal.
 *
+* @author {@link https://github.com/Mugen87|Mugen87}
 * @author {@link https://github.com/robp94|robp94}
 */
 class GetHealthEvaluator extends GoalEvaluator {

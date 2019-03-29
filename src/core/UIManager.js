@@ -9,6 +9,7 @@ const PI75 = Math.PI * 0.75;
 * Used to manage the state of the user interface.
 *
 * @author {@link https://github.com/Mugen87|Mugen87}
+* @author {@link https://github.com/robp94|robp94}
 */
 class UIManager {
 
