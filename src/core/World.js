@@ -605,6 +605,8 @@ class World {
 
 		this.uiManager.init();
 
+		this.uiManager.removeLoadingScreen();
+
 		return this;
 
 	}

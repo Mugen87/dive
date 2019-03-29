@@ -34,6 +34,7 @@ class UIManager {
 		this.fragMessages = new Array();
 
 		this.html = {
+			loadingScreen: document.getElementById( 'loadingScreen' ),
 			hudAmmo: document.getElementById( 'hudAmmo' ),
 			hudHealth: document.getElementById( 'hudHealth' ),
 			roundsLeft: document.getElementById( 'roundsLeft' ),
@@ -199,6 +200,15 @@ class UIManager {
 
 		}
 
+		// ensure to completely remove the loading screen from the DOM when it is not visible anymore
+
+		this.html.loadingScreen.addEventListener( 'transitionend', ( event ) => {
+
+			event.target.remove();
+			this.html.loadingScreen = null;
+
+		} );
+
 		return this;
 
 	}
@@ -356,6 +366,24 @@ class UIManager {
 		this.sprites.rightIndicator.visible = false;
 		this.sprites.leftIndicator.visible = false;
 		this.sprites.backIndicator.visible = false;
+
+		return this;
+
+	}
+
+	/**
+	* Removes the loading screen. After removing, the loading screen can not
+	* be restored anymore. So it's only allowed to call this method once.
+	*
+	* @return {UIManager} A reference to this UI manager.
+	*/
+	removeLoadingScreen() {
+
+		if ( this.html.loadingScreen !== null ) {
+
+			this.html.loadingScreen.classList.add( 'fade-out' );
+
+		}
 
 		return this;
 

@@ -7,7 +7,17 @@
 	</head>
 <body>
 
-	<section id="hudAmmo" class="ui-container hidden">
+	<section id="loadingScreen">
+		<div class="spinner">
+			<div class="rect1"></div>
+			<div class="rect2"></div>
+			<div class="rect3"></div>
+			<div class="rect4"></div>
+			<div class="rect5"></div>
+		</div>
+	</section>
+
+	<section id="hudAmmo" class="uiContainer hidden">
 		<div>
 			<span id="roundsLeft"></span>
 			<span>|</span>
@@ -15,13 +25,13 @@
 		</div>
 	</section>
 
-	<section id="hudHealth" class="ui-container hidden">
+	<section id="hudHealth" class="uiContainer hidden">
 		<div>
 			<span id="health"></span>
 		</div>
 	</section>
 
-	<section id="hudFragList" class="ui-container hidden">
+	<section id="hudFragList" class="uiContainer hidden">
 		<div>
 			<ul id="fragList"></ul>
 		</div>
