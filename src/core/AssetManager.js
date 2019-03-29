@@ -464,7 +464,6 @@ class AssetManager {
 		// health pack
 
 		const healthPackGeometry = new BoxBufferGeometry( 0.5, 0.5, 0.5 );
-		healthPackGeometry.translate( 0, 0.25, 0 );
 		const healthPackMaterial = new MeshBasicMaterial( { color: 0x00FF00 } );
 
 		const healthPack = new Mesh( healthPackGeometry, healthPackMaterial );
@@ -475,10 +474,9 @@ class AssetManager {
 		// weapon items
 
 		const weaponGeometry = new BoxBufferGeometry( 0.5, 0.5, 0.5 );
-		weaponGeometry.translate( 0, 0.25, 0 );
 		const blasterItemMaterial = new MeshBasicMaterial( { color: 0x000000 } );
 
-		const blasterItem = new Mesh( healthPackGeometry, blasterItemMaterial );
+		const blasterItem = new Mesh( weaponGeometry, blasterItemMaterial );
 		blasterItem.matrixAutoUpdate = false;
 
 		models.set( 'blasterItem', blasterItem );
@@ -487,7 +485,7 @@ class AssetManager {
 
 		const shotgunItemMaterial = new MeshBasicMaterial( { color: 0xff0000 } );
 
-		const shotgunItem = new Mesh( healthPackGeometry, shotgunItemMaterial );
+		const shotgunItem = new Mesh( weaponGeometry, shotgunItemMaterial );
 		shotgunItem.matrixAutoUpdate = false;
 
 		models.set( 'shotgunItem', shotgunItem );
