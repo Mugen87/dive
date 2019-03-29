@@ -427,26 +427,23 @@ class UIManager {
 
 		const string = fragger.name + ' fragged ' + victim.name;
 
-		const fraggerSpan = document.createElement( "span" );
-		//fraggerSpan.className = "arrow";
-		fraggerSpan.style.color = "green";
+		const fraggerSpan = document.createElement( 'span' );
+		fraggerSpan.style.color = '#00ff00';
 		fraggerSpan.textContent = fragger.name;
 
-		const victimSpan = document.createElement( "span" );
-		//victimSpan.className = "arrow";
-		victimSpan.style.color = "red";
-		victimSpan.textContent = victim.name;
+		const middleSpan = document.createElement( 'span' );
+		middleSpan.textContent = ' fragged ';
 
-		const middleSpan = document.createElement( "span" );
-		//middleSpan.className = "arrow";
-		middleSpan.textContent = " fragged ";
+		const victimSpan = document.createElement( 'span' );
+		victimSpan.style.color = '#ff0000';
+		victimSpan.textContent = victim.name;
 
 		// create the respective HTML
 
 		const frag = document.createElement( 'li' );
-		frag.appendChild( fraggerSpan.cloneNode( true ) );
-		frag.appendChild( middleSpan.cloneNode( true ) );
-		frag.appendChild( victimSpan.cloneNode( true ) );
+		frag.appendChild( fraggerSpan );
+		frag.appendChild( middleSpan );
+		frag.appendChild( victimSpan );
 
 		// save everything in a new message object
 
