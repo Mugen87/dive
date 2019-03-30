@@ -296,7 +296,7 @@ class World {
 		// camera
 
 		this.camera = new PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 0.1, 1000 );
-		this.camera.position.set( 0, 10, 15 );
+		this.camera.position.set( 0, 75, 100 );
 		this.camera.add( this.assetManager.listener );
 
 		// helpers
