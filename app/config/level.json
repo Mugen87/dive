@@ -15,8 +15,8 @@
         "width": 125,
         "height": 25,
         "depth": 125,
-        "cellsX": 10,
+        "cellsX": 20,
         "cellsY": 1,
-        "cellsZ": 10
+        "cellsZ": 20
     }
 }
