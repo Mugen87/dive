@@ -26,9 +26,10 @@ class SpawningManager {
 		// spawning points
 
 		this.spawningPoints = new Array();
-		this.spawningPoints.push( new Vector3( 0, 0, 0 ) );
-		this.spawningPoints.push( new Vector3( - 40, 0, 15 ) );
-		this.spawningPoints.push( new Vector3( - 30, 0, - 25 ) );
+		this.spawningPoints.push( new Vector3( - 64, 2.27, 61 ) ); // top right
+		this.spawningPoints.push( new Vector3( 11, 0, 55 ) ); // top left
+		this.spawningPoints.push( new Vector3( 3.5, 0, - 10.5 ) ); // bottom left
+		this.spawningPoints.push( new Vector3( - 82, 2.65, 3 ) ); // bottom right
 
 		//items
 
@@ -38,16 +39,20 @@ class SpawningManager {
 
 		this.healthPacks = new Array();
 		this.healthPackSpawningPoints = new Array();
-		this.healthPackSpawningPoints.push( new Vector3( - 40, 0.25, 0 ) );
+		this.healthPackSpawningPoints.push( new Vector3( - 31, 3.75, 19 ) );
+		this.healthPackSpawningPoints.push( new Vector3( 3.5, 0.25, 37 ) );
+		this.healthPackSpawningPoints.push( new Vector3( - 57, 2.9, - 8 ) );
 
 		// weapons
 
 		this.assaultRilflesSpawningPoints = new Array();
-		this.assaultRilflesSpawningPoints.push( new Vector3( - 41, 0.25, 5 ) );
+		this.assaultRilflesSpawningPoints.push( new Vector3( - 3, 0.25, 17 ) );
+		this.assaultRilflesSpawningPoints.push( new Vector3( - 51, 4.75, 32 ) );
 		this.assaultRilfles = new Array();
 
 		this.shotgunSpawningPoints = new Array();
-		this.shotgunSpawningPoints.push( new Vector3( 1, 0.25, 5 ) );
+		this.shotgunSpawningPoints.push( new Vector3( - 25, 4.75, 64 ) );
+		this.shotgunSpawningPoints.push( new Vector3( - 37, 2.9, 0 ) );
 		this.shotguns = new Array();
 
 		this.blasterSpawningPoints = new Array();

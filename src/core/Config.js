@@ -13,14 +13,14 @@ const CONFIG = {
 		DYING_TIME: 3, // seconds
 		HEAD_HEIGHT: 1.7, // meter
 		MAX_HEALTH: 100, // health points
-		MAX_SPEED: 4 // meter/seconds
+		MAX_SPEED: 6 // meter/seconds
 	},
 	CONTROLS: {
 		LOOKING_SPEED: 2, // unitless
 		BRAKING_POWER: 10, // unitless
-		HEAD_MOVEMENT: 1.7, // unitless
-		WEAPON_MOVEMENT: 1.7, // unitless
-		ACCELERATION: 0.7 // unitless
+		HEAD_MOVEMENT: 1.2, // unitless
+		WEAPON_MOVEMENT: 1.2, // unitless
+		ACCELERATION: 60 // unitless
 	},
 	HEALTH_PACK: {
 		HEALTH: 50, // health
@@ -60,7 +60,7 @@ const CONFIG = {
 			NOISE_MAX_DISTANCE: 100 // meter
 		},
 		BOUNDING_RADIUS: 0.5, // meter
-		COUNT: 2, // number
+		COUNT: 3, // number
 		HEAD_HEIGHT: 1.5, // meter
 		MAX_HEALTH: 100, // health points
 		DYING_TIME: 3, // seconds

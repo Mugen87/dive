@@ -574,7 +574,6 @@ class AssetManager {
 
 			} );
 
-
 		return this;
 
 	}
