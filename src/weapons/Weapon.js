@@ -19,6 +19,8 @@ class Weapon extends GameEntity {
 
 		this.owner = owner;
 
+		this.canAcitivateTrigger = false;
+
 		this.type = null;
 		this.status = WEAPON_STATUS_UNREADY;
 

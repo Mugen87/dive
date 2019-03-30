@@ -21,6 +21,8 @@ class Projectile extends MovingEntity {
 
 		super();
 
+		this.canAcitivateTrigger = false;
+
 		this.owner = owner;
 		this.ray = ray;
 
