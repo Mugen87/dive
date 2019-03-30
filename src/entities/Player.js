@@ -89,7 +89,7 @@ class Player extends MovingEntity {
 
 		};
 
-		this.name = "Player";
+		this.name = 'Player';
 
 	}
 

@@ -1,4 +1,4 @@
-import { EntityManager, Time, MeshGeometry, Vector3 } from '../lib/yuka.module.js';
+import { EntityManager, Time, MeshGeometry, Vector3, CellSpacePartitioning } from '../lib/yuka.module.js';
 import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer, Object3D, SkeletonHelper } from '../lib/three.module.js';
 import { HemisphereLight, DirectionalLight } from '../lib/three.module.js';
 import { AxesHelper } from '../lib/three.module.js';
@@ -73,6 +73,7 @@ class World {
 
 		this.helpers = {
 			convexRegionHelper: null,
+			spatialIndexHelper: null,
 			axesHelper: null,
 			graphHelper: null,
 			pathHelpers: new Array(),
@@ -303,6 +304,7 @@ class World {
 		if ( this.debug ) {
 
 			this.helpers.axesHelper = new AxesHelper( 5 );
+			this.helpers.axesHelper.visible = false;
 			this.scene.add( this.helpers.axesHelper );
 
 		}
@@ -439,6 +441,15 @@ class World {
 		this.navMesh = this.assetManager.navMesh;
 		this.costTable = this.assetManager.costTable;
 
+		const width = 200, height = 50, depth = 150;
+		const cellsX = 20, cellsY = 5, cellsZ = 20;
+
+		this.navMesh.spatialIndex = new CellSpacePartitioning( width, height, depth, cellsX, cellsY, cellsZ );
+		this.navMesh.updateSpatialIndex();
+
+		this.helpers.spatialIndexHelper = NavMeshUtils.createCellSpaceHelper( this.navMesh.spatialIndex );
+		this.scene.add( this.helpers.spatialIndexHelper );
+
 		// spawning points
 
 		this.spawningManager.initItems();
@@ -453,7 +464,6 @@ class World {
 			//
 
 			this.helpers.graphHelper = NavMeshUtils.createGraphHelper( this.navMesh.graph, 0.2 );
-			this.helpers.graphHelper.visible = false;
 			this.scene.add( this.helpers.graphHelper );
 
 			//

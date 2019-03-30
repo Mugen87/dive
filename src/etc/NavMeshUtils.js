@@ -109,6 +109,7 @@ class NavMeshUtils {
 	static createGraphHelper( graph, nodeSize = 1, nodeColor = 0x4e84c4, edgeColor = 0xffffff ) {
 
 		const group = new Group();
+		group.visible = false;
 
 		// nodes
 
@@ -165,6 +166,62 @@ class NavMeshUtils {
 		group.add( lines );
 
 		return group;
+
+	}
+
+	/**
+	* Creates a helper that visualizes the spatial index of a navigation mesh.
+	*
+	* @param {CellSpacePartitioning} spatialIndex - The spatial index.
+	* @return {LineSegments} The helper.
+	*/
+	static createCellSpaceHelper( spatialIndex ) {
+
+		const cells = spatialIndex.cells;
+
+		const geometry = new BufferGeometry();
+		const material = new LineBasicMaterial( { color: 0xff0000 } );
+
+		const lines = new LineSegments( geometry, material );
+		lines.visible = false;
+		lines.matrixAutoUpdate = false;
+
+		const positions = [];
+
+		for ( let i = 0, l = cells.length; i < l; i ++ ) {
+
+			const cell = cells[ i ];
+			const min = cell.aabb.min;
+			const max = cell.aabb.max;
+
+			// generate data for twelve lines segments
+
+			// bottom lines
+
+			positions.push( min.x, min.y, min.z, 	max.x, min.y, min.z );
+			positions.push( min.x, min.y, min.z, 	min.x, min.y, max.z );
+			positions.push( max.x, min.y, max.z, 	max.x, min.y, min.z );
+			positions.push( max.x, min.y, max.z, 	min.x, min.y, max.z );
+
+			// top lines
+
+			positions.push( min.x, max.y, min.z, 	max.x, max.y, min.z );
+			positions.push( min.x, max.y, min.z, 	min.x, max.y, max.z );
+			positions.push( max.x, max.y, max.z, 	max.x, max.y, min.z );
+			positions.push( max.x, max.y, max.z, 	min.x, max.y, max.z );
+
+			// torso lines
+
+			positions.push( min.x, min.y, min.z, 	min.x, max.y, min.z );
+			positions.push( max.x, min.y, min.z, 	max.x, max.y, min.z );
+			positions.push( max.x, min.y, max.z, 	max.x, max.y, max.z );
+			positions.push( min.x, min.y, max.z, 	min.x, max.y, max.z );
+
+		}
+
+		geometry.addAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
+
+		return lines;
 
 	}
 

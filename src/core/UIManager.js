@@ -66,14 +66,15 @@ class UIManager {
 
 		this.debugParameter = {
 			showRegions: false,
-			showAxes: true,
-			showPaths: true,
+			showAxes: false,
+			showPaths: false,
 			showGraph: false,
 			showSpawnPoints: false,
 			showUUIDHelpers: false,
 			showSkeletons: false,
 			showItemRadius: false,
 			showWireframe: false,
+			showSpatialIndex: false,
 			enableFPSControls: () => {
 
 				this.world.fpsControls.connect();
@@ -115,6 +116,12 @@ class UIManager {
 			folderNavMesh.add( params, 'showRegions' ).name( 'show convex regions' ).onChange( ( value ) => {
 
 				world.helpers.convexRegionHelper.visible = value;
+
+			} );
+
+			folderNavMesh.add( params, 'showSpatialIndex', 1, 30 ).name( 'show spatial index' ).onChange( ( value ) => {
+
+				world.helpers.spatialIndexHelper.visible = value;
 
 			} );
 
