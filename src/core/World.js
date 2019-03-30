@@ -441,8 +441,16 @@ class World {
 		this.navMesh = this.assetManager.navMesh;
 		this.costTable = this.assetManager.costTable;
 
-		const width = 200, height = 50, depth = 150;
-		const cellsX = 20, cellsY = 5, cellsZ = 20;
+		// spatial index
+
+		const levelConfig = this.assetManager.configs.get( 'level' );
+
+		const width = levelConfig.spatialIndex.width;
+		const height = levelConfig.spatialIndex.height;
+		const depth = levelConfig.spatialIndex.depth;
+		const cellsX = levelConfig.spatialIndex.cellsX;
+		const cellsY = levelConfig.spatialIndex.cellsY;
+		const cellsZ = levelConfig.spatialIndex.cellsZ;
 
 		this.navMesh.spatialIndex = new CellSpacePartitioning( width, height, depth, cellsX, cellsY, cellsZ );
 		this.navMesh.updateSpatialIndex();
@@ -454,7 +462,7 @@ class World {
 
 		this.spawningManager.init();
 
-		//
+		// debugging
 
 		if ( this.debug ) {
 
