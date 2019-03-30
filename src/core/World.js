@@ -450,9 +450,9 @@ class World {
 		this.helpers.spatialIndexHelper = NavMeshUtils.createCellSpaceHelper( this.navMesh.spatialIndex );
 		this.scene.add( this.helpers.spatialIndexHelper );
 
-		// spawning points
+		// init spawning points and items
 
-		this.spawningManager.initItems();
+		this.spawningManager.init();
 
 		//
 

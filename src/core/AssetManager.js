@@ -31,6 +31,7 @@ class AssetManager {
 
 		this.animations = new Map();
 		this.audios = new Map();
+		this.configs = new Map();
 		this.models = new Map();
 		this.textures = new Map();
 
@@ -49,6 +50,7 @@ class AssetManager {
 
 		this._loadAnimations();
 		this._loadAudios();
+		this._loadConfigs();
 		this._loadModels();
 		this._loadTextures();
 		this._loadNavMesh();
@@ -240,6 +242,38 @@ class AssetManager {
 		audios.set( 'impact7', impact7 );
 		audios.set( 'health', health );
 		audios.set( 'ammo', ammo );
+
+		return this;
+
+	}
+
+	/**
+	* Loads all configurations from the backend.
+	*
+	* @return {AssetManager} A reference to this asset manager.
+	*/
+	_loadConfigs() {
+
+		const loadingManager = this.loadingManager;
+		const configs = this.configs;
+
+		// level config
+
+		loadingManager.itemStart( 'levelConfig' );
+
+		fetch( './config/level.json' )
+			.then( response => {
+
+				return response.json();
+
+			} )
+			.then( json => {
+
+				configs.set( 'level', json );
+
+				loadingManager.itemEnd( 'levelConfig' );
+
+			} );
 
 		return this;
 

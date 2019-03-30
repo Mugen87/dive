@@ -1,0 +1,14 @@
+{
+    "competitorSpawningPoints": [
+        [ -64, 2.27, 61 ], [ 11, 0, 55 ], [ 0, 0, -10.5 ], [ -82, 2.65, 3 ]
+    ],
+    "healthPackSpawningPoints": [
+        [ -31, 3.75, 19 ], [ 3.5, 0.25, 37 ], [ -57, 2.9, -8 ]
+    ],
+    "shotgunSpawningPoints": [
+        [ -25, 4.75, 64 ], [ -37, 2.9, 0 ]
+    ],
+    "assaultRilflesSpawningPoints": [
+        [ -3, 0.25, 17 ], [ -51, 4.75, 32 ]
+    ]
+}
