@@ -12,6 +12,8 @@ const STEP2 = 'step2';
 let currentSign = 1;
 let elapsed = 0;
 
+const euler = { x: 0, y: 0, z: 0 };
+
 /**
 * Holds the implementation of the First-Person Controls.
 *
@@ -95,6 +97,24 @@ class FirstPersonControls extends EventDispatcher {
 		document.removeEventListener( 'pointerlockerror', this._pointerlockErrorHandler, false );
 		document.removeEventListener( 'keydown', this._keyDownHandler, false );
 		document.removeEventListener( 'keyup', this._keyUpHandler, false );
+
+		return this;
+
+	}
+
+	/**
+	* Ensures the controls reflect the current orientation of the owner. This method is
+	* always used if the player's orientation is set manually. In this case, it's necessary
+	* to adjust internal variables.
+	*
+	* @return {FirstPersonControls} A reference to this instance.
+	*/
+	sync() {
+
+		this.owner.rotation.toEuler( euler );
+
+		this.movementX = euler.y; // yaw
+		this.movementY = euler.x; // pitch
 
 		return this;
 

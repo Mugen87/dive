@@ -143,6 +143,7 @@ class Player extends MovingEntity {
 			if ( this.world.debug ) console.log( 'DIVE.Player: Player died.' );
 
 			this.world.spawningManager.respawnCompetitor( this );
+			this.world.fpsControls.sync();
 
 			const animation = this.animations.get( 'player_death' );
 			animation.stop();

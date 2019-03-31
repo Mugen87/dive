@@ -142,7 +142,9 @@ class SpawningManager {
 	respawnCompetitor( competitor ) {
 
 		const spawnPoint = this.getSpawnPoint( competitor );
-		competitor.position.copy( spawnPoint );
+
+		competitor.position.copy( spawnPoint.position );
+		competitor.rotation.fromEuler( spawnPoint.rotation.x, spawnPoint.rotation.y, spawnPoint.rotation.z );
 
 		// ensure all world matrices of the competitor are immediately up to date
 
@@ -160,12 +162,11 @@ class SpawningManager {
 	*/
 	getSpawnPoint( enemy ) {
 
-		let maxDistance = - Infinity;
-
-		let bestSpawningPoint = this.spawningPoints[ 0 ];
-
-		const competitors = this.world.competitors;
 		const spawningPoints = this.spawningPoints;
+		const competitors = this.world.competitors;
+
+		let maxDistance = - Infinity;
+		let bestSpawningPoint = null;
 
 		// searching for the spawning point furthest away from an enemy
 
@@ -181,7 +182,7 @@ class SpawningManager {
 
 				if ( competitor !== enemy ) {
 
-					const distance = spawningPoint.squaredDistanceTo( competitor.position );
+					const distance = spawningPoint.position.squaredDistanceTo( competitor.position );
 
 					if ( distance < closestDistance ) {
 
@@ -232,7 +233,13 @@ class SpawningManager {
 
 		for ( const spawningPoint of levelConfig.competitorSpawningPoints ) {
 
-			this.spawningPoints.push( new Vector3().fromArray( spawningPoint ) );
+			const position = spawningPoint.position;
+			const rotation = spawningPoint.rotation;
+
+			this.spawningPoints.push( {
+				position: new Vector3().fromArray( position ),
+				rotation: { x: rotation[ 0 ], y: rotation[ 1 ], z: rotation[ 2 ] } // euler angles
+			} );
 
 		}
 

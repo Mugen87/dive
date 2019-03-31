@@ -573,6 +573,7 @@ class World {
 	_initControls() {
 
 		this.fpsControls = new FirstPersonControls( this.player );
+		this.fpsControls.sync();
 
 		this.fpsControls.addEventListener( 'lock', ( ) => {
 
