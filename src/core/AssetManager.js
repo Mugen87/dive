@@ -471,6 +471,25 @@ class AssetManager {
 
 		} );
 
+		// health pack
+
+		gltfLoader.load( './models/healthPack.glb', ( gltf ) => {
+
+			const renderComponent = gltf.scene;
+			renderComponent.matrixAutoUpdate = false;
+			renderComponent.updateMatrix();
+
+			renderComponent.traverse( ( object ) => {
+
+				object.matrixAutoUpdate = false;
+				object.updateMatrix();
+
+			} );
+
+			models.set( 'healthPack', renderComponent );
+
+		} );
+
 		// muzzle sprite
 
 		const muzzleTexture = textureLoader.load( './textures/muzzle.png' );
@@ -494,46 +513,6 @@ class AssetManager {
 		bulletLine.matrixAutoUpdate = false;
 
 		models.set( 'bulletLine', bulletLine );
-
-		// health pack
-
-		const healthPackGeometry = new BoxBufferGeometry( 0.5, 0.5, 0.5 );
-		const healthPackMaterial = new MeshBasicMaterial( { color: 0x00FF00 } );
-
-		const healthPack = new Mesh( healthPackGeometry, healthPackMaterial );
-		healthPack.matrixAutoUpdate = false;
-
-		models.set( 'healthPack', healthPack );
-
-		// weapon items
-
-		const weaponGeometry = new BoxBufferGeometry( 0.5, 0.5, 0.5 );
-		const blasterItemMaterial = new MeshBasicMaterial( { color: 0x000000 } );
-
-		const blasterItem = new Mesh( weaponGeometry, blasterItemMaterial );
-		blasterItem.matrixAutoUpdate = false;
-
-		models.set( 'blasterItem', blasterItem );
-
-		//
-
-		const shotgunItemMaterial = new MeshBasicMaterial( { color: 0xff0000 } );
-
-		const shotgunItem = new Mesh( weaponGeometry, shotgunItemMaterial );
-		shotgunItem.matrixAutoUpdate = false;
-
-		models.set( 'shotgunItem', shotgunItem );
-
-		//
-
-		const assaultRifleItemMaterial = new MeshBasicMaterial( { color: 0xffff00 } );
-
-		const assaultRifleItem = new Mesh( weaponGeometry, assaultRifleItemMaterial );
-		assaultRifleItem.matrixAutoUpdate = false;
-
-		models.set( 'assaultRifleItem', assaultRifleItem );
-
-		return this;
 
 	}
 

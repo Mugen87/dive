@@ -302,8 +302,9 @@ class Enemy extends Vehicle {
 
 			}
 
-			this.world.spawningManager.respawnCompetitor( this );
 			this.reset();
+
+			this.world.spawningManager.respawnCompetitor( this );
 
 		}
 
@@ -552,8 +553,6 @@ class Enemy extends Vehicle {
 	* @return {Enemy} A reference to this game entity.
 	*/
 	reset() {
-
-		this.rotation.set( 0, 0, 0, 1 );
 
 		this.health = this.maxHealth;
 		this.status = STATUS_ALIVE;

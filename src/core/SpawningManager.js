@@ -326,7 +326,7 @@ class SpawningManager {
 			const blasterItem = new WeaponItem( WEAPON_TYPES_BLASTER, CONFIG.BLASTER.RESPAWN_TIME, CONFIG.BLASTER.AMMO );
 			blasterItem.position.copy( spawningPoint );
 
-			const renderComponent = assetManager.models.get( 'blasterItem' ).clone();
+			const renderComponent = assetManager.models.get( 'blaster_low' ).clone();
 			renderComponent.position.copy( blasterItem.position );
 			blasterItem.setRenderComponent( renderComponent, sync );
 
@@ -357,7 +357,7 @@ class SpawningManager {
 			const shotgunItem = new WeaponItem( WEAPON_TYPES_SHOTGUN, CONFIG.SHOTGUN.RESPAWN_TIME, CONFIG.SHOTGUN.AMMO );
 			shotgunItem.position.copy( spawningPoint );
 
-			const renderComponent = assetManager.models.get( 'shotgunItem' ).clone();
+			const renderComponent = assetManager.models.get( 'shotgun_low' ).clone();
 			renderComponent.position.copy( shotgunItem.position );
 			shotgunItem.setRenderComponent( renderComponent, sync );
 
@@ -388,7 +388,7 @@ class SpawningManager {
 			const assaultRilfleItem = new WeaponItem( WEAPON_TYPES_ASSAULT_RIFLE, CONFIG.ASSAULT_RIFLE.RESPAWN_TIME, CONFIG.ASSAULT_RIFLE.AMMO );
 			assaultRilfleItem.position.copy( spawningPoint );
 
-			const renderComponent = assetManager.models.get( 'assaultRifleItem' ).clone();
+			const renderComponent = assetManager.models.get( 'assaultRifle_low' ).clone();
 			renderComponent.position.copy( assaultRilfleItem.position );
 			assaultRilfleItem.setRenderComponent( renderComponent, sync );
 

@@ -6,3 +6,6 @@ License: CC Attribution
 
 Assault Rifle from https://sketchfab.com/3d-models/sci-fi-assault-rifle-d2596ed504b84ffda761b0886c26b202 by Ptis
 License: CC Attribution-NonCommercial
+
+Health Pack from https://sketchfab.com/3d-models/health-pack-9d2c0bc5dbe8488f9be45801184e9319 by Michael
+License: CC Attribution

@@ -142,13 +142,10 @@ class Player extends MovingEntity {
 
 			if ( this.world.debug ) console.log( 'DIVE.Player: Player died.' );
 
+			this.reset();
+
 			this.world.spawningManager.respawnCompetitor( this );
 			this.world.fpsControls.sync();
-
-			const animation = this.animations.get( 'player_death' );
-			animation.stop();
-
-			this.reset();
 
 		}
 
@@ -167,9 +164,6 @@ class Player extends MovingEntity {
 	*/
 	reset() {
 
-		this.rotation.set( 0, 0, 0, 1 );
-		this.head.rotation.set( 0, 0, 0, 1 );
-
 		this.health = this.maxHealth;
 		this.status = STATUS_ALIVE;
 
@@ -178,6 +172,9 @@ class Player extends MovingEntity {
 		this.world.fpsControls.reset();
 
 		this.world.uiManager.showFPSInterface();
+
+		const animation = this.animations.get( 'player_death' );
+		animation.stop();
 
 		return this;
 
