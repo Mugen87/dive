@@ -34,6 +34,22 @@ class Projectile extends MovingEntity {
 	}
 
 	/**
+	* Executed when this game entity is updated for the first time by its entity manager.
+	*
+	* @return {Projectile} A reference to this game entity.
+	*/
+	start() {
+
+		// add the render component to the scene when the projectile was updated
+		// by the entity manager at least once
+
+		this.owner.world.scene.add( this._renderComponent );
+
+		return this;
+
+	}
+
+	/**
 	* Update method of this projectile.
 	*
 	* @param {Number} delta - The time delta value;

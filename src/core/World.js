@@ -167,7 +167,7 @@ class World {
 		const bullet = new Bullet( owner, ray );
 		bullet.setRenderComponent( bulletLine, sync );
 
-		this.add( bullet );
+		this.entityManager.add( bullet );
 
 		return this;
 

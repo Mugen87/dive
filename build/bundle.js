@@ -72184,6 +72184,7 @@
 
 	}
 	var GUI$1 = GUI;
+	//# sourceMappingURL=dat.gui.module.js.map
 
 	const PI25 = Math.PI * 0.25;
 	const PI75 = Math.PI * 0.75;
@@ -78105,6 +78106,22 @@
 		}
 
 		/**
+		* Executed when this game entity is updated for the first time by its entity manager.
+		*
+		* @return {Projectile} A reference to this game entity.
+		*/
+		start() {
+
+			// add the render component to the scene when the projectile was updated
+			// by the entity manager at least once
+
+			this.owner.world.scene.add( this._renderComponent );
+
+			return this;
+
+		}
+
+		/**
 		* Update method of this projectile.
 		*
 		* @param {Number} delta - The time delta value;
@@ -78971,7 +78988,7 @@
 			const bullet = new Bullet( owner, ray );
 			bullet.setRenderComponent( bulletLine, sync$2 );
 
-			this.add( bullet );
+			this.entityManager.add( bullet );
 
 			return this;
 
