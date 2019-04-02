@@ -163,11 +163,12 @@ class World {
 	addBullet( owner, ray ) {
 
 		const bulletLine = this.assetManager.models.get( 'bulletLine' ).clone();
+		bulletLine.visible = false;
 
 		const bullet = new Bullet( owner, ray );
 		bullet.setRenderComponent( bulletLine, sync );
 
-		this.entityManager.add( bullet );
+		this.add( bullet );
 
 		return this;
 

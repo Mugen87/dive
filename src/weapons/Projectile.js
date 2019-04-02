@@ -40,10 +40,10 @@ class Projectile extends MovingEntity {
 	*/
 	start() {
 
-		// add the render component to the scene when the projectile was updated
+		// make the render component visible when the projectile was updated
 		// by the entity manager at least once
 
-		this.owner.world.scene.add( this._renderComponent );
+		this._renderComponent.visible = true;
 
 		return this;
 
