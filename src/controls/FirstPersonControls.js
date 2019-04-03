@@ -112,8 +112,9 @@ class FirstPersonControls extends EventDispatcher {
 	sync() {
 
 		this.owner.rotation.toEuler( euler );
-
 		this.movementX = euler.y; // yaw
+
+		this.owner.head.rotation.toEuler( euler );
 		this.movementY = euler.x; // pitch
 
 		return this;
