@@ -76689,8 +76689,8 @@
 			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetClose, okayShot ), fuzzySets.veryDesirable ) );
 			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetClose, LoadsShot ), fuzzySets.veryDesirable ) );
 
-			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, lowShot ), fuzzySets.desirable ) );
-			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, okayShot ), fuzzySets.veryDesirable ) );
+			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, lowShot ), fuzzySets.undesirable ) );
+			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, okayShot ), fuzzySets.desirable ) );
 			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, LoadsShot ), fuzzySets.veryDesirable ) );
 
 			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetFar, lowShot ), fuzzySets.undesirable ) );
@@ -76731,7 +76731,7 @@
 			fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetClose, LoadsAssault ), fuzzySets.desirable ) );
 
 			fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, lowAssault ), fuzzySets.desirable ) );
-			fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, okayAssault ), fuzzySets.desirable ) );
+			fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, okayAssault ), fuzzySets.veryDesirable ) );
 			fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, LoadsAssault ), fuzzySets.veryDesirable ) );
 
 			fuzzyModuleAssaultRifle.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, lowAssault ), fuzzySets.desirable ) );
