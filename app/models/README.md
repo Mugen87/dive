@@ -9,3 +9,6 @@ License: CC Attribution-NonCommercial
 
 Health Pack from https://sketchfab.com/3d-models/health-pack-9d2c0bc5dbe8488f9be45801184e9319 by Michael
 License: CC Attribution
+
+Soldier from https://www.mixamo.com/ by Adobe
+License: None
