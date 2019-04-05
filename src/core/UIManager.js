@@ -64,6 +64,8 @@ class UIManager {
 
 		// debugging
 
+		this.datGui = null;
+
 		this.debugParameter = {
 			showRegions: false,
 			showAxes: false,
@@ -204,6 +206,8 @@ class UIManager {
 			} );
 
 			gui.open();
+
+			this.datGui = gui;
 
 		}
 
@@ -535,6 +539,32 @@ class UIManager {
 		const player = this.world.player;
 
 		this.html.health.textContent = player.health;
+
+		return this;
+
+	}
+
+	/**
+	* Opens the debug interface.
+	*
+	* @return {UIManager} A reference to this UI manager.
+	*/
+	openDebugUI() {
+
+		this.datGui.open();
+
+		return this;
+
+	}
+
+	/**
+	* Closes the debug interface.
+	*
+	* @return {UIManager} A reference to this UI manager.
+	*/
+	closeDebugUI() {
+
+		this.datGui.close();
 
 		return this;
 

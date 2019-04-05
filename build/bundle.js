@@ -72250,6 +72250,8 @@
 
 			// debugging
 
+			this.datGui = null;
+
 			this.debugParameter = {
 				showRegions: false,
 				showAxes: false,
@@ -72390,6 +72392,8 @@
 				} );
 
 				gui$$1.open();
+
+				this.datGui = gui$$1;
 
 			}
 
@@ -72721,6 +72725,32 @@
 			const player = this.world.player;
 
 			this.html.health.textContent = player.health;
+
+			return this;
+
+		}
+
+		/**
+		* Opens the debug interface.
+		*
+		* @return {UIManager} A reference to this UI manager.
+		*/
+		openDebugUI() {
+
+			this.datGui.open();
+
+			return this;
+
+		}
+
+		/**
+		* Closes the debug interface.
+		*
+		* @return {UIManager} A reference to this UI manager.
+		*/
+		closeDebugUI() {
+
+			this.datGui.close();
 
 			return this;
 
@@ -79412,6 +79442,12 @@
 
 				this.uiManager.showFPSInterface();
 
+				if ( this.debug ) {
+
+					this.uiManager.closeDebugUI();
+
+				}
+
 			} );
 
 			this.fpsControls.addEventListener( 'unlock', () => {
@@ -79425,6 +79461,12 @@
 				this.player.head.setRenderComponent( null, null );
 
 				this.uiManager.hideFPSInterface();
+
+				if ( this.debug ) {
+
+					this.uiManager.openDebugUI();
+
+				}
 
 			} );
 

@@ -588,6 +588,12 @@ class World {
 
 			this.uiManager.showFPSInterface();
 
+			if ( this.debug ) {
+
+				this.uiManager.closeDebugUI();
+
+			}
+
 		} );
 
 		this.fpsControls.addEventListener( 'unlock', () => {
@@ -601,6 +607,12 @@ class World {
 			this.player.head.setRenderComponent( null, null );
 
 			this.uiManager.hideFPSInterface();
+
+			if ( this.debug ) {
+
+				this.uiManager.openDebugUI();
+
+			}
 
 		} );
 
