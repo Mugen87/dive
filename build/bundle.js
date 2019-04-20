@@ -390,7 +390,7 @@
 
 	}
 
-	const lut = [];
+	const lut = new Array();
 
 	for ( let i = 0; i < 256; i ++ ) {
 
@@ -2019,7 +2019,7 @@
 				euler.y = Math.atan2( this.x * this.z + this.w * this.y, 0.5 - this.x * this.x - this.y * this.y );
 				euler.z = 0;
 
-			} else {
+			} else { //todo test
 
 				euler.x = Math.asin( sp );
 				euler.y = Math.atan2( this.x * this.z + this.w * this.y, 0.5 - this.x * this.x - this.y * this.y );
@@ -4461,6 +4461,362 @@
 
 	}
 
+	const vector$1 = new Vector3();
+	const center = new Vector3();
+	const size = new Vector3();
+
+	const points = [
+		new Vector3(),
+		new Vector3(),
+		new Vector3(),
+		new Vector3(),
+		new Vector3(),
+		new Vector3(),
+		new Vector3(),
+		new Vector3()
+	];
+
+	/**
+	* Class representing an axis-aligned bounding box (AABB).
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class AABB {
+
+		/**
+		* Constructs a new AABB with the given values.
+		*
+		* @param {Vector3} min - The minimum bounds of the AABB.
+		* @param {Vector3} max - The maximum bounds of the AABB.
+		*/
+		constructor( min = new Vector3(), max = new Vector3() ) {
+
+			/**
+			* The minimum bounds of the AABB.
+			* @type Vector3
+			*/
+			this.min = min;
+
+			/**
+			* The maximum bounds of the AABB.
+			* @type Vector3
+			*/
+			this.max = max;
+
+		}
+
+		/**
+		* Sets the given values to this AABB.
+		*
+		* @param {Vector3} min - The minimum bounds of the AABB.
+		* @param {Vector3} max - The maximum bounds of the AABB.
+		* @return {AABB} A reference to this AABB.
+		*/
+		set( min, max ) {
+
+			this.min = min;
+			this.max = max;
+
+			return this;
+
+		}
+
+		/**
+		* Copies all values from the given AABB to this AABB.
+		*
+		* @param {AABB} aabb - The AABB to copy.
+		* @return {AABB} A reference to this AABB.
+		*/
+		copy( aabb ) {
+
+			this.min.copy( aabb.min );
+			this.max.copy( aabb.max );
+
+			return this;
+
+		}
+
+		/**
+		* Creates a new AABB and copies all values from this AABB.
+		*
+		* @return {AABB} A new AABB.
+		*/
+		clone() {
+
+			return new this.constructor().copy( this );
+
+		}
+
+		/**
+		* Ensures the given point is inside this AABB and stores
+		* the result in the given vector.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		clampPoint( point, result ) {
+
+			result.copy( point ).clamp( this.min, this.max );
+
+			return result;
+
+		}
+
+		/**
+		* Returns true if the given point is inside this AABB.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @return {Boolean} The result of the containments test.
+		*/
+		containsPoint( point ) {
+
+			return point.x < this.min.x || point.x > this.max.x ||
+				point.y < this.min.y || point.y > this.max.y ||
+				point.z < this.min.z || point.z > this.max.z ? false : true;
+
+		}
+
+		/**
+		* Expands this AABB by the given point. So after this method call,
+		* the given point lies inside the AABB.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @return {AABB} A reference to this AABB.
+		*/
+		expand( point ) {
+
+			this.min.min( point );
+			this.max.max( point );
+
+			return this;
+
+		}
+
+		/**
+		* Computes the center point of this AABB and stores it into the given vector.
+		*
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		getCenter( result ) {
+
+			return result.addVectors( this.min, this.max ).multiplyScalar( 0.5 );
+
+		}
+
+		/**
+		* Computes the size (width, height, depth) of this AABB and stores it into the given vector.
+		*
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		getSize( result ) {
+
+			return result.subVectors( this.max, this.min );
+
+		}
+
+		/**
+		* Returns true if the given AABB intersects this AABB.
+		*
+		* @param {AABB} aabb - The AABB to test.
+		* @return {Boolean} The result of the intersection test.
+		*/
+		intersectsAABB( aabb ) {
+
+			return aabb.max.x < this.min.x || aabb.min.x > this.max.x ||
+				aabb.max.y < this.min.y || aabb.min.y > this.max.y ||
+				aabb.max.z < this.min.z || aabb.min.z > this.max.z ? false : true;
+
+		}
+
+		/**
+		* Returns true if the given bounding sphere intersects this AABB.
+		*
+		* @param {BoundingSphere} sphere - The bounding sphere to test.
+		* @return {Boolean} The result of the intersection test.
+		*/
+		intersectsBoundingSphere( sphere ) {
+
+			// find the point on the AABB closest to the sphere center
+
+			this.clampPoint( sphere.center, vector$1 );
+
+			// if that point is inside the sphere, the AABB and sphere intersect.
+
+			return vector$1.squaredDistanceTo( sphere.center ) <= ( sphere.radius * sphere.radius );
+
+		}
+
+		/**
+		* Returns the normal for a given point on this AABB's surface.
+		*
+		* @param {Vector3} point - The point on the surface
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		getNormalFromSurfacePoint( point, result ) {
+
+			// from https://www.gamedev.net/forums/topic/551816-finding-the-aabb-surface-normal-from-an-intersection-point-on-aabb/
+
+			result.set( 0, 0, 0 );
+
+			let distance;
+			let minDistance = Infinity;
+
+			this.getCenter( center );
+			this.getSize( size );
+
+			// transform point into local space of AABB
+
+			vector$1.copy( point ).sub( center );
+
+			// x-axis
+
+			distance = Math.abs( size.x - Math.abs( vector$1.x ) );
+
+			if ( distance < minDistance ) {
+
+				minDistance = distance;
+				result.set( 1 * Math.sign( vector$1.x ), 0, 0 );
+
+			}
+
+			// y-axis
+
+			distance = Math.abs( size.y - Math.abs( vector$1.y ) );
+
+			if ( distance < minDistance ) {
+
+				minDistance = distance;
+				result.set( 0, 1 * Math.sign( vector$1.y ), 0 );
+
+			}
+
+			// z-axis
+
+			distance = Math.abs( size.z - Math.abs( vector$1.z ) );
+
+			if ( distance < minDistance ) {
+
+				result.set( 0, 0, 1 * Math.sign( vector$1.z ) );
+
+			}
+
+			return result;
+
+		}
+
+		/**
+		* Sets the values of the AABB from the given center and size vector.
+		*
+		* @param {Vector3} center - The center point of the AABB.
+		* @param {Vector3} size - The size of the AABB per axis.
+		* @return {AABB} A reference to this AABB.
+		*/
+		fromCenterAndSize( center, size ) {
+
+			vector$1.copy( size ).multiplyScalar( 0.5 ); // compute half size
+
+			this.min.copy( center ).sub( vector$1 );
+			this.max.copy( center ).add( vector$1 );
+
+			return this;
+
+		}
+
+		/**
+		* Computes an AABB that encloses the given set of points.
+		*
+		* @param {Array} points - An array of 3D vectors representing points in 3D space.
+		* @return {AABB} A reference to this AABB.
+		*/
+		fromPoints( points ) {
+
+			this.min.set( Infinity, Infinity, Infinity );
+			this.max.set( - Infinity, - Infinity, - Infinity );
+
+			for ( let i = 0, l = points.length; i < l; i ++ ) {
+
+				this.expand( points[ i ] );
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Transforms this AABB with the given 4x4 transformation matrix.
+		*
+		* @param {Matrix4} matrix - The 4x4 transformation matrix.
+		* @return {AABB} A reference to this AABB.
+		*/
+		applyMatrix4( matrix ) {
+
+			const min = this.min;
+			const max = this.max;
+
+			points[ 0 ].set( min.x, min.y, min.z ).applyMatrix4( matrix );
+			points[ 1 ].set( min.x, min.y, max.z ).applyMatrix4( matrix );
+			points[ 2 ].set( min.x, max.y, min.z ).applyMatrix4( matrix );
+			points[ 3 ].set( min.x, max.y, max.z ).applyMatrix4( matrix );
+			points[ 4 ].set( max.x, min.y, min.z ).applyMatrix4( matrix );
+			points[ 5 ].set( max.x, min.y, max.z ).applyMatrix4( matrix );
+			points[ 6 ].set( max.x, max.y, min.z ).applyMatrix4( matrix );
+			points[ 7 ].set( max.x, max.y, max.z ).applyMatrix4( matrix );
+
+			return this.fromPoints( points );
+
+		}
+
+		/**
+		* Returns true if the given AABB is deep equal with this AABB.
+		*
+		* @param {AABB} aabb - The AABB to test.
+		* @return {Boolean} The result of the equality test.
+		*/
+		equals( aabb ) {
+
+			return ( aabb.min.equals( this.min ) ) && ( aabb.max.equals( this.max ) );
+
+		}
+
+		/**
+		* Transforms this instance into a JSON object.
+		*
+		* @return {Object} The JSON object.
+		*/
+		toJSON() {
+
+			return {
+				type: this.constructor.name,
+				min: this.min.toArray( new Array() ),
+				max: this.max.toArray( new Array() )
+			};
+
+		}
+
+		/**
+		* Restores this instance from the given JSON object.
+		*
+		* @param {Object} json - The JSON object.
+		* @return {AABB} A reference to this AABB.
+		*/
+		fromJSON( json ) {
+
+			this.min.fromArray( json.min );
+			this.max.fromArray( json.max );
+
+			return this;
+
+		}
+
+	}
+
+	const aabb = new AABB();
+
 	/**
 	* Class representing a bounding sphere.
 	*
@@ -4593,6 +4949,27 @@
 		getNormalFromSurfacePoint( point, result ) {
 
 			return result.subVectors( point, this.center ).normalize();
+
+		}
+
+		/**
+		* Computes a bounding sphere that encloses the given set of points.
+		*
+		* @param {Array} points - An array of 3D vectors representing points in 3D space.
+		* @return {BoundingSphere} A reference to this bounding sphere.
+		*/
+		fromPoints( points ) {
+
+			// Using an AABB is a simple way to compute a bounding sphere for a given set
+			// of points. However, there are other more complex algorithms that produce a
+			// more tight bounding sphere. For now, this approach is a good start.
+
+			aabb.fromPoints( points );
+
+			aabb.getCenter( this.center );
+			this.radius = this.center.distanceTo( aabb.max );
+
+			return this;
 
 		}
 
@@ -4791,12 +5168,12 @@
 		}
 
 		/**
-		 * Performs a ray/sphere intersection test. Returns either true or false if
-		 * there is a intersection or not.
-		 *
-		 * @param {BoundingSphere} sphere - A bounding sphere.
-		 * @return {boolean} Whether there is an intersection or not.
-		 */
+		* Performs a ray/sphere intersection test. Returns either true or false if
+		* there is a intersection or not.
+		*
+		* @param {BoundingSphere} sphere - A bounding sphere.
+		* @return {boolean} Whether there is an intersection or not.
+		*/
 		intersectsBoundingSphere( sphere ) {
 
 			const v1 = new Vector3();
@@ -4901,12 +5278,12 @@
 		}
 
 		/**
-		 * Performs a ray/AABB intersection test. Returns either true or false if
-		 * there is a intersection or not.
-		 *
-		 * @param {AABB} aabb - An axis-aligned bounding box.
-		 * @return {boolean} Whether there is an intersection or not.
-		 */
+		* Performs a ray/AABB intersection test. Returns either true or false if
+		* there is a intersection or not.
+		*
+		* @param {AABB} aabb - An axis-aligned bounding box.
+		* @return {boolean} Whether there is an intersection or not.
+		*/
 		intersectsAABB( aabb ) {
 
 			return this.intersectAABB( aabb, v1$1 ) !== null;
@@ -4956,12 +5333,12 @@
 		}
 
 		/**
-		 * Performs a ray/plane intersection test. Returns either true or false if
-		 * there is a intersection or not.
-		 *
-		 * @param {Plane} plane - A plane.
-		 * @return {boolean} Whether there is an intersection or not.
-		 */
+		* Performs a ray/plane intersection test. Returns either true or false if
+		* there is a intersection or not.
+		*
+		* @param {Plane} plane - A plane.
+		* @return {boolean} Whether there is an intersection or not.
+		*/
 		intersectsPlane( plane ) {
 
 			// check if the ray lies on the plane first
@@ -4985,6 +5362,102 @@
 			// ray origin is behind the plane (and is pointing behind it)
 
 			return false;
+
+		}
+
+		/**
+		* Performs a ray/convex hull intersection test and stores the intersection point
+		* to the given 3D vector. If no intersection is detected, *null* is returned.
+		* The implementation is based on "Fast Ray-Convex Polyhedron Intersection"
+		* by Eric Haines, GRAPHICS GEMS II
+		*
+		* @param {ConvexHull} convexHull - A convex hull.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		intersectConvexHull( convexHull, result ) {
+
+			const faces = convexHull.faces;
+
+			let tNear = - Infinity;
+			let tFar = Infinity;
+
+			for ( let i = 0, l = faces.length; i < l; i ++ ) {
+
+				const face = faces[ i ];
+				const plane = face.plane;
+
+				const vN = plane.distanceToPoint( this.origin );
+				const vD = plane.normal.dot( this.direction );
+
+				// if the origin is on the positive side of a plane (so the plane can "see" the origin) and
+				// the ray is turned away or parallel to the plane, there is no intersection
+
+				if ( vN > 0 && vD >= 0 ) return null;
+
+				// compute the distance from the ray’s origin to the intersection with the plane
+
+				const t = ( vD !== 0 ) ? ( - vN / vD ) : 0;
+
+				// only proceed if the distance is positive. since the ray has a direction, the intersection point
+				// would lie "behind" the origin with a negative distance
+
+				if ( t <= 0 ) continue;
+
+				// now categorized plane as front-facing or back-facing
+
+				if ( vD > 0 ) {
+
+					//  plane faces away from the ray, so this plane is a back-face
+
+					tFar = Math.min( t, tFar );
+
+				} else {
+
+					// front-face
+
+					tNear = Math.max( t, tNear );
+
+				}
+
+				if ( tNear > tFar ) {
+
+					// if tNear ever is greater than tFar, the ray must miss the convex hull
+
+					return null;
+
+				}
+
+			}
+
+			// evaluate intersection point
+
+			// always try tNear first since its the closer intersection point
+
+			if ( tNear !== - Infinity ) {
+
+				this.at( tNear, result );
+
+			} else {
+
+				this.at( tFar, result );
+
+			}
+
+			return result;
+
+		}
+
+		/**
+		* Performs a ray/convex hull intersection test. Returns either true or false if
+		* there is a intersection or not.
+		*
+		* @param {ConvexHull} convexHull - A convex hull.
+		* @return {boolean} Whether there is an intersection or not.
+		*/
+		intersectsConvexHull( convexHull ) {
+
+			return this.intersectConvexHull( convexHull, v1$1 ) !== null;
 
 		}
 
@@ -6165,7 +6638,7 @@
 			*/
 			this.count = count;
 
-			this._history = []; // this holds the history
+			this._history = new Array(); // this holds the history
 			this._slot = 0; // the current sample slot
 
 			// initialize history with Vector3s
@@ -6495,361 +6968,6 @@
 		* @return {TriggerRegion} A reference to this trigger region.
 		*/
 		fromJSON( /* json */ ) {
-
-			return this;
-
-		}
-
-	}
-
-	const vector$1 = new Vector3();
-	const center = new Vector3();
-	const size = new Vector3();
-
-	const points = [
-		new Vector3(),
-		new Vector3(),
-		new Vector3(),
-		new Vector3(),
-		new Vector3(),
-		new Vector3(),
-		new Vector3(),
-		new Vector3()
-	];
-
-	/**
-	* Class representing an axis-aligned bounding box (AABB).
-	*
-	* @author {@link https://github.com/Mugen87|Mugen87}
-	*/
-	class AABB {
-
-		/**
-		* Constructs a new AABB with the given values.
-		*
-		* @param {Vector3} min - The minimum bounds of the AABB.
-		* @param {Vector3} max - The maximum bounds of the AABB.
-		*/
-		constructor( min = new Vector3(), max = new Vector3() ) {
-
-			/**
-			* The minimum bounds of the AABB.
-			* @type Vector3
-			*/
-			this.min = min;
-
-			/**
-			* The maximum bounds of the AABB.
-			* @type Vector3
-			*/
-			this.max = max;
-
-		}
-
-		/**
-		* Sets the given values to this AABB.
-		*
-		* @param {Vector3} min - The minimum bounds of the AABB.
-		* @param {Vector3} max - The maximum bounds of the AABB.
-		* @return {AABB} A reference to this AABB.
-		*/
-		set( min, max ) {
-
-			this.min = min;
-			this.max = max;
-
-			return this;
-
-		}
-
-		/**
-		* Copies all values from the given AABB to this AABB.
-		*
-		* @param {AABB} aabb - The AABB to copy.
-		* @return {AABB} A reference to this AABB.
-		*/
-		copy( aabb ) {
-
-			this.min.copy( aabb.min );
-			this.max.copy( aabb.max );
-
-			return this;
-
-		}
-
-		/**
-		* Creates a new AABB and copies all values from this AABB.
-		*
-		* @return {AABB} A new AABB.
-		*/
-		clone() {
-
-			return new this.constructor().copy( this );
-
-		}
-
-		/**
-		* Ensures the given point is inside this AABB and stores
-		* the result in the given vector.
-		*
-		* @param {Vector3} point - A point in 3D space.
-		* @param {Vector3} result - The result vector.
-		* @return {Vector3} The result vector.
-		*/
-		clampPoint( point, result ) {
-
-			result.copy( point ).clamp( this.min, this.max );
-
-			return result;
-
-		}
-
-		/**
-		* Returns true if the given point is inside this AABB.
-		*
-		* @param {Vector3} point - A point in 3D space.
-		* @return {Boolean} The result of the containments test.
-		*/
-		containsPoint( point ) {
-
-			return point.x < this.min.x || point.x > this.max.x ||
-				point.y < this.min.y || point.y > this.max.y ||
-				point.z < this.min.z || point.z > this.max.z ? false : true;
-
-		}
-
-		/**
-		* Expands this AABB by the given point. So after this method call,
-		* the given point lies inside the AABB.
-		*
-		* @param {Vector3} point - A point in 3D space.
-		* @return {AABB} A reference to this AABB.
-		*/
-		expand( point ) {
-
-			this.min.min( point );
-			this.max.max( point );
-
-			return this;
-
-		}
-
-		/**
-		* Computes the center point of this AABB and stores it into the given vector.
-		*
-		* @param {Vector3} result - The result vector.
-		* @return {Vector3} The result vector.
-		*/
-		getCenter( result ) {
-
-			return result.addVectors( this.min, this.max ).multiplyScalar( 0.5 );
-
-		}
-
-		/**
-		* Computes the size (width, height, depth) of this AABB and stores it into the given vector.
-		*
-		* @param {Vector3} result - The result vector.
-		* @return {Vector3} The result vector.
-		*/
-		getSize( result ) {
-
-			return result.subVectors( this.max, this.min );
-
-		}
-
-		/**
-		* Returns true if the given AABB intersects this AABB.
-		*
-		* @param {AABB} aabb - The AABB to test.
-		* @return {Boolean} The result of the intersection test.
-		*/
-		intersectsAABB( aabb ) {
-
-			return aabb.max.x < this.min.x || aabb.min.x > this.max.x ||
-				aabb.max.y < this.min.y || aabb.min.y > this.max.y ||
-				aabb.max.z < this.min.z || aabb.min.z > this.max.z ? false : true;
-
-		}
-
-		/**
-		* Returns true if the given bounding sphere intersects this AABB.
-		*
-		* @param {BoundingSphere} sphere - The bounding sphere to test.
-		* @return {Boolean} The result of the intersection test.
-		*/
-		intersectsBoundingSphere( sphere ) {
-
-			// find the point on the AABB closest to the sphere center
-
-			this.clampPoint( sphere.center, vector$1 );
-
-			// if that point is inside the sphere, the AABB and sphere intersect.
-
-			return vector$1.squaredDistanceTo( sphere.center ) <= ( sphere.radius * sphere.radius );
-
-		}
-
-		/**
-		* Returns the normal for a given point on this AABB's surface.
-		*
-		* @param {Vector3} point - The point on the surface
-		* @param {Vector3} result - The result vector.
-		* @return {Vector3} The result vector.
-		*/
-		getNormalFromSurfacePoint( point, result ) {
-
-			// from https://www.gamedev.net/forums/topic/551816-finding-the-aabb-surface-normal-from-an-intersection-point-on-aabb/
-
-			result.set( 0, 0, 0 );
-
-			let distance;
-			let minDistance = Infinity;
-
-			this.getCenter( center );
-			this.getSize( size );
-
-			// transform point into local space of AABB
-
-			vector$1.copy( point ).sub( center );
-
-			// x-axis
-
-			distance = Math.abs( size.x - Math.abs( vector$1.x ) );
-
-			if ( distance < minDistance ) {
-
-				minDistance = distance;
-				result.set( 1 * Math.sign( vector$1.x ), 0, 0 );
-
-			}
-
-			// y-axis
-
-			distance = Math.abs( size.y - Math.abs( vector$1.y ) );
-
-			if ( distance < minDistance ) {
-
-				minDistance = distance;
-				result.set( 0, 1 * Math.sign( vector$1.y ), 0 );
-
-			}
-
-			// z-axis
-
-			distance = Math.abs( size.z - Math.abs( vector$1.z ) );
-
-			if ( distance < minDistance ) {
-
-				minDistance = distance;
-				result.set( 0, 0, 1 * Math.sign( vector$1.z ) );
-
-			}
-
-			return result;
-
-		}
-
-		/**
-		* Sets the values of the AABB from the given center and size vector.
-		*
-		* @param {Vector3} center - The center point of the AABB.
-		* @param {Vector3} size - The size of the AABB per axis.
-		* @return {AABB} A reference to this AABB.
-		*/
-		fromCenterAndSize( center, size ) {
-
-			vector$1.copy( size ).multiplyScalar( 0.5 ); // compute half size
-
-			this.min.copy( center ).sub( vector$1 );
-			this.max.copy( center ).add( vector$1 );
-
-			return this;
-
-		}
-
-		/**
-		* Sets the values of the AABB from the given array of points.
-		*
-		* @param {Array} points - An array of 3D vectors representing points in 3D space.
-		* @return {AABB} A reference to this AABB.
-		*/
-		fromPoints( points ) {
-
-			this.min.set( Infinity, Infinity, Infinity );
-			this.max.set( - Infinity, - Infinity, - Infinity );
-
-			for ( let i = 0, l = points.length; i < l; i ++ ) {
-
-				this.expand( points[ i ] );
-
-			}
-
-			return this;
-
-		}
-
-		/**
-		* Transforms this AABB with the given 4x4 transformation matrix.
-		*
-		* @param {Matrix4} matrix - The 4x4 transformation matrix.
-		* @return {AABB} A reference to this AABB.
-		*/
-		applyMatrix4( matrix ) {
-
-			const min = this.min;
-			const max = this.max;
-
-			points[ 0 ].set( min.x, min.y, min.z ).applyMatrix4( matrix );
-			points[ 1 ].set( min.x, min.y, max.z ).applyMatrix4( matrix );
-			points[ 2 ].set( min.x, max.y, min.z ).applyMatrix4( matrix );
-			points[ 3 ].set( min.x, max.y, max.z ).applyMatrix4( matrix );
-			points[ 4 ].set( max.x, min.y, min.z ).applyMatrix4( matrix );
-			points[ 5 ].set( max.x, min.y, max.z ).applyMatrix4( matrix );
-			points[ 6 ].set( max.x, max.y, min.z ).applyMatrix4( matrix );
-			points[ 7 ].set( max.x, max.y, max.z ).applyMatrix4( matrix );
-
-			return this.fromPoints( points );
-
-		}
-
-		/**
-		* Returns true if the given AABB is deep equal with this AABB.
-		*
-		* @param {AABB} aabb - The AABB to test.
-		* @return {Boolean} The result of the equality test.
-		*/
-		equals( aabb ) {
-
-			return ( aabb.min.equals( this.min ) ) && ( aabb.max.equals( this.max ) );
-
-		}
-
-		/**
-		* Transforms this instance into a JSON object.
-		*
-		* @return {Object} The JSON object.
-		*/
-		toJSON() {
-
-			return {
-				type: this.constructor.name,
-				min: this.min.toArray( new Array() ),
-				max: this.max.toArray( new Array() )
-			};
-
-		}
-
-		/**
-		* Restores this instance from the given JSON object.
-		*
-		* @param {Object} json - The JSON object.
-		* @return {AABB} A reference to this AABB.
-		*/
-		fromJSON( json ) {
-
-			this.min.fromArray( json.min );
-			this.max.fromArray( json.max );
 
 			return this;
 
@@ -7217,7 +7335,7 @@
 
 	}
 
-	const candidates = [];
+	const candidates = new Array();
 
 	/**
 	* This class is used for managing all central objects of a game like
@@ -7873,7 +7991,7 @@
 	class Plane {
 
 		/**
-		* Constructs a new plane with the given values. The sign of {@link Plane#constant} determines the side of the plane on which the origin is located.
+		* Constructs a new plane with the given values.
 		*
 		* @param {Vector3} normal - The normal vector of the plane.
 		* @param {Number} constant - The distance of the plane from the origin.
@@ -7981,6 +8099,24 @@
 			this.fromNormalAndCoplanarPoint( v1$2, a );
 
 			return this;
+
+		}
+
+		/**
+		* Projects the given point onto the plane. The result is written
+		* to the given vector.
+		*
+		* @param {Vector3} point - The point to project onto the plane.
+		* @param {Vector3} result - The projected point.
+		* @return {Vector3} The projected point.
+		*/
+		projectPoint( point, result ) {
+
+			v1$2.copy( this.normal ).multiplyScalar( this.distanceToPoint( point ) );
+
+			result.subVectors( point, v1$2 );
+
+			return result;
 
 		}
 
@@ -8521,7 +8657,7 @@
 		*
 		* @param {Array} terms - An arbitrary amount of fuzzy terms.
 		*/
-		constructor( terms = [] ) {
+		constructor( terms = new Array() ) {
 
 			super();
 
@@ -8669,7 +8805,7 @@
 		*/
 		constructor( fuzzyTerm = null ) {
 
-			const terms = ( fuzzyTerm !== null ) ? [ fuzzyTerm ] : [];
+			const terms = ( fuzzyTerm !== null ) ? [ fuzzyTerm ] : new Array();
 
 			super( terms );
 
@@ -8784,7 +8920,7 @@
 		*/
 		constructor( fuzzyTerm = null ) {
 
-			const terms = ( fuzzyTerm !== null ) ? [ fuzzyTerm ] : [];
+			const terms = ( fuzzyTerm !== null ) ? [ fuzzyTerm ] : new Array();
 
 			super( terms );
 
@@ -11424,12 +11560,12 @@
 				digraph: this.digraph
 			};
 
-			const edges = [];
-			const nodes = [];
+			const edges = new Array();
+			const nodes = new Array();
 
 			for ( let [ key, value ] of this._nodes.entries() ) {
 
-				const adjacencyList = [];
+				const adjacencyList = new Array();
 
 				this.getEdgesOfNode( key, adjacencyList );
 
@@ -12041,6 +12177,472 @@
 	}
 
 	/**
+	* Implementation of a half-edge data structure, also known as
+	* {@link https://en.wikipedia.org/wiki/Doubly_connected_edge_list Doubly connected edge list}.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class HalfEdge {
+
+		/**
+		* Constructs a new half-edge.
+		*
+		* @param {Vector3} vertex - The (origin) vertex of this half-edge.
+		*/
+		constructor( vertex = new Vector3() ) {
+
+			/**
+			* The (origin) vertex of this half-edge.
+			* @type Vector3
+			*/
+			this.vertex = vertex;
+
+			/**
+			* A reference to the next half-edge.
+			* @type HalfEdge
+			*/
+			this.next = null;
+
+			/**
+			* A reference to the previous half-edge.
+			* @type HalfEdge
+			*/
+			this.prev = null;
+
+			/**
+			* A reference to the opponent half-edge.
+			* @type HalfEdge
+			*/
+			this.twin = null;
+
+			/**
+			* A reference to its polygon/face.
+			* @type Polygon
+			*/
+			this.polygon = null;
+
+		}
+
+		/**
+		* Returns the tail of this half-edge. That's a reference to the previous
+		* half-edge vertex.
+		*
+		* @return {Vector3} The tail vertex.
+		*/
+		tail() {
+
+			return this.prev ? this.prev.vertex : null;
+
+		}
+
+		/**
+		* Returns the head of this half-edge. That's a reference to the own vertex.
+		*
+		* @return {Vector3} The head vertex.
+		*/
+		head() {
+
+			return this.vertex;
+
+		}
+
+		/**
+		* Computes the length of this half-edge.
+		*
+		* @return {Number} The length of this half-edge.
+		*/
+		length() {
+
+			const tail = this.tail();
+			const head = this.head();
+
+			if ( tail !== null ) {
+
+				return tail.distanceTo( head );
+
+			}
+
+			return - 1;
+
+		}
+
+		/**
+		* Computes the squared length of this half-edge.
+		*
+		* @return {Number} The squared length of this half-edge.
+		*/
+		squaredLength() {
+
+			const tail = this.tail();
+			const head = this.head();
+
+			if ( tail !== null ) {
+
+				return tail.squaredDistanceTo( head );
+
+			}
+
+			return - 1;
+
+		}
+
+		/**
+		* Links the given opponent half edge with this one.
+		*
+		* @param {HalfEdge} edge - The opponent edge to link.
+		* @return {HalfEdge} A reference to this half edge.
+		*/
+		linkOpponent( edge ) {
+
+			this.twin = edge;
+			edge.twin = this;
+
+			return this;
+
+		}
+
+		/**
+		* Computes the direction of this half edge. The method assumes the half edge
+		* has a valid reference to a previous half edge.
+		*
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		getDirection( result ) {
+
+			return result.subVectors( this.vertex, this.prev.vertex ).normalize();
+
+		}
+
+	}
+
+	/**
+	* Class for representing a planar polygon with an arbitrary amount of edges.
+	*
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	* @author {@link https://github.com/robp94|robp94}
+	*/
+	class Polygon {
+
+		/**
+		* Constructs a new polygon.
+		*/
+		constructor() {
+
+			/**
+			* The centroid of this polygon.
+			* @type Vector3
+			*/
+			this.centroid = new Vector3();
+
+			/**
+			* A reference to the first half-edge of this polygon.
+			* @type HalfEdge
+			*/
+			this.edge = null;
+
+			/**
+			* A plane abstraction of this polygon.
+			* @type Plane
+			*/
+			this.plane = new Plane();
+
+		}
+
+		/**
+		* Creates the polygon based on the given array of points in 3D space.
+		* The method assumes the contour (the sequence of points) is defined
+		* in CCW order.
+		*
+		* @param {Array} points - The array of points.
+		* @return {Polygon} A reference to this polygon.
+		*/
+		fromContour( points ) {
+
+			const edges = new Array();
+
+			if ( points.length < 3 ) {
+
+				Logger.error( 'YUKA.Polygon: Unable to create polygon from contour. It needs at least three points.' );
+				return this;
+
+			}
+
+			for ( let i = 0, l = points.length; i < l; i ++ ) {
+
+				const edge = new HalfEdge( points[ i ] );
+				edges.push( edge );
+
+			}
+
+			// link edges
+
+			for ( let i = 0, l = edges.length; i < l; i ++ ) {
+
+				let current, prev, next;
+
+				if ( i === 0 ) {
+
+					current = edges[ i ];
+					prev = edges[ l - 1 ];
+				 	next = edges[ i + 1 ];
+
+				} else if ( i === ( l - 1 ) ) {
+
+					current = edges[ i ];
+				 	prev = edges[ i - 1 ];
+					next = edges[ 0 ];
+
+				} else {
+
+				 	current = edges[ i ];
+					prev = edges[ i - 1 ];
+					next = edges[ i + 1 ];
+
+				}
+
+				current.prev = prev;
+				current.next = next;
+				current.polygon = this;
+
+			}
+
+			//
+
+			this.edge = edges[ 0 ];
+
+			//
+
+			this.plane.fromCoplanarPoints( points[ 0 ], points[ 1 ], points[ 2 ] );
+
+			return this;
+
+		}
+
+		/**
+		* Computes the centroid for this polygon.
+		*
+		* @return {Polygon} A reference to this polygon.
+		*/
+		computeCentroid() {
+
+			const centroid = this.centroid;
+			let edge = this.edge;
+			let count = 0;
+
+			centroid.set( 0, 0, 0 );
+
+			do {
+
+				centroid.add( edge.vertex );
+
+				count ++;
+
+				edge = edge.next;
+
+			} while ( edge !== this.edge );
+
+			centroid.divideScalar( count );
+
+			return this;
+
+		}
+
+		/**
+		* Returns true if the polygon contains the given point.
+		*
+		* @param {Vector3} point - The point to test.
+		* @param {Number} epsilon - A tolerance value.
+		* @return {Boolean} Whether this polygon contain the given point or not.
+		*/
+		contains( point, epsilon = 1e-3 ) {
+
+			const plane = this.plane;
+			let edge = this.edge;
+
+			// convex test
+
+			do {
+
+				const v1 = edge.tail();
+				const v2 = edge.head();
+
+				if ( leftOn( v1, v2, point ) === false ) {
+
+					return false;
+
+				}
+
+				edge = edge.next;
+
+			} while ( edge !== this.edge );
+
+			// ensure the given point lies within a defined tolerance range
+
+			const distance = plane.distanceToPoint( point );
+
+			if ( Math.abs( distance ) > epsilon ) {
+
+				return false;
+
+			}
+
+			return true;
+
+		}
+
+		/**
+		* Returns true if the polygon is convex.
+		*
+		* @param {Boolean} ccw - Whether the winding order is CCW or not.
+		* @return {Boolean} Whether this polygon is convex or not.
+		*/
+		convex( ccw = true ) {
+
+			let edge = this.edge;
+
+			do {
+
+				const v1 = edge.tail();
+				const v2 = edge.head();
+				const v3 = edge.next.head();
+
+				if ( ccw ) {
+
+					if ( leftOn( v1, v2, v3 ) === false )	return false;
+
+				} else {
+
+					if ( leftOn( v3, v2, v1 ) === false ) return false;
+
+				}
+
+				edge = edge.next;
+
+			} while ( edge !== this.edge );
+
+			return true;
+
+		}
+
+		/**
+		* Returns true if the polygon is coplanar.
+		*
+		* @param {Number} epsilon - A tolerance value.
+		* @return {Boolean} Whether this polygon is coplanar or not.
+		*/
+		coplanar( epsilon = 1e-3 ) {
+
+			const plane = this.plane;
+			let edge = this.edge;
+
+			do {
+
+				const distance = plane.distanceToPoint( edge.vertex );
+
+				if ( Math.abs( distance ) > epsilon ) {
+
+					return false;
+
+				}
+
+				edge = edge.next;
+
+			} while ( edge !== this.edge );
+
+			return true;
+
+		}
+
+		/**
+		* Computes the signed distance from the given 3D vector to this polygon. The method
+		* uses the polygon's plane abstraction in order to compute this value.
+		*
+		* @param {Vector3} point - A point in 3D space.
+		* @return {Number} The signed distance from the given point to this polygon.
+		*/
+		distanceToPoint( point ) {
+
+			return this.plane.distanceToPoint( point );
+
+		}
+
+		/**
+		* Determines the contour (sequence of points) of this polygon and
+		* stores the result in the given array.
+		*
+		* @param {Array} result - The result array.
+		* @return {Array} The result array.
+		*/
+		getContour( result ) {
+
+			let edge = this.edge;
+
+			result.length = 0;
+
+			do {
+
+				result.push( edge.vertex );
+
+				edge = edge.next;
+
+			} while ( edge !== this.edge );
+
+			return result;
+
+		}
+
+		/**
+		* Determines the portal edge that can be used to reach the
+		* given polygon over its twin reference. The result is stored
+		* in the given portal edge data structure. If the given polygon
+		* is no direct neighbor, the references of the portal edge data
+		* structure are set to null.
+		*
+		* @param {Polygon} polygon - The polygon to reach.
+		* @param {Object} portalEdge - The portal edge.
+		* @return {Object} The portal edge.
+		*/
+		getPortalEdgeTo( polygon, portalEdge ) {
+
+			let edge = this.edge;
+
+			do {
+
+				if ( edge.twin !== null ) {
+
+					if ( edge.twin.polygon === polygon ) {
+
+						portalEdge.left = edge.prev.vertex;
+						portalEdge.right = edge.vertex;
+						return portalEdge;
+
+					}
+
+				}
+
+				edge = edge.next;
+
+			} while ( edge !== this.edge );
+
+			portalEdge.left = null;
+			portalEdge.right = null;
+
+			return portalEdge;
+
+		}
+
+	}
+
+	// from the book "Computational Geometry in C, Joseph O'Rourke"
+
+	function leftOn( a, b, c ) {
+
+		return MathUtils.area( a, b, c ) >= 0;
+
+	}
+
+	/**
 	* Class for representing navigation edges.
 	*
 	* @author {@link https://github.com/Mugen87|Mugen87}
@@ -12389,7 +12991,7 @@
 		toJSON() {
 
 			const json = {
-				nodes: []
+				nodes: new Array()
 			};
 
 			for ( let [ key, value ] of this._nodeMap.entries() ) {
@@ -12445,117 +13047,6 @@
 		}
 
 		return distance;
-
-	}
-
-	/**
-	* Implementation of a half-edge data structure, also known as
-	* {@link https://en.wikipedia.org/wiki/Doubly_connected_edge_list Doubly connected edge list}.
-	*
-	* @author {@link https://github.com/Mugen87|Mugen87}
-	*/
-	class HalfEdge {
-
-		/**
-		* Constructs a new half-edge.
-		*
-		* @param {Vector3} vertex - The (origin) vertex of this half-edge.
-		*/
-		constructor( vertex = new Vector3() ) {
-
-			/**
-			* The (origin) vertex of this half-edge.
-			* @type Vector3
-			*/
-			this.vertex = vertex;
-
-			/**
-			* A reference to the next half-edge.
-			* @type HalfEdge
-			*/
-			this.next = null;
-
-			/**
-			* A reference to the previous half-edge.
-			* @type HalfEdge
-			*/
-			this.prev = null;
-
-			/**
-			* A reference to the opponent half-edge.
-			* @type HalfEdge
-			*/
-			this.twin = null;
-
-			/**
-			* A reference to its polygon/face.
-			* @type Polygon
-			*/
-			this.polygon = null;
-
-		}
-
-		/**
-		* Returns the origin vertex of this half-edge.
-		*
-		* @return {Vector3} The origin vertex.
-		*/
-		from() {
-
-			return this.vertex;
-
-		}
-
-		/**
-		* Returns the destination vertex of this half-edge.
-		*
-		* @return {Vector3} The destination vertex.
-		*/
-		to() {
-
-			return this.next ? this.next.vertex : null;
-
-		}
-
-		/**
-		* Computes the length of this half-edge.
-		*
-		* @return {Number} The length of this half-edge.
-		*/
-		length() {
-
-			const from = this.from();
-			const to = this.to();
-
-			if ( to !== null ) {
-
-				return from.distanceTo( to );
-
-			}
-
-			return - 1;
-
-		}
-
-		/**
-		* Computes the squared length of this half-edge.
-		*
-		* @return {Number} The squared length of this half-edge.
-		*/
-		squaredLength() {
-
-			const from = this.from();
-			const to = this.to();
-
-			if ( to !== null ) {
-
-				return from.squaredDistanceTo( to );
-
-			}
-
-			return - 1;
-
-		}
 
 	}
 
@@ -12681,12 +13172,11 @@
 
 					let edge1 = initialEdgeList[ j ];
 
-					if ( edge0.from().equals( edge1.to() ) && edge0.to().equals( edge1.from() ) ) {
+					if ( edge0.tail().equals( edge1.head() ) && edge0.head().equals( edge1.tail() ) ) {
 
-						// twin found, set references
+						// opponent edge found, set twin references
 
-						edge0.twin = edge1;
-						edge1.twin = edge0;
+						edge0.linkOpponent( edge1 );
 
 						// add edge to list
 
@@ -12951,7 +13441,7 @@
 
 				// calculate movement and edge direction
 
-				edgeDirection.subVectors( closestEdge.next.vertex, closestEdge.vertex ).normalize();
+				closestEdge.getDirection( edgeDirection );
 				const length = movementDirection.subVectors( endPosition, startPosition ).length();
 
 				// this value influences the speed at which the entity moves along the edge
@@ -12975,7 +13465,7 @@
 
 				// the following value "t" tells us if the point exceeds the line segment
 
-				lineSegment.set( closestEdge.vertex, closestEdge.next.vertex );
+				lineSegment.set( closestEdge.prev.vertex, closestEdge.vertex );
 				const t = lineSegment.closestPointToPointParameter( newPosition, false );
 
 				//
@@ -13272,7 +13762,7 @@
 
 				const edge = borderEdges[ i ];
 
-				lineSegment.set( edge.vertex, edge.next.vertex );
+				lineSegment.set( edge.prev.vertex, edge.vertex );
 				const t = lineSegment.closestPointToPointParameter( point );
 				lineSegment.at( t, pointOnLineSegment );
 
@@ -13300,314 +13790,6 @@
 	function descending( a, b ) {
 
 		return ( a.cost < b.cost ) ? 1 : ( a.cost > b.cost ) ? - 1 : 0;
-
-	}
-
-	/**
-	* Class for representing a planar polygon with an arbitrary amount of edges.
-	*
-	* @author {@link https://github.com/Mugen87|Mugen87}
-	* @author {@link https://github.com/robp94|robp94}
-	*/
-	class Polygon {
-
-		/**
-		* Constructs a new polygon.
-		*/
-		constructor() {
-
-			/**
-			* The centroid of this polygon.
-			* @type Vector3
-			*/
-			this.centroid = new Vector3();
-
-			/**
-			* A reference to the first half-edge of this polygon.
-			* @type HalfEdge
-			*/
-			this.edge = null;
-
-			/**
-			* A plane abstraction of this polygon.
-			* @type Plane
-			*/
-			this.plane = new Plane();
-
-		}
-
-		/**
-		* Creates the polygon based on the given array of points in 3D space.
-		* The method assumes the contour (the sequence of points) is defined
-		* in CCW order.
-		*
-		* @param {Array} points - The array of points.
-		* @return {Polygon} A reference to this polygon.
-		*/
-		fromContour( points ) {
-
-			const edges = new Array();
-
-			if ( points.length < 3 ) {
-
-				Logger.error( 'YUKA.Polygon: Unable to create polygon from contour. It needs at least three points.' );
-				return this;
-
-			}
-
-			for ( let i = 0, l = points.length; i < l; i ++ ) {
-
-				const edge = new HalfEdge( points[ i ] );
-				edges.push( edge );
-
-			}
-
-			// link edges
-
-			for ( let i = 0, l = edges.length; i < l; i ++ ) {
-
-				let current, prev, next;
-
-				if ( i === 0 ) {
-
-					current = edges[ i ];
-					prev = edges[ l - 1 ];
-				 	next = edges[ i + 1 ];
-
-				} else if ( i === ( l - 1 ) ) {
-
-					current = edges[ i ];
-				 	prev = edges[ i - 1 ];
-					next = edges[ 0 ];
-
-				} else {
-
-				 	current = edges[ i ];
-					prev = edges[ i - 1 ];
-					next = edges[ i + 1 ];
-
-				}
-
-				current.prev = prev;
-				current.next = next;
-				current.polygon = this;
-
-			}
-
-			//
-
-			this.edge = edges[ 0 ];
-
-			//
-
-			this.plane.fromCoplanarPoints( points[ 0 ], points[ 1 ], points[ 2 ] );
-
-			return this;
-
-		}
-
-		/**
-		* Computes the centroid for this polygon.
-		*
-		* @return {Polygon} A reference to this polygon.
-		*/
-		computeCentroid() {
-
-			const centroid = this.centroid;
-			let edge = this.edge;
-			let count = 0;
-
-			centroid.set( 0, 0, 0 );
-
-			do {
-
-				centroid.add( edge.from() );
-
-				count ++;
-
-				edge = edge.next;
-
-			} while ( edge !== this.edge );
-
-			centroid.divideScalar( count );
-
-			return this;
-
-		}
-
-		/**
-		* Returns true if the polygon contains the given point.
-		*
-		* @param {Vector3} point - The point to test.
-		* @param {Number} epsilon - A tolerance value.
-		* @return {Boolean} Whether this polygon contain the given point or not.
-		*/
-		contains( point, epsilon = 1e-3 ) {
-
-			const plane = this.plane;
-			let edge = this.edge;
-
-			// convex test
-
-			do {
-
-				const v1 = edge.from();
-				const v2 = edge.to();
-
-				if ( leftOn( v1, v2, point ) === false ) {
-
-					return false;
-
-				}
-
-				edge = edge.next;
-
-			} while ( edge !== this.edge );
-
-			// ensure the given point lies within a defined tolerance range
-
-			const distance = plane.distanceToPoint( point );
-
-			if ( Math.abs( distance ) > epsilon ) {
-
-				return false;
-
-			}
-
-			return true;
-
-		}
-
-		/**
-		* Returns true if the polygon is convex.
-		*
-		* @return {Boolean} Whether this polygon is convex or not.
-		*/
-		convex() {
-
-			let edge = this.edge;
-
-			do {
-
-				const v1 = edge.from();
-				const v2 = edge.to();
-				const v3 = edge.next.to();
-
-				if ( leftOn( v1, v2, v3 ) === false ) {
-
-					return false;
-
-				}
-
-				edge = edge.next;
-
-			} while ( edge !== this.edge );
-
-			return true;
-
-		}
-
-		/**
-		* Returns true if the polygon is coplanar.
-		*
-		* @param {Number} epsilon - A tolerance value.
-		* @return {Boolean} Whether this polygon is coplanar or not.
-		*/
-		coplanar( epsilon = 1e-3 ) {
-
-			const plane = this.plane;
-			let edge = this.edge;
-
-			do {
-
-				const distance = plane.distanceToPoint( edge.from() );
-
-				if ( Math.abs( distance ) > epsilon ) {
-
-					return false;
-
-				}
-
-				edge = edge.next;
-
-			} while ( edge !== this.edge );
-
-			return true;
-
-		}
-
-		/**
-		* Determines the contour (sequence of points) of this polygon and
-		* stores the result in the given array.
-		*
-		* @param {Array} result - The result array.
-		* @return {Array} The result array.
-		*/
-		getContour( result ) {
-
-			let edge = this.edge;
-
-			result.length = 0;
-
-			do {
-
-				result.push( edge.vertex );
-
-				edge = edge.next;
-
-			} while ( edge !== this.edge );
-
-			return result;
-
-		}
-
-		/**
-		* Determines the portal edge that can be used to reach the
-		* given polygon over its twin reference. The result is stored
-		* in the given portal edge data structure. If the given polygon
-		* is no direct neighbor, the references of the portal edge data
-		* structure are set to null.
-		*
-		* @param {Polygon} polygon - The polygon to reach.
-		* @param {Object} portalEdge - The portal edge.
-		* @return {Object} The portal edge.
-		*/
-		getPortalEdgeTo( polygon, portalEdge ) {
-
-			let edge = this.edge;
-
-			do {
-
-				if ( edge.twin !== null ) {
-
-					if ( edge.twin.polygon === polygon ) {
-
-						portalEdge.left = edge.vertex;
-						portalEdge.right = edge.next.vertex;
-						return portalEdge;
-
-					}
-
-				}
-
-				edge = edge.next;
-
-			} while ( edge !== this.edge );
-
-			portalEdge.left = null;
-			portalEdge.right = null;
-
-			return portalEdge;
-
-		}
-
-	}
-
-	// from the book "Computational Geometry in C, Joseph O'Rourke"
-
-	function leftOn( a, b, c ) {
-
-		return MathUtils.area( a, b, c ) >= 0;
 
 	}
 
@@ -13792,7 +13974,7 @@
 
 			} else {
 
-				// non-indexed geometry
+				// non-indexed geometry //todo test
 
 				for ( let i = 0, l = vertices.length; i < l; i += 3 ) {
 
@@ -13818,7 +14000,7 @@
 
 			if ( ! dependencies ) {
 
-				const definitions = this.json[ type + ( type === 'mesh' ? 'es' : 's' ) ] || [];
+				const definitions = this.json[ type + ( type === 'mesh' ? 'es' : 's' ) ] || new Array();
 
 				dependencies = Promise.all( definitions.map( ( definition, index ) => {
 
@@ -14219,7 +14401,7 @@
 	}
 
 	const clampedPosition = new Vector3();
-	const aabb = new AABB();
+	const aabb$1 = new AABB();
 	const contour = new Array();
 
 	/**
@@ -14438,8 +14620,8 @@
 
 			// approximate range with an AABB which allows fast intersection test
 
-			aabb.min.copy( position ).subScalar( radius );
-			aabb.max.copy( position ).addScalar( radius );
+			aabb$1.min.copy( position ).subScalar( radius );
+			aabb$1.max.copy( position ).addScalar( radius );
 
 			// test all non-empty cells for an intersection
 
@@ -14447,7 +14629,7 @@
 
 				const cell = cells[ i ];
 
-				if ( cell.empty() === false && cell.intersects( aabb ) === true ) {
+				if ( cell.empty() === false && cell.intersects( aabb$1 ) === true ) {
 
 					result.push( ...cell.entries );
 
@@ -14490,13 +14672,13 @@
 
 			polygon.getContour( contour );
 
-			aabb.fromPoints( contour );
+			aabb$1.fromPoints( contour );
 
 			for ( let i = 0, l = cells.length; i < l; i ++ ) {
 
 				const cell = cells[ i ];
 
-				if ( cell.intersects( aabb ) === true ) {
+				if ( cell.intersects( aabb$1 ) === true ) {
 
 					cell.add( polygon );
 
@@ -73341,9 +73523,9 @@
 
 				for ( let i = 1, l = triangleCount; i <= l; i ++ ) {
 
-					const v1 = edges[ 0 ].from();
-					const v2 = edges[ i + 0 ].from();
-					const v3 = edges[ i + 1 ].from();
+					const v1 = edges[ 0 ].vertex;
+					const v2 = edges[ i + 0 ].vertex;
+					const v3 = edges[ i + 1 ].vertex;
 
 					positions.push( v1.x, v1.y, v1.z );
 					positions.push( v2.x, v2.y, v2.z );
@@ -76720,8 +76902,8 @@
 			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetClose, LoadsShot ), fuzzySets.veryDesirable ) );
 
 			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, lowShot ), fuzzySets.undesirable ) );
-			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, okayShot ), fuzzySets.desirable ) );
-			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, LoadsShot ), fuzzySets.veryDesirable ) );
+			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, okayShot ), fuzzySets.undesirable ) );
+			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetMedium, LoadsShot ), fuzzySets.desirable ) );
 
 			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetFar, lowShot ), fuzzySets.undesirable ) );
 			fuzzyModuleShotGun.addRule( new FuzzyRule( new FuzzyAND( fuzzySets.targetFar, okayShot ), fuzzySets.undesirable ) );
