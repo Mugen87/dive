@@ -1,3 +1,6 @@
+Level designed by Abdou Bouam, Portfolio: https://abdoubouam.artstation.com/
+License: CC Attribution
+
 SciFi Gun (Blaster) from https://sketchfab.com/models/04a9f3ccb5b14dc38a28b27c1916e18e by Feche Pedroza
 License: CC Attribution
 

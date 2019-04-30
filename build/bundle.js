@@ -67695,6 +67695,13 @@
 
 				} );
 
+				// add lightmap manually since glTF does not support this type of texture so far
+
+				const mesh = renderComponent.getObjectByName( 'level' );
+				mesh.material.lightMap = textureLoader.load( './textures/lightmap.png' );
+				mesh.material.lightMap.flipY = false;
+				mesh.material.map.anisotropy = 4;
+
 				models.set( 'level', renderComponent );
 
 			} );
