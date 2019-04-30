@@ -68270,7 +68270,7 @@
 			for ( let i = 0, l = spawnPoints.length; i < l; i ++ ) {
 
 				const nodeMesh = new Mesh( nodeGeometry, nodeMaterial );
-				nodeMesh.position.copy( spawnPoints[ i ] );
+				nodeMesh.position.copy( spawnPoints[ i ].position );
 
 				nodeMesh.matrixAutoUpdate = false;
 				nodeMesh.updateMatrix();
