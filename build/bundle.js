@@ -72375,6 +72375,7 @@
 
 	}
 	var GUI$1 = GUI;
+	//# sourceMappingURL=dat.gui.module.js.map
 
 	const PI25 = Math.PI * 0.25;
 	const PI75 = Math.PI * 0.75;
@@ -79885,6 +79886,7 @@
 			if ( this.debug ) {
 
 				this.orbitControls = new OrbitControls( this.camera, this.renderer.domElement );
+				this.orbitControls.maxDistance = 500;
 
 			}
 

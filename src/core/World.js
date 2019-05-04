@@ -633,6 +633,7 @@ class World {
 		if ( this.debug ) {
 
 			this.orbitControls = new OrbitControls( this.camera, this.renderer.domElement );
+			this.orbitControls.maxDistance = 500;
 
 		}
 
