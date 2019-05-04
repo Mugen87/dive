@@ -15,6 +15,7 @@ import { Enemy } from '../entities/Enemy.js';
 import { Player } from '../entities/Player.js';
 import { Bullet } from '../weapons/Bullet.js';
 import { PathPlanner } from '../etc/PathPlanner.js';
+import { Sky } from '../effects/Sky.js';
 import { CONFIG } from './Config.js';
 
 const currentIntersectionPoint = new Vector3();
@@ -317,8 +318,19 @@ class World {
 		this.scene.add( hemiLight );
 
 		const dirLight = new DirectionalLight( 0xffffff, 0.8 );
-		dirLight.position.set( 5, 7.5, 0 );
+		dirLight.position.set( - 700, 1000, - 750 );
 		this.scene.add( dirLight );
+
+		// sky
+
+		const sky = new Sky();
+		sky.scale.setScalar( 1000 );
+
+		sky.material.uniforms.turbidity.value = 5;
+		sky.material.uniforms.rayleigh.value = 1.5;
+		sky.material.uniforms.sunPosition.value.set( - 700, 1000, - 750 );
+
+		this.scene.add( sky );
 
 		// renderer
 
