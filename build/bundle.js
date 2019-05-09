@@ -67231,7 +67231,7 @@
 		HEALTH_PACK: {
 			HEALTH: 50, // health
 			RESPAWN_TIME: 10, // seconds
-			RADIUS: 0.5 // world units
+			RADIUS: 1 // world units
 		},
 		BOT: {
 			MOVEMENT: {
@@ -67287,7 +67287,7 @@
 			HIDE_TIME: 0.5, // seconds
 			SPREAD: 0.01, // unitless
 			RESPAWN_TIME: 10, // seconds
-			RADIUS: 0.5, // world units
+			RADIUS: 1, // world units
 
 		},
 		SHOTGUN: {
@@ -67304,7 +67304,7 @@
 			SPREAD: 0.05, // unitless
 			BULLETS_PER_SHOT: 6, // number
 			RESPAWN_TIME: 10, // seconds
-			RADIUS: 0.5, // world units
+			RADIUS: 1, // world units
 
 		},
 		ASSAULT_RIFLE: {
@@ -67319,7 +67319,7 @@
 			HIDE_TIME: 1, // seconds
 			SPREAD: 0.01, // unitless
 			RESPAWN_TIME: 10, // seconds
-			RADIUS: 0.5, // world units
+			RADIUS: 1, // world units
 
 		},
 		BULLET: {
