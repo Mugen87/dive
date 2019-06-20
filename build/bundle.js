@@ -72375,7 +72375,6 @@
 
 	}
 	var GUI$1 = GUI;
-	//# sourceMappingURL=dat.gui.module.js.map
 
 	const PI25 = Math.PI * 0.25;
 	const PI75 = Math.PI * 0.75;
@@ -73108,6 +73107,8 @@
 			this._keyDownHandler = onKeyDown.bind( this );
 			this._keyUpHandler = onKeyUp.bind( this );
 
+			this._firstEvent = true; // FIX for Chrome (ignore the first mouse-move event)
+
 		}
 
 		/**
@@ -73126,6 +73127,8 @@
 			document.addEventListener( 'keyup', this._keyUpHandler, false );
 
 			document.body.requestPointerLock();
+
+			this._firstEvent = true;
 
 			return this;
 
@@ -73352,6 +73355,13 @@
 	function onMouseMove( event ) {
 
 		if ( this.active ) {
+
+			if ( this._firstEvent ) {
+
+				this._firstEvent = false;
+				return;
+
+			}
 
 			this.movementX -= event.movementX * 0.001 * this.lookingSpeed;
 			this.movementY -= event.movementY * 0.001 * this.lookingSpeed;
