@@ -1,4 +1,4 @@
-import { GameEntity } from '../lib/yuka.module.js';
+import { GameEntity, BVH } from '../lib/yuka.module.js';
 
 /**
 * Class for representing the level of this game.
@@ -16,7 +16,7 @@ class Level extends GameEntity {
 
 		super();
 
-		this.geometry = geometry;
+		this.bvh = new BVH().fromMeshGeometry( geometry );
 		this.canAcitivateTrigger = false;
 
 	}
@@ -45,7 +45,7 @@ class Level extends GameEntity {
 	*/
 	checkProjectileIntersection( ray, intersectionPoint ) {
 
-		return this.geometry.intersectRay( ray, this.worldMatrix, true, intersectionPoint );
+		return ray.intersectBVH( this.bvh, intersectionPoint );
 
 	}
 
@@ -59,7 +59,7 @@ class Level extends GameEntity {
 	*/
 	lineOfSightTest( ray, intersectionPoint ) {
 
-		return this.geometry.intersectRay( ray, this.worldMatrix, true, intersectionPoint );
+		return ray.intersectBVH( this.bvh, intersectionPoint );
 
 	}
 

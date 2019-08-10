@@ -8,7 +8,7 @@
 	 * @license
 	 * The MIT License
 	 *
-	 * Copyright © 2018 Yuka authors
+	 * Copyright © 2019 Yuka authors
 	 *
 	 * Permission is hereby granted, free of charge, to any person obtaining a copy
 	 * of this software and associated documentation files (the "Software"), to deal
@@ -1171,6 +1171,9 @@
 	const perpWorldUp = new Vector3();
 	const temp = new Vector3();
 
+	const colVal = [ 2, 2, 1 ];
+	const rowVal = [ 1, 0, 0 ];
+
 	/**
 	* Class representing a 3x3 matrix. The elements of the matrix
 	* are stored in column-major order.
@@ -1447,6 +1450,179 @@
 			t = e[ 5 ]; e[ 5 ] = e[ 7 ]; e[ 7 ] = t;
 
 			return this;
+
+		}
+
+		/**
+		* Computes the element index according to the given column and row.
+		*
+		* @param {Number} column - Index of the column.
+		* @param {Number} row - Index of the row.
+		* @return {Number} The index of the element at the provided row and column.
+		*/
+		getElementIndex( column, row ) {
+
+			return column * 3 + row;
+
+		}
+
+		/**
+		* Computes the frobenius norm. It's the squareroot of the sum of all
+		* squared matrix elements.
+		*
+		* @return {Number} The frobenius norm.
+		*/
+		frobeniusNorm() {
+
+			const e = this.elements;
+			let norm = 0;
+
+			for ( let i = 0; i < 9; i ++ ) {
+
+				norm += e[ i ] * e[ i ];
+
+			}
+
+			return Math.sqrt( norm );
+
+		}
+
+		/**
+		* Computes the  "off-diagonal" frobenius norm. Assumes the matrix is symmetric.
+		*
+		* @return {Number} The "off-diagonal" frobenius norm.
+		*/
+		offDiagonalFrobeniusNorm() {
+
+			const e = this.elements;
+			let norm = 0;
+
+			for ( let i = 0; i < 3; i ++ ) {
+
+				const t = e[ this.getElementIndex( colVal[ i ], rowVal[ i ] ) ];
+				norm += 2 * t * t; // multiply the result by two since the matrix is symetric
+
+			}
+
+			return Math.sqrt( norm );
+
+		}
+
+		/**
+		* Computes the eigenvectors and eigenvalues.
+		*
+		* Reference: https://github.com/AnalyticalGraphicsInc/cesium/blob/411a1afbd36b72df64d7362de6aa934730447234/Source/Core/Matrix3.js#L1141 (Apache License 2.0)
+		*
+		* The values along the diagonal of the diagonal matrix are the eigenvalues.
+		* The columns of the unitary matrix are the corresponding eigenvectors.
+		*
+		* @param {Object} result - An object with unitary and diagonal properties which are matrices onto which to store the result.
+		* @return {Object} An object with unitary and diagonal properties which are matrices onto which to store the result.
+		*/
+		eigenDecomposition( result ) {
+
+			let count = 0;
+			let sweep = 0;
+
+			const maxSweeps = 10;
+
+			result.unitary.identity();
+			result.diagonal.copy( this );
+
+			const unitaryMatrix = result.unitary;
+			const diagonalMatrix = result.diagonal;
+
+			const epsilon = Number.EPSILON * diagonalMatrix.frobeniusNorm();
+
+			while ( sweep < maxSweeps && diagonalMatrix.offDiagonalFrobeniusNorm() > epsilon ) {
+
+				diagonalMatrix.shurDecomposition( m1 );
+				m2.copy( m1 ).transpose();
+				diagonalMatrix.multiply( m1 );
+				diagonalMatrix.premultiply( m2 );
+				unitaryMatrix.multiply( m1 );
+
+				if ( ++ count > 2 ) {
+
+					sweep ++;
+					count = 0;
+
+				}
+
+			}
+
+			return result;
+
+		}
+
+		/**
+		* Finds the largest off-diagonal term and then creates a matrix
+		* which can be used to help reduce it.
+		*
+		* @param {Matrix3} result - The result matrix.
+		* @return {Matrix3} The result matrix.
+		*/
+		shurDecomposition( result ) {
+
+			let maxDiagonal = 0;
+			let rotAxis = 1;
+
+			// find pivot (rotAxis) based on largest off-diagonal term
+
+			const e = this.elements;
+
+			for ( let i = 0; i < 3; i ++ ) {
+
+				const t = Math.abs( e[ this.getElementIndex( colVal[ i ], rowVal[ i ] ) ] );
+
+				if ( t > maxDiagonal ) {
+
+					maxDiagonal = t;
+					rotAxis = i;
+
+				}
+
+			}
+
+			let c = 1;
+			let s = 0;
+
+			const p = rowVal[ rotAxis ];
+			const q = colVal[ rotAxis ];
+
+			if ( Math.abs( e[ this.getElementIndex( q, p ) ] ) > Number.EPSILON ) {
+
+				const qq = e[ this.getElementIndex( q, q ) ];
+				const pp = e[ this.getElementIndex( p, p ) ];
+				const qp = e[ this.getElementIndex( q, p ) ];
+
+				const tau = ( qq - pp ) / 2 / qp;
+
+				let t;
+
+				if ( tau < 0 ) {
+
+					t = - 1 / ( - tau + Math.sqrt( 1 + tau * tau ) );
+
+				} else {
+
+					t = 1 / ( tau + Math.sqrt( 1.0 + tau * tau ) );
+
+				}
+
+				c = 1.0 / Math.sqrt( 1.0 + t * t );
+				s = t * c;
+
+			}
+
+			result.identity();
+
+			result.elements[ this.getElementIndex( p, p ) ] = c;
+			result.elements[ this.getElementIndex( q, q ) ] = c;
+			result.elements[ this.getElementIndex( q, p ) ] = s;
+			result.elements[ this.getElementIndex( p, q ) ] = - s;
+
+			return result;
 
 		}
 
@@ -2537,6 +2713,7 @@
 
 		/**
 		* Uses the given quaternion to transform the upper left 3x3 part to a rotation matrix.
+		* Other parts of the matrix are equal to the identiy matrix.
 		*
 		* @param {Quaternion} q - A quaternion representing a rotation.
 		* @return {Matrix4} A reference to this matrix.
@@ -2565,6 +2742,42 @@
 
 			e[ 3 ] = 0;
 			e[ 7 ] = 0;
+			e[ 11 ] = 0;
+
+			e[ 12 ] = 0;
+			e[ 13 ] = 0;
+			e[ 14 ] = 0;
+			e[ 15 ] = 1;
+
+			return this;
+
+		}
+
+		/**
+		* Sets the upper-left 3x3 portion of this matrix by the given 3x3 matrix. Other
+		* parts of the matrix are equal to the identiy matrix.
+		*
+		* @param {Matrix3} m - A 3x3 matrix.
+		* @return {Matrix4} A reference to this matrix.
+		*/
+		fromMatrix3( m ) {
+
+			const e = this.elements;
+			const me = m.elements;
+
+			e[ 0 ] = me[ 0 ];
+			e[ 1 ] = me[ 1 ];
+			e[ 2 ] = me[ 2 ];
+			e[ 3 ] = 0;
+
+			e[ 4 ] = me[ 3 ];
+			e[ 5 ] = me[ 4 ];
+			e[ 6 ] = me[ 5 ];
+			e[ 7 ] = 0;
+
+			e[ 8 ] = me[ 6 ];
+			e[ 9 ] = me[ 7 ];
+			e[ 10 ] = me[ 8 ];
 			e[ 11 ] = 0;
 
 			e[ 12 ] = 0;
@@ -4650,6 +4863,34 @@
 		}
 
 		/**
+		* Returns true if the given plane intersects this AABB.
+		*
+		* Reference: Testing Box Against Plane in Real-Time Collision Detection
+		* by Christer Ericson (chapter 5.2.3)
+		*
+		* @param {Plane} plane - The plane to test.
+		* @return {Boolean} The result of the intersection test.
+		*/
+		intersectsPlane( plane ) {
+
+			const normal = plane.normal;
+
+			this.getCenter( center );
+			size.subVectors( this.max, center ); // positive extends
+
+			// compute the projection interval radius of b onto L(t) = c + t * plane.normal
+
+			const r = size.x * Math.abs( normal.x ) + size.y * Math.abs( normal.y ) + size.z * Math.abs( normal.z );
+
+			// compute distance of box center from plane
+
+			const s = plane.distanceToPoint( center );
+
+			return Math.abs( s ) <= r;
+
+		}
+
+		/**
 		* Returns the normal for a given point on this AABB's surface.
 		*
 		* @param {Vector3} point - The point on the surface
@@ -4940,6 +5181,21 @@
 		}
 
 		/**
+		* Returns true if the given plane intersects this bounding sphere.
+		*
+		* Reference: Testing Sphere Against Plane in Real-Time Collision Detection
+		* by Christer Ericson (chapter 5.2.2)
+		*
+		* @param {Plane} plane - The plane to test.
+		* @return {Boolean} The result of the intersection test.
+		*/
+		intersectsPlane( plane ) {
+
+			return Math.abs( plane.distanceToPoint( this.center ) ) <= this.radius;
+
+		}
+
+		/**
 		* Returns the normal for a given point on this bounding sphere's surface.
 		*
 		* @param {Vector3} point - The point on the surface
@@ -5036,6 +5292,10 @@
 	const edge1 = new Vector3();
 	const edge2 = new Vector3();
 	const normal = new Vector3();
+	const size$1 = new Vector3();
+	const matrix$1 = new Matrix4();
+	const inverse = new Matrix4();
+	const aabb$1 = new AABB();
 
 	/**
 	* Class representing a ray in 3D space.
@@ -5366,6 +5626,58 @@
 		}
 
 		/**
+		* Performs a ray/OBB intersection test and stores the intersection point
+		* to the given 3D vector. If no intersection is detected, *null* is returned.
+		*
+		* @param {OBB} obb - An orientend bounding box.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		intersectOBB( obb, result ) {
+
+			// the idea is to perform the intersection test in the local space
+			// of the OBB.
+
+			obb.getSize( size$1 );
+			aabb$1.fromCenterAndSize( v1$1.set( 0, 0, 0 ), size$1 );
+
+			matrix$1.fromMatrix3( obb.rotation );
+			matrix$1.setPosition( obb.center );
+
+			// transform ray to the local space of the OBB
+
+			localRay.copy( this ).applyMatrix4( matrix$1.getInverse( inverse ) );
+
+			// perform ray <-> AABB intersection test
+
+			if ( localRay.intersectAABB( aabb$1, result ) ) {
+
+				// transform the intersection point back to world space
+
+				return result.applyMatrix4( matrix$1 );
+
+			} else {
+
+				return null;
+
+			}
+
+		}
+
+		/**
+		* Performs a ray/OBB intersection test. Returns either true or false if
+		* there is a intersection or not.
+		*
+		* @param {OBB} obb - An orientend bounding box.
+		* @return {boolean} Whether there is an intersection or not.
+		*/
+		intersectsOBB( obb ) {
+
+			return this.intersectOBB( obb, v1$1 ) !== null;
+
+		}
+
+		/**
 		* Performs a ray/convex hull intersection test and stores the intersection point
 		* to the given 3D vector. If no intersection is detected, *null* is returned.
 		* The implementation is based on "Fast Ray-Convex Polyhedron Intersection"
@@ -5549,6 +5861,33 @@
 		}
 
 		/**
+		* Performs a ray/BVH intersection test and stores the intersection point
+		* to the given 3D vector. If no intersection is detected, *null* is returned.
+		*
+		* @param {BVH} bvh - A BVH.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		intersectBVH( bvh, result ) {
+
+			return bvh.root.intersectRay( this, result );
+
+		}
+
+		/**
+		* Performs a ray/BVH intersection test. Returns either true or false if
+		* there is a intersection or not.
+		*
+		* @param {BVH} bvh - A BVH.
+		* @return {boolean} Whether there is an intersection or not.
+		*/
+		intersectsBVH( bvh ) {
+
+			return bvh.root.intersectsRay( this );
+
+		}
+
+		/**
 		* Transforms this ray by the given 4x4 matrix.
 		*
 		* @param {Matrix4} m - The 4x4 matrix.
@@ -5577,7 +5916,9 @@
 
 	}
 
-	const inverse = new Matrix4();
+	const localRay = new Ray();
+
+	const inverse$1 = new Matrix4();
 	const localPositionOfObstacle = new Vector3();
 	const localPositionOfClosestObstacle = new Vector3();
 	const intersectionPoint = new Vector3();
@@ -5649,7 +5990,7 @@
 
 			const dBoxLength = this.dBoxMinLength + ( vehicle.getSpeed() / vehicle.maxSpeed ) * this.dBoxMinLength;
 
-			vehicle.worldMatrix.getInverse( inverse );
+			vehicle.worldMatrix.getInverse( inverse$1 );
 
 			for ( let i = 0, l = obstacles.length; i < l; i ++ ) {
 
@@ -5659,7 +6000,7 @@
 
 				// calculate this obstacle's position in local space of the vehicle
 
-				localPositionOfObstacle.copy( obstacle.position ).applyMatrix4( inverse );
+				localPositionOfObstacle.copy( obstacle.position ).applyMatrix4( inverse$1 );
 
 				// if the local position has a positive z value then it must lay behind the agent.
 				// besides the absolute z value must be smaller than the length of the detection box
@@ -7982,6 +8323,7 @@
 
 	const v1$2 = new Vector3();
 	const v2 = new Vector3();
+	const d = new Vector3();
 
 	/**
 	* Class representing a plane in 3D space. The plane is specified in Hessian normal form.
@@ -8103,6 +8445,55 @@
 		}
 
 		/**
+		* Performs a plane/plane intersection test and stores the intersection point
+		* to the given 3D vector. If no intersection is detected, *null* is returned.
+		*
+		* Reference: Intersection of Two Planes in Real-Time Collision Detection
+		* by Christer Ericson (chapter 5.4.4)
+		*
+		* @param {Plane} plane - The plane to test.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		intersectPlane( plane, result ) {
+
+			// compute direction of intersection line
+
+			d.crossVectors( this.normal, plane.normal );
+
+			// if d is zero, the planes are parallel (and separated)
+			// or coincident, so they’re not considered intersecting
+
+			const denom = d.dot( d );
+
+			if ( denom === 0 ) return null;
+
+			// compute point on intersection line
+
+			v1$2.copy( plane.normal ).multiplyScalar( this.constant );
+			v2.copy( this.normal ).multiplyScalar( plane.constant );
+
+			result.crossVectors( v1$2.sub( v2 ), d ).divideScalar( denom );
+
+			return result;
+
+		}
+
+		/**
+		* Returns true if the given plane intersects this plane.
+		*
+		* @param {Plane} plane - The plane to test.
+		* @return {Boolean} The result of the intersection test.
+		*/
+		intersectsPlane( plane ) {
+
+			const d = this.normal.dot( plane.normal );
+
+			return ( Math.abs( d ) !== 1 );
+
+		}
+
+		/**
 		* Projects the given point onto the plane. The result is written
 		* to the given vector.
 		*
@@ -8170,7 +8561,7 @@
 		}
 
 		/**
-		* Computes an AABB for this geometry.
+		* Computes the internal bounding volumes of this mesh geometry.
 		*
 		* @return {MeshGeometry} A reference to this mesh geometry.
 		*/
@@ -8367,6 +8758,42 @@
 			}
 
 			return null;
+
+		}
+
+		/**
+		 * Returns a new geometry without containing indices.
+		 *
+		 * @return {MeshGeometry} The new geometry.
+		 */
+		toTriangleSoup() {
+
+			const indices = this.indices;
+			const vertices = this.vertices;
+			let newVertices;
+
+			if ( indices ) {
+
+				newVertices = new Float32Array( indices.length * 3 );
+
+				for ( let i = 0, l = indices.length; i < l; i ++ ) {
+
+					const a = indices[ i ];
+					const stride = 3;
+
+					newVertices[ i * stride ] = vertices[ a * stride ];
+					newVertices[ ( i * stride ) + 1 ] = vertices[ ( a * stride ) + 1 ];
+					newVertices[ ( i * stride ) + 2 ] = vertices[ ( a * stride ) + 2 ];
+
+				}
+
+			} else {
+
+				newVertices = new Float32Array( vertices );
+
+			}
+
+			return new MeshGeometry( newVertices );
 
 		}
 
@@ -12017,6 +12444,658 @@
 
 	}
 
+	const v1$3 = new Vector3();
+	const v2$1 = new Vector3();
+	const v3 = new Vector3();
+
+	const xAxis = new Vector3( 1, 0, 0 );
+	const yAxis = new Vector3( 0, 1, 0 );
+	const zAxis = new Vector3( 0, 0, 1 );
+
+	const triangle$1 = { a: new Vector3(), b: new Vector3(), c: new Vector3() };
+	const intersection = new Vector3();
+	const intersections = new Array();
+
+	/**
+	* Class representing a bounding volume hierarchy. The current implementation
+	* represents single BVH nodes as AABBs. It accepts arbitrary branching factors
+	* and can subdivide the given geometry until a defined hierarchy depth has been reached.
+	* Besides, the hierarchy construction is performed top-down and the algorithm only
+	* performs splits along the cardinal axes.
+	*
+	* Reference: Bounding Volume Hierarchies in Real-Time Collision Detection
+	* by Christer Ericson (chapter 6).
+	*
+	* @author {@link https://github.com/robp94|robp94}
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class BVH {
+
+		/**
+		* Constructs a new BVH.
+		*
+		* @param {Number} branchingFactor - The branching factor.
+		* @param {Number} depth - The maximum hierarchical depth.
+		* @param {Number} primitivesPerNode - The minimum amount of primitives per BVH node.
+		*/
+		constructor( branchingFactor = 2, primitivesPerNode = 1, depth = 10 ) {
+
+			/**
+			* The branching factor (how many nodes per level).
+			* @type Number
+			* @default 2
+			*/
+			this.branchingFactor = branchingFactor;
+
+			/**
+			* The minimum amount of primitives per BVH node.
+			* @type Number
+			* @default 10
+			*/
+			this.primitivesPerNode = primitivesPerNode;
+
+			/**
+			* The maximum hierarchical depth.
+			* @type Number
+			* @default 10
+			*/
+			this.depth = depth;
+
+			/**
+			* The root BVH node.
+			* @type BVHNode
+			* @default null
+			*/
+			this.root = null;
+
+		}
+
+		/**
+		* Computes a BVH for the given mesh geometry.
+		*
+		* @param {MeshGeometry} geometry - The mesh geometry.
+		* @return {BVH} A reference to this BVH.
+		*/
+		fromMeshGeometry( geometry ) {
+
+			this.root = new BVHNode();
+
+			// primitives
+
+			const nonIndexedGeometry = geometry.toTriangleSoup();
+			const vertices = nonIndexedGeometry.vertices;
+			this.root.primitives.push( ...vertices );
+
+			// centroids
+
+			const primitives = this.root.primitives;
+
+			for ( let i = 0, l = primitives.length; i < l; i += 9 ) {
+
+				v1$3.fromArray( primitives, i );
+				v2$1.fromArray( primitives, i + 3 );
+				v3.fromArray( primitives, i + 6 );
+
+				v1$3.add( v2$1 ).add( v3 ).divideScalar( 3 );
+
+				this.root.centroids.push( v1$3.x, v1$3.y, v1$3.z );
+
+			}
+
+			// build
+
+			this.root.build( this.branchingFactor, this.primitivesPerNode, this.depth, 1 );
+
+			return this;
+
+		}
+
+		/**
+		* Executes the given callback for each node of the BVH.
+		*
+		* @param {Function} callback - The callback to execute.
+		* @return {BVH} A reference to this BVH.
+		*/
+		traverse( callback ) {
+
+			this.root.traverse( callback );
+
+			return this;
+
+		}
+
+	}
+
+	/**
+	* A single node in a bounding volume hierarchy (BVH).
+	*
+	* @author {@link https://github.com/robp94|robp94}
+	* @author {@link https://github.com/Mugen87|Mugen87}
+	*/
+	class BVHNode {
+
+		/**
+		* Constructs a BVH node.
+		*/
+		constructor() {
+
+			/**
+			* The parent BVH node.
+			* @type BVHNode
+			* @default null
+			*/
+			this.parent = null;
+
+			/**
+			* The child BVH nodes.
+			* @type Array
+			*/
+			this.children = new Array();
+
+			/**
+			* The bounding volume of this BVH node.
+			* @type AABB
+			*/
+			this.boundingVolume = new AABB();
+
+			/**
+			* The primitives (triangles) of this BVH node.
+			* Only filled for leaf nodes.
+			* @type Array
+			*/
+			this.primitives = new Array();
+
+			/**
+			* The centroids of the node's triangles.
+			* Only filled for leaf nodes.
+			* @type Array
+			*/
+			this.centroids = new Array();
+
+		}
+
+		/**
+		* Returns true if this BVH node is a root node.
+		*
+		* @return {Boolean} Whether this BVH node is a root node or not.
+		*/
+		root() {
+
+			return this.parent === null;
+
+		}
+
+		/**
+		* Returns true if this BVH node is a leaf node.
+		*
+		* @return {Boolean} Whether this BVH node is a leaf node or not.
+		*/
+		leaf() {
+
+			return this.children.length === 0;
+
+		}
+
+		/**
+		* Returns the depth of this BVH node in its hierarchy.
+		*
+		* @return {Number} The hierarchical depth of this BVH node.
+		*/
+		getDepth() {
+
+			let depth = 0;
+
+			let parent = this.parent;
+
+			while ( parent !== null ) {
+
+				parent = parent.parent;
+				depth ++;
+
+			}
+
+			return depth;
+
+		}
+
+		/**
+		* Executes the given callback for this BVH node and its ancestors.
+		*
+		* @param {Function} callback - The callback to execute.
+		* @return {BVHNode} A reference to this BVH node.
+		*/
+		traverse( callback ) {
+
+			callback( this );
+
+			for ( let i = 0, l = this.children.length; i < l; i ++ ) {
+
+				 this.children[ i ].traverse( callback );
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Builds this BVH node. That means the respective bounding volume
+		* is computed and the node's primitives are distributed under new child nodes.
+		* This only happens if the maximum hierarchical depth is not yet reached and
+		* the node does contain enough primitives required for a split.
+		*
+		* @param {Number} branchingFactor - The branching factor.
+		* @param {Number} primitivesPerNode - The minimum amount of primitives per BVH node.
+		* @param {Number} maxDepth - The maximum  hierarchical depth.
+		* @param {Number} currentDepth - The current hierarchical depth.
+		* @return {BVHNode} A reference to this BVH node.
+		*/
+		build( branchingFactor, primitivesPerNode, maxDepth, currentDepth ) {
+
+			this.computeBoundingVolume();
+
+			// check depth and primitive count
+
+			const primitiveCount = this.primitives.length / 9;
+			const newPrimitiveCount = Math.floor( primitiveCount / branchingFactor );
+
+			if ( ( currentDepth <= maxDepth ) && ( newPrimitiveCount >= primitivesPerNode ) ) {
+
+				// split (distribute primitives on new child BVH nodes)
+
+				this.split( branchingFactor );
+
+				// proceed with build on the next hierarchy level
+
+				for ( let i = 0; i < branchingFactor; i ++ ) {
+
+					this.children[ i ].build( branchingFactor, primitivesPerNode, maxDepth, currentDepth + 1 );
+
+				}
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Computes the AABB for this BVH node.
+		*
+		* @return {BVHNode} A reference to this BVH node.
+		*/
+		computeBoundingVolume() {
+
+			const primitives = this.primitives;
+
+			const aabb = this.boundingVolume;
+
+			// compute AABB
+
+			aabb.min.set( Infinity, Infinity, Infinity );
+			aabb.max.set( - Infinity, - Infinity, - Infinity );
+
+			for ( let i = 0, l = primitives.length; i < l; i += 3 ) {
+
+				v1$3.x = primitives[ i ];
+				v1$3.y = primitives[ i + 1 ];
+				v1$3.z = primitives[ i + 2 ];
+
+				aabb.expand( v1$3 );
+
+			}
+
+			return this;
+
+		}
+
+		/**
+		* Computes the split axis. Right now, only the cardinal axes
+		* are potential split axes.
+		*
+		* @return {Vector3} The split axis.
+		*/
+		computeSplitAxis() {
+
+			let maxX, maxY, maxZ = maxY = maxX = - Infinity;
+			let minX, minY, minZ = minY = minX = Infinity;
+
+			const centroids = this.centroids;
+
+			for ( let i = 0, l = centroids.length; i < l; i += 3 ) {
+
+				const x = centroids[ i ];
+				const y = centroids[ i + 1 ];
+				const z = centroids[ i + 2 ];
+
+				if ( x > maxX ) {
+
+					maxX = x;
+
+				}
+
+				if ( y > maxY ) {
+
+					maxY = y;
+
+				}
+
+				if ( z > maxZ ) {
+
+					maxZ = z;
+
+				}
+
+				if ( x < minX ) {
+
+					minX = x;
+
+				}
+
+				if ( y < minY ) {
+
+					minY = y;
+
+				}
+
+				if ( z < minZ ) {
+
+					minZ = z;
+
+				}
+
+			}
+
+			const rangeX = maxX - minX;
+			const rangeY = maxY - minY;
+			const rangeZ = maxZ - minZ;
+
+			if ( rangeX > rangeY && rangeX > rangeZ ) {
+
+				return xAxis;
+
+			} else if ( rangeY > rangeZ ) {
+
+				return yAxis;
+
+			} else {
+
+				return zAxis;
+
+			}
+
+		}
+
+		/**
+		* Splits the node and distributes node's primitives over new child nodes.
+		*
+		* @param {Number} branchingFactor - The branching factor.
+		* @return {BVHNode} A reference to this BVH node.
+		*/
+		split( branchingFactor ) {
+
+			const centroids = this.centroids;
+			const primitives = this.primitives;
+
+			// create (empty) child BVH nodes
+
+			for ( let i = 0; i < branchingFactor; i ++ ) {
+
+				this.children[ i ] = new BVHNode();
+				this.children[ i ].parent = this;
+
+			}
+
+			// sort primitives along split axis
+
+			const axis = this.computeSplitAxis();
+			const sortedPrimitiveIndices = new Array();
+
+			for ( let i = 0, l = centroids.length; i < l; i += 3 ) {
+
+				v1$3.fromArray( centroids, i );
+
+				// the result from the dot product is our sort criterion.
+				// it represents the projection of the centroid on the split axis
+
+				const p = v1$3.dot( axis );
+				const primitiveIndex = i / 3;
+
+				sortedPrimitiveIndices.push( { index: primitiveIndex, p: p } );
+
+			}
+
+			sortedPrimitiveIndices.sort( sortPrimitives );
+
+			// distribute data
+
+			const primitveCount = sortedPrimitiveIndices.length;
+			const primitivesPerChild = Math.floor( primitveCount / branchingFactor );
+
+			var childIndex = 0;
+			var primitivesIndex = 0;
+
+			for ( let i = 0; i < primitveCount; i ++ ) {
+
+				// selected child
+
+				primitivesIndex ++;
+
+				// check if we try to add more primitives to a child than "primitivesPerChild" defines.
+				// move primitives to the next child
+
+				if ( primitivesIndex > primitivesPerChild ) {
+
+					// ensure "childIndex" does not overflow (meaning the last child takes all remaining primitives)
+
+					if ( childIndex < ( branchingFactor - 1 ) ) {
+
+						primitivesIndex = 1; // reset primitive index
+						childIndex ++; // raise child index
+
+					}
+
+				}
+
+				const child = this.children[ childIndex ];
+
+				// move data to the next level
+
+				// 1. primitives
+
+				const primitiveIndex = sortedPrimitiveIndices[ i ].index;
+				const stride = primitiveIndex * 9; // remember the "primitives" array holds raw vertex data defining triangles
+
+				v1$3.fromArray( primitives, stride );
+				v2$1.fromArray( primitives, stride + 3 );
+				v3.fromArray( primitives, stride + 6 );
+
+				child.primitives.push( v1$3.x, v1$3.y, v1$3.z );
+				child.primitives.push( v2$1.x, v2$1.y, v2$1.z );
+				child.primitives.push( v3.x, v3.y, v3.z );
+
+				// 2. centroid
+
+				v1$3.fromArray( centroids, primitiveIndex * 3 );
+
+				child.centroids.push( v1$3.x, v1$3.y, v1$3.z );
+
+			}
+
+			// remove centroids/primitives after split from this node
+
+			this.centroids.length = 0;
+			this.primitives.length = 0;
+
+			return this;
+
+		}
+
+		/**
+		* Performs a ray/BVH node intersection test and stores the closest intersection point
+		* to the given 3D vector. If no intersection is detected, *null* is returned.
+		*
+		* @param {Ray} ray - The ray.
+		* @param {Vector3} result - The result vector.
+		* @return {Vector3} The result vector.
+		*/
+		intersectRay( ray, result ) {
+
+			// gather all intersection points along the hierarchy
+
+			if ( ray.intersectAABB( this.boundingVolume, result ) !== null ) {
+
+				if ( this.leaf() === true ) {
+
+					const vertices = this.primitives;
+
+					for ( let i = 0, l = vertices.length; i < l; i += 9 ) {
+
+						// remember: we assume primitives are triangles
+
+						triangle$1.a.fromArray( vertices, i );
+						triangle$1.b.fromArray( vertices, i + 3 );
+						triangle$1.c.fromArray( vertices, i + 6 );
+
+						if ( ray.intersectTriangle( triangle$1, true, result ) !== null ) {
+
+							intersections.push( result.clone() );
+
+						}
+
+					}
+
+				} else {
+
+					// process childs
+
+					for ( let i = 0, l = this.children.length; i < l; i ++ ) {
+
+						this.children[ i ].intersectRay( ray, result );
+
+					}
+
+				}
+
+			}
+
+			// determine the closest intersection point in the root node (so after
+			// the hierarchy was processed)
+
+			if ( this.root() === true ) {
+
+				if ( intersections.length > 0 ) {
+
+					let minDistance = Infinity;
+
+					for ( let i = 0, l = intersections.length; i < l; i ++ ) {
+
+						const squaredDistance = ray.origin.squaredDistanceTo( intersections[ i ] );
+
+						if ( squaredDistance < minDistance ) {
+
+							minDistance = squaredDistance;
+							result.copy( intersections[ i ] );
+
+						}
+
+					}
+
+					// reset array
+
+					intersections.length = 0;
+
+					// return closest intersection point
+
+					return result;
+
+				} else {
+
+					// no intersection detected
+
+					return null;
+
+				}
+
+			} else {
+
+				// always return null for non-root nodes
+
+				return null;
+
+			}
+
+		}
+
+		/**
+		* Performs a ray/BVH node intersection test. Returns either true or false if
+		* there is a intersection or not.
+		*
+		* @param {Ray} ray - The ray.
+		* @return {boolean} Whether there is an intersection or not.
+		*/
+		intersectsRay( ray ) {
+
+			if ( ray.intersectAABB( this.boundingVolume, intersection ) !== null ) {
+
+				if ( this.leaf() === true ) {
+
+					const vertices = this.primitives;
+
+					for ( let i = 0, l = vertices.length; i < l; i += 9 ) {
+
+						// remember: we assume primitives are triangles
+
+						triangle$1.a.fromArray( vertices, i );
+						triangle$1.b.fromArray( vertices, i + 3 );
+						triangle$1.c.fromArray( vertices, i + 6 );
+
+						if ( ray.intersectTriangle( triangle$1, true, intersection ) !== null ) {
+
+							return true;
+
+						}
+
+					}
+
+					return false;
+
+				} else {
+
+					// process child BVH nodes
+
+					for ( let i = 0, l = this.children.length; i < l; i ++ ) {
+
+						if ( this.children[ i ].intersectsRay( ray ) === true ) {
+
+							return true;
+
+						}
+
+					}
+
+					return false;
+
+				}
+
+			} else {
+
+				return false;
+
+			}
+
+		}
+
+	}
+
+	//
+
+	function sortPrimitives( a, b ) {
+
+		return a.p - b.p;
+
+	}
+
 	const p1 = new Vector3();
 	const p2 = new Vector3();
 
@@ -14401,7 +15480,7 @@
 	}
 
 	const clampedPosition = new Vector3();
-	const aabb$1 = new AABB();
+	const aabb$2 = new AABB();
 	const contour = new Array();
 
 	/**
@@ -14620,8 +15699,8 @@
 
 			// approximate range with an AABB which allows fast intersection test
 
-			aabb$1.min.copy( position ).subScalar( radius );
-			aabb$1.max.copy( position ).addScalar( radius );
+			aabb$2.min.copy( position ).subScalar( radius );
+			aabb$2.max.copy( position ).addScalar( radius );
 
 			// test all non-empty cells for an intersection
 
@@ -14629,7 +15708,7 @@
 
 				const cell = cells[ i ];
 
-				if ( cell.empty() === false && cell.intersects( aabb$1 ) === true ) {
+				if ( cell.empty() === false && cell.intersects( aabb$2 ) === true ) {
 
 					result.push( ...cell.entries );
 
@@ -14672,13 +15751,13 @@
 
 			polygon.getContour( contour );
 
-			aabb$1.fromPoints( contour );
+			aabb$2.fromPoints( contour );
 
 			for ( let i = 0, l = cells.length; i < l; i ++ ) {
 
 				const cell = cells[ i ];
 
-				if ( cell.intersects( aabb$1 ) === true ) {
+				if ( cell.intersects( aabb$2 ) === true ) {
 
 					cell.add( polygon );
 
@@ -14770,6 +15849,8 @@
 				this.cells[ i ].resolveReferences( entities );
 
 			}
+
+			return this;
 
 		}
 
@@ -73715,7 +74796,7 @@
 
 			super();
 
-			this.geometry = geometry;
+			this.bvh = new BVH().fromMeshGeometry( geometry );
 			this.canAcitivateTrigger = false;
 
 		}
@@ -73744,7 +74825,7 @@
 		*/
 		checkProjectileIntersection( ray, intersectionPoint ) {
 
-			return this.geometry.intersectRay( ray, this.worldMatrix, true, intersectionPoint );
+			return ray.intersectBVH( this.bvh, intersectionPoint );
 
 		}
 
@@ -73758,7 +74839,7 @@
 		*/
 		lineOfSightTest( ray, intersectionPoint ) {
 
-			return this.geometry.intersectRay( ray, this.worldMatrix, true, intersectionPoint );
+			return ray.intersectBVH( this.bvh, intersectionPoint );
 
 		}
 
