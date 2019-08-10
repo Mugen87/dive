@@ -60,8 +60,6 @@ class FirstPersonControls extends EventDispatcher {
 		this._keyDownHandler = onKeyDown.bind( this );
 		this._keyUpHandler = onKeyUp.bind( this );
 
-		this._firstEvent = true; // FIX for Chrome (ignore the first mouse-move event)
-
 	}
 
 	/**
@@ -80,8 +78,6 @@ class FirstPersonControls extends EventDispatcher {
 		document.addEventListener( 'keyup', this._keyUpHandler, false );
 
 		document.body.requestPointerLock();
-
-		this._firstEvent = true;
 
 		return this;
 
@@ -308,13 +304,6 @@ function onMouseUp( event ) {
 function onMouseMove( event ) {
 
 	if ( this.active ) {
-
-		if ( this._firstEvent ) {
-
-			this._firstEvent = false;
-			return;
-
-		}
 
 		this.movementX -= event.movementX * 0.001 * this.lookingSpeed;
 		this.movementY -= event.movementY * 0.001 * this.lookingSpeed;
