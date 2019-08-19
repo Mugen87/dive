@@ -77492,9 +77492,11 @@
 					// and after a certain reaction time
 
 					const targeted = owner.rotateTo( target.position, delta, 0.05 ); // "targeted" is true if the enemy is faced to the target
-					const timeBecameVisible = targetSystem.getTimeBecameVisible();
 
-					if ( targeted === true && timeBecameVisible >= this.reactionTime ) {
+					const timeBecameVisible = targetSystem.getTimeBecameVisible();
+					const elapsedTime = owner.world.time.getElapsed();
+
+					if ( targeted === true && ( elapsedTime - timeBecameVisible ) >= this.reactionTime ) {
 
 						target.bounds.getCenter( targetPosition$1 );
 
@@ -78208,10 +78210,7 @@
 		*/
 		getTimeBecameVisible() {
 
-			const time = this.owner.world.time;
-			const elapsedTime = time.getElapsed();
-
-			return ( this._currentRecord !== null ) ? ( elapsedTime - this._currentRecord.timeBecameVisible ) : - 1;
+			return ( this._currentRecord !== null ) ? this._currentRecord.timeBecameVisible : - 1;
 
 		}
 

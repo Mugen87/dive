@@ -156,10 +156,7 @@ class TargetSystem {
 	*/
 	getTimeBecameVisible() {
 
-		const time = this.owner.world.time;
-		const elapsedTime = time.getElapsed();
-
-		return ( this._currentRecord !== null ) ? ( elapsedTime - this._currentRecord.timeBecameVisible ) : - 1;
+		return ( this._currentRecord !== null ) ? this._currentRecord.timeBecameVisible : - 1;
 
 	}
 

@@ -557,9 +557,11 @@ class WeaponSystem {
 				// and after a certain reaction time
 
 				const targeted = owner.rotateTo( target.position, delta, 0.05 ); // "targeted" is true if the enemy is faced to the target
-				const timeBecameVisible = targetSystem.getTimeBecameVisible();
 
-				if ( targeted === true && timeBecameVisible >= this.reactionTime ) {
+				const timeBecameVisible = targetSystem.getTimeBecameVisible();
+				const elapsedTime = owner.world.time.getElapsed();
+
+				if ( targeted === true && ( elapsedTime - timeBecameVisible ) >= this.reactionTime ) {
 
 					target.bounds.getCenter( targetPosition );
 
