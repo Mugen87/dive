@@ -75054,7 +75054,7 @@
 				if ( this.completed() ) {
 
 					const target = owner.targetSystem.getTarget();
-					owner.memorySystem.deleteRecord( target );
+					owner.removeEntityFromMemory( target );
 					owner.targetSystem.update();
 
 				} else {
@@ -78598,7 +78598,7 @@
 
 			// memory
 
-			this.memorySystem = new MemorySystem();
+			this.memorySystem = new MemorySystem( this );
 			this.memorySystem.memorySpan = CONFIG.BOT.MEMORY.SPAN;
 			this.memoryRecords = new Array();
 
@@ -79241,6 +79241,21 @@
 		}
 
 		/**
+		* Removes the given entity from the memory system.
+		*
+		* @param {GameEntity} entity - The entity to remove
+		* @return {Enemy} A reference to this game entity.
+		*/
+		removeEntityFromMemory( entity ) {
+
+			this.memorySystem.deleteRecord( entity );
+			this.memorySystem.getValidMemoryRecords( this.currentTime, this.memoryRecords );
+
+			return this;
+
+		}
+
+		/**
 		* Returns true if the enemy can move a step to the given dirction without
 		* leaving the level. The new position vector is stored into the given vector.
 		*
@@ -79360,7 +79375,7 @@
 
 					if ( memoryRecord && memoryRecord.visible ) {
 
-						this.memorySystem.deleteRecord( sender );
+						this.removeEntityFromMemory( sender );
 						this.targetSystem.update();
 
 					}

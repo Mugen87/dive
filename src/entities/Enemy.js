@@ -117,7 +117,7 @@ class Enemy extends Vehicle {
 
 		// memory
 
-		this.memorySystem = new MemorySystem();
+		this.memorySystem = new MemorySystem( this );
 		this.memorySystem.memorySpan = CONFIG.BOT.MEMORY.SPAN;
 		this.memoryRecords = new Array();
 
@@ -760,6 +760,21 @@ class Enemy extends Vehicle {
 	}
 
 	/**
+	* Removes the given entity from the memory system.
+	*
+	* @param {GameEntity} entity - The entity to remove
+	* @return {Enemy} A reference to this game entity.
+	*/
+	removeEntityFromMemory( entity ) {
+
+		this.memorySystem.deleteRecord( entity );
+		this.memorySystem.getValidMemoryRecords( this.currentTime, this.memoryRecords );
+
+		return this;
+
+	}
+
+	/**
 	* Returns true if the enemy can move a step to the given dirction without
 	* leaving the level. The new position vector is stored into the given vector.
 	*
@@ -879,7 +894,7 @@ class Enemy extends Vehicle {
 
 				if ( memoryRecord && memoryRecord.visible ) {
 
-					this.memorySystem.deleteRecord( sender );
+					this.removeEntityFromMemory( sender );
 					this.targetSystem.update();
 
 				}

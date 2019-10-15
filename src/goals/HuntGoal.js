@@ -58,7 +58,7 @@ class HuntGoal extends CompositeGoal {
 			if ( this.completed() ) {
 
 				const target = owner.targetSystem.getTarget();
-				owner.memorySystem.deleteRecord( target );
+				owner.removeEntityFromMemory( target );
 				owner.targetSystem.update();
 
 			} else {
