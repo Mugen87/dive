@@ -14,8 +14,7 @@
     "extends": "mdcs"
   },
   "eslintIgnore": [
-    "yuka.module.js",
-    "three.module.js"
+    "dat.gui.module.js"
   ],
   "author": "Mugen87",
   "license": "MIT",
