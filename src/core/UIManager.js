@@ -1,6 +1,6 @@
 import { AudioContext, OrthographicCamera, Scene, Sprite, SpriteMaterial } from 'three';
 import { CONFIG } from './Config.js';
-import * as DAT from '../lib/dat.gui.module.js';
+import * as DAT from 'dat.gui';
 
 const PI25 = Math.PI * 0.25;
 const PI75 = Math.PI * 0.75;
