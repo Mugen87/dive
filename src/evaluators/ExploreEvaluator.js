@@ -1,4 +1,4 @@
-import { GoalEvaluator } from '../lib/yuka.module.js';
+import { GoalEvaluator } from 'yuka';
 import { ExploreGoal } from '../goals/ExploreGoal.js';
 
 /**

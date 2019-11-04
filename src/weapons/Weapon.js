@@ -1,4 +1,4 @@
-import { GameEntity, MathUtils } from '../lib/yuka.module.js';
+import { GameEntity, MathUtils } from 'yuka';
 import { WEAPON_STATUS_READY, WEAPON_STATUS_UNREADY, WEAPON_STATUS_EQUIP, WEAPON_STATUS_HIDE } from '../core/Constants.js';
 
 /**

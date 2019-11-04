@@ -1,8 +1,8 @@
-import { LoadingManager, AnimationLoader, AudioLoader, TextureLoader, Mesh } from '../lib/three.module.js';
-import { Sprite, SpriteMaterial, DoubleSide, AudioListener, PositionalAudio } from '../lib/three.module.js';
-import { LineSegments, LineBasicMaterial, MeshBasicMaterial, BufferGeometry, Vector3, PlaneBufferGeometry, BoxBufferGeometry } from '../lib/three.module.js';
-import { GLTFLoader } from '../lib/GLTFLoader.module.js';
-import { NavMeshLoader, CostTable } from '../lib/yuka.module.js';
+import { LoadingManager, AnimationLoader, AudioLoader, TextureLoader, Mesh } from 'three';
+import { Sprite, SpriteMaterial, DoubleSide, AudioListener, PositionalAudio } from 'three';
+import { LineSegments, LineBasicMaterial, MeshBasicMaterial, BufferGeometry, Vector3, PlaneBufferGeometry } from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { NavMeshLoader, CostTable } from 'yuka';
 import { CONFIG } from './Config.js';
 
 /**

@@ -1,4 +1,4 @@
-import { AudioContext, OrthographicCamera, Scene, Sprite, SpriteMaterial } from '../lib/three.module.js';
+import { AudioContext, OrthographicCamera, Scene, Sprite, SpriteMaterial } from 'three';
 import { CONFIG } from './Config.js';
 import * as DAT from '../lib/dat.gui.module.js';
 

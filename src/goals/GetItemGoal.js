@@ -1,5 +1,5 @@
 
-import { CompositeGoal, Vector3, Goal, Regulator } from '../lib/yuka.module.js';
+import { CompositeGoal, Vector3, Goal, Regulator } from 'yuka';
 import { FindPathGoal } from './FindPathGoal.js';
 import { FollowPathGoal } from './FollowPathGoal.js';
 import { CONFIG } from '../core/Config.js';

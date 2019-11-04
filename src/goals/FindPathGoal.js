@@ -1,4 +1,4 @@
-import { Goal } from '../lib/yuka.module.js';
+import { Goal } from 'yuka';
 
 /**
 * Sub-goal for finding the next random location

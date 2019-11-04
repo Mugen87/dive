@@ -1,4 +1,4 @@
-import { Task } from '../lib/yuka.module.js';
+import { Task } from 'yuka';
 
 /**
 * Class for representing a single path planning task.

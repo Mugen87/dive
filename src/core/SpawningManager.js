@@ -1,4 +1,4 @@
-import { SphericalTriggerRegion, Vector3 } from '../lib/yuka.module.js';
+import { SphericalTriggerRegion, Vector3 } from 'yuka';
 import { HealthPack } from '../entities/HealthPack.js';
 import { ItemGiver } from '../triggers/ItemGiver.js';
 import { SceneUtils } from '../etc/SceneUtils.js';

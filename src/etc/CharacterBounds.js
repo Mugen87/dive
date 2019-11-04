@@ -1,5 +1,5 @@
-import { AABB, Vector3, Ray } from '../lib/yuka.module.js';
-import { Matrix4 } from '../lib/three.module.js';
+import { AABB, Vector3, Ray } from 'yuka';
+import { Matrix4 } from 'three';
 
 const rayBindSpace = new Ray();
 

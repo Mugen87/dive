@@ -1,4 +1,4 @@
-import { Ray } from '../lib/yuka.module.js';
+import { Ray } from 'yuka';
 import { CONFIG } from '../core/Config.js';
 import { Projectile } from './Projectile.js';
 

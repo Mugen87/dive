@@ -1,5 +1,5 @@
-import { LineSegments, Sprite, SpriteMaterial, LineBasicMaterial, CanvasTexture, BufferGeometry, Float32BufferAttribute } from '../lib/three.module.js';
-import { Mesh, Group, MeshBasicMaterial, CylinderBufferGeometry, SphereBufferGeometry } from '../lib/three.module.js';
+import { LineSegments, Sprite, SpriteMaterial, LineBasicMaterial, CanvasTexture, BufferGeometry, Float32BufferAttribute } from 'three';
+import { Mesh, Group, MeshBasicMaterial, CylinderBufferGeometry, SphereBufferGeometry } from 'three';
 
 /**
 * Class with various helper methods.
@@ -106,7 +106,7 @@ class SceneUtils {
 		var geometry = new BufferGeometry();
 
 		geometry.setIndex( indices );
-		geometry.addAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
+		geometry.setAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
 
 		const lines = new LineSegments( geometry, new LineBasicMaterial( { color: 0xffffff } ) );
 		lines.matrixAutoUpdate = false;

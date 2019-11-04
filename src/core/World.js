@@ -1,8 +1,8 @@
-import { EntityManager, Time, MeshGeometry, Vector3, CellSpacePartitioning } from '../lib/yuka.module.js';
-import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer, Object3D, SkeletonHelper } from '../lib/three.module.js';
-import { HemisphereLight, DirectionalLight } from '../lib/three.module.js';
-import { AxesHelper } from '../lib/three.module.js';
-import { OrbitControls } from '../lib/OrbitControls.module.js';
+import { EntityManager, Time, MeshGeometry, Vector3, CellSpacePartitioning } from 'yuka';
+import { WebGLRenderer, Scene, PerspectiveCamera, Color, AnimationMixer, Object3D, SkeletonHelper } from 'three';
+import { HemisphereLight, DirectionalLight } from 'three';
+import { AxesHelper } from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import { AssetManager } from './AssetManager.js';
 import { SpawningManager } from './SpawningManager.js';

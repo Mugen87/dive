@@ -1,4 +1,4 @@
-import { ShaderMaterial, UniformsUtils, BackSide, Mesh, BoxBufferGeometry, Vector3 } from '../lib/three.module.js';
+import { ShaderMaterial, UniformsUtils, BackSide, Mesh, BoxBufferGeometry, Vector3 } from 'three';
 
 /**
 * Reference: https://github.com/mrdoob/three.js/blob/master/examples/js/objects/Sky.js

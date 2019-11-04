@@ -1,4 +1,4 @@
-import { GameEntity } from '../lib/yuka.module.js';
+import { GameEntity } from 'yuka';
 
 /**
 * A game entity which represents a collectable item.

@@ -1,4 +1,4 @@
-import { Goal, Vector3 } from '../lib/yuka.module.js';
+import { Goal, Vector3 } from 'yuka';
 
 /**
 * Sub-goal for seeking a target position.

@@ -1,5 +1,5 @@
-import { GameEntity, MovingEntity, Vector3, AABB, MathUtils } from '../lib/yuka.module.js';
-import { LoopOnce } from '../lib/three.module.js';
+import { GameEntity, MovingEntity, Vector3, AABB, MathUtils } from 'yuka';
+import { LoopOnce } from 'three';
 import { WeaponSystem } from '../core/WeaponSystem.js';
 import { CONFIG } from '../core/Config.js';
 import { Projectile } from '../weapons/Projectile.js';

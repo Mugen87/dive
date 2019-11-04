@@ -1,4 +1,4 @@
-import { Trigger } from '../lib/yuka.module.js';
+import { Trigger } from 'yuka';
 
 /**
 * Gives an entity an item if it touches the trigger region.

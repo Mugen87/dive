@@ -1,4 +1,4 @@
-import { Goal, CompositeGoal, Vector3 } from '../lib/yuka.module.js';
+import { Goal, CompositeGoal, Vector3 } from 'yuka';
 import { SeekToPositionGoal } from './SeekToPositionGoal.js';
 
 const right = new Vector3( 1, 0, 0 );

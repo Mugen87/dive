@@ -1,4 +1,4 @@
-import { MovingEntity, Ray, Vector3 } from '../lib/yuka.module.js';
+import { MovingEntity, Ray, Vector3 } from 'yuka';
 import { MESSAGE_HIT } from '../core/Constants.js';
 
 const intersectionPoint = new Vector3();

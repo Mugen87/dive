@@ -1,4 +1,4 @@
-import { EventDispatcher, Vector3, Logger } from '../lib/yuka.module.js';
+import { EventDispatcher, Vector3, Logger } from 'yuka';
 import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE } from '../core/Constants.js';
 import { CONFIG } from '../core/Config.js';
 

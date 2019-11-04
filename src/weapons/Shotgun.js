@@ -1,5 +1,5 @@
-import { Ray, Vector3 } from '../lib/yuka.module.js';
-import { AnimationMixer, LoopOnce } from '../lib/three.module.js';
+import { Ray, Vector3 } from 'yuka';
+import { AnimationMixer, LoopOnce } from 'three';
 import { Weapon } from './Weapon.js';
 import { CONFIG } from '../core/Config.js';
 import { WEAPON_STATUS_READY, WEAPON_STATUS_SHOT, WEAPON_STATUS_RELOAD, WEAPON_STATUS_EMPTY, WEAPON_STATUS_OUT_OF_AMMO, WEAPON_TYPES_SHOTGUN } from '../core/Constants.js';

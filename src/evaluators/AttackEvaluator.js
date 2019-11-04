@@ -1,4 +1,4 @@
-import { GoalEvaluator } from '../lib/yuka.module.js';
+import { GoalEvaluator } from 'yuka';
 import { AttackGoal } from '../goals/AttackGoal.js';
 import { Feature } from '../core/Feature.js';
 

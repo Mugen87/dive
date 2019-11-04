@@ -1,5 +1,5 @@
-import { Goal } from '../lib/yuka.module.js';
-import { BufferGeometry } from '../lib/three.module.js';
+import { Goal } from 'yuka';
+import { BufferGeometry } from 'three';
 
 /**
 * Sub-goal for seeking the defined destination point.

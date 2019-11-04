@@ -1,4 +1,4 @@
-import { Goal, CompositeGoal, Vector3 } from '../lib/yuka.module.js';
+import { Goal, CompositeGoal, Vector3 } from 'yuka';
 import { HuntGoal } from './HuntGoal.js';
 import { DodgeGoal } from './DodgeGoal.js';
 import { ChargeGoal } from './ChargeGoal.js';

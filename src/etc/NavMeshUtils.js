@@ -1,7 +1,7 @@
-import { LineSegments, Line, Mesh, Group } from '../lib/three.module.js';
-import { MeshBasicMaterial, LineBasicMaterial } from '../lib/three.module.js';
-import { BufferGeometry, Float32BufferAttribute, IcosahedronBufferGeometry } from '../lib/three.module.js';
-import { Color, VertexColors } from '../lib/three.module.js';
+import { LineSegments, Line, Mesh, Group } from 'three';
+import { MeshBasicMaterial, LineBasicMaterial } from 'three';
+import { BufferGeometry, Float32BufferAttribute, IcosahedronBufferGeometry } from 'three';
+import { Color, VertexColors } from 'three';
 
 /**
 * Class with various helpers in context of navigation meshes.
@@ -74,8 +74,8 @@ class NavMeshUtils {
 
 		}
 
-		geometry.addAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
-		geometry.addAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
+		geometry.setAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
+		geometry.setAttribute( 'color', new Float32BufferAttribute( colors, 3 ) );
 
 		return mesh;
 
@@ -158,7 +158,7 @@ class NavMeshUtils {
 
 		}
 
-		edgesGeometry.addAttribute( 'position', new Float32BufferAttribute( position, 3 ) );
+		edgesGeometry.setAttribute( 'position', new Float32BufferAttribute( position, 3 ) );
 
 		const lines = new LineSegments( edgesGeometry, edgesMaterial );
 		lines.matrixAutoUpdate = false;
@@ -219,7 +219,7 @@ class NavMeshUtils {
 
 		}
 
-		geometry.addAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
+		geometry.setAttribute( 'position', new Float32BufferAttribute( positions, 3 ) );
 
 		return lines;
 

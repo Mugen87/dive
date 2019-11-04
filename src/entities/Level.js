@@ -1,4 +1,4 @@
-import { GameEntity, BVH } from '../lib/yuka.module.js';
+import { GameEntity, BVH } from 'yuka';
 
 /**
 * Class for representing the level of this game.

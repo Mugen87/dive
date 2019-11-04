@@ -1,4 +1,4 @@
-import { TaskQueue } from '../lib/yuka.module.js';
+import { TaskQueue } from 'yuka';
 import { PathPlannerTask } from './PathPlannerTask.js';
 
 /**

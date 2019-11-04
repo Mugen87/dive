@@ -1,6 +1,6 @@
 import { CONFIG } from './Config.js';
 import { WEAPON_TYPES_BLASTER, WEAPON_TYPES_SHOTGUN, WEAPON_TYPES_ASSAULT_RIFLE } from './Constants.js';
-import { MathUtils } from '../lib/yuka.module.js';
+import { MathUtils } from 'yuka';
 
 const result = { distance: Infinity, item: null };
 
