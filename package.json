@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rollup -c \"config/rollup/config.js\"",
     "build-prod": "rollup -c \"config/rollup/config.js\" && google-closure-compiler-js build/bundle.js > build/bundle.min.js",
-    "dev": "concurrently \"rollup -c \"config/rollup/config.js\" -w\" \"http-server -c-1\"",
+    "dev": "concurrently \"rollup -c \"config/rollup/config.js\" -w\" \"serve\"",
     "lint": "eslint src --ext .js",
     "start": "npm run dev"
   },
@@ -20,9 +20,9 @@
     "eslint": "^6.6.0",
     "eslint-config-mdcs": "^4.2.3",
     "google-closure-compiler": "^20190929.0.0",
-    "http-server": "0.9.0",
     "rollup": "^1.26.0",
-    "rollup-plugin-node-resolve": "^5.2.0"
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "serve": "^11.2.0"
   },
   "dependencies": {
     "dat.gui": "0.7.6",
