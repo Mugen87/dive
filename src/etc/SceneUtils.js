@@ -171,8 +171,6 @@ class SceneUtils {
 		const triggerMesh = new Mesh( triggerGeometry, triggerMaterial );
 		triggerMesh.matrixAutoUpdate = false;
 		triggerMesh.visible = false;
-		triggerMesh.position.copy( trigger.region.position );
-		triggerMesh.updateMatrix(); // triggers are static in this game
 
 		return triggerMesh;
 

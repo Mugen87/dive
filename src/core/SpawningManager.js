@@ -427,12 +427,11 @@ class SpawningManager {
 	*/
 	createTrigger( item, radius ) {
 
-		const sphericalTriggerRegion = new SphericalTriggerRegion();
-		sphericalTriggerRegion.position.copy( item.position );
-		sphericalTriggerRegion.radius = radius;
+		const sphericalTriggerRegion = new SphericalTriggerRegion( radius );
 
 		const trigger = new ItemGiver( sphericalTriggerRegion, item );
-		this.world.entityManager.addTrigger( trigger );
+		item.add( trigger );
+
 		this.itemTriggerMap.set( item, trigger );
 
 		// debugging
@@ -440,6 +439,7 @@ class SpawningManager {
 		if ( this.world.debug ) {
 
 			const triggerHelper = SceneUtils.createTriggerHelper( trigger );
+			trigger.setRenderComponent( triggerHelper, sync );
 
 			this.world.helpers.itemHelpers.push( triggerHelper );
 			this.world.scene.add( triggerHelper );

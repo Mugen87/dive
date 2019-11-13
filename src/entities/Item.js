@@ -14,7 +14,7 @@ class Item extends GameEntity {
 
 		super();
 
-		this.canAcitivateTrigger = false;
+		this.canActivateTrigger = false;
 
 		this.currentTime = 0;
 		this.nextSpawnTime = Infinity;

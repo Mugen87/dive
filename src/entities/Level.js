@@ -17,7 +17,7 @@ class Level extends GameEntity {
 		super();
 
 		this.bvh = new BVH().fromMeshGeometry( geometry );
-		this.canAcitivateTrigger = false;
+		this.canActivateTrigger = false;
 
 	}
 
