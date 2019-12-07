@@ -27,6 +27,6 @@
   "dependencies": {
     "dat.gui": "0.7.6",
     "three": "0.110.0",
-    "yuka": "0.1.0"
+    "yuka": "0.3.0"
   }
 }
