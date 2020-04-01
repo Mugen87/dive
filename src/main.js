@@ -2,7 +2,14 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import World from './core/World.js';
+import world from './core/World.js';
 
-const world = new World();
-world.init();
+const startButton = document.getElementById( 'start' );
+startButton.addEventListener( 'click', () => {
+
+	const startScreen = document.getElementById( 'startScreen' );
+	startScreen.remove();
+
+	world.init();
+
+} );

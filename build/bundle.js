@@ -74679,6 +74679,10 @@
 
 			} );
 
+			// start to fade out the loading screen
+
+			this.html.loadingScreen.classList.add( 'fade-out' );
+
 			return this;
 
 		}
@@ -74836,24 +74840,6 @@
 			this.sprites.rightIndicator.visible = false;
 			this.sprites.leftIndicator.visible = false;
 			this.sprites.backIndicator.visible = false;
-
-			return this;
-
-		}
-
-		/**
-		* Removes the loading screen. After removing, the loading screen can not
-		* be restored anymore. So it's only allowed to call this method once.
-		*
-		* @return {UIManager} A reference to this UI manager.
-		*/
-		removeLoadingScreen() {
-
-			if ( this.html.loadingScreen !== null ) {
-
-				this.html.loadingScreen.classList.add( 'fade-out' );
-
-			}
 
 			return this;
 
@@ -81386,7 +81372,7 @@
 			this.time = new Time();
 			this.tick = 0;
 
-			this.assetManager = new AssetManager();
+			this.assetManager = null;
 			this.navMesh = null;
 			this.costTable = null;
 			this.pathPlanner = null;
@@ -81441,6 +81427,8 @@
 		* @return {World} A reference to this world object.
 		*/
 		init() {
+
+			this.assetManager = new AssetManager();
 
 			this.assetManager.init().then( () => {
 
@@ -81998,8 +81986,6 @@
 
 			this.uiManager.init();
 
-			this.uiManager.removeLoadingScreen();
-
 			return this;
 
 		}
@@ -82075,11 +82061,20 @@
 
 	}
 
+	var world = new World();
+
 	/**
 	 * @author Mugen87 / https://github.com/Mugen87
 	 */
 
-	const world = new World();
-	world.init();
+	const startButton = document.getElementById( 'start' );
+	startButton.addEventListener( 'click', () => {
+
+		const startScreen = document.getElementById( 'startScreen' );
+		startScreen.remove();
+
+		world.init();
+
+	} );
 
 })));

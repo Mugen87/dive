@@ -220,6 +220,10 @@ class UIManager {
 
 		} );
 
+		// start to fade out the loading screen
+
+		this.html.loadingScreen.classList.add( 'fade-out' );
+
 		return this;
 
 	}
@@ -377,24 +381,6 @@ class UIManager {
 		this.sprites.rightIndicator.visible = false;
 		this.sprites.leftIndicator.visible = false;
 		this.sprites.backIndicator.visible = false;
-
-		return this;
-
-	}
-
-	/**
-	* Removes the loading screen. After removing, the loading screen can not
-	* be restored anymore. So it's only allowed to call this method once.
-	*
-	* @return {UIManager} A reference to this UI manager.
-	*/
-	removeLoadingScreen() {
-
-		if ( this.html.loadingScreen !== null ) {
-
-			this.html.loadingScreen.classList.add( 'fade-out' );
-
-		}
 
 		return this;
 

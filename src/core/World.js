@@ -38,7 +38,7 @@ class World {
 		this.time = new Time();
 		this.tick = 0;
 
-		this.assetManager = new AssetManager();
+		this.assetManager = null;
 		this.navMesh = null;
 		this.costTable = null;
 		this.pathPlanner = null;
@@ -93,6 +93,8 @@ class World {
 	* @return {World} A reference to this world object.
 	*/
 	init() {
+
+		this.assetManager = new AssetManager();
 
 		this.assetManager.init().then( () => {
 
@@ -650,8 +652,6 @@ class World {
 
 		this.uiManager.init();
 
-		this.uiManager.removeLoadingScreen();
-
 		return this;
 
 	}
@@ -727,4 +727,4 @@ function animate() {
 
 }
 
-export default World;
+export default new World();
