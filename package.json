@@ -16,13 +16,13 @@
   "author": "Mugen87",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^5.0.0",
-    "eslint": "^6.6.0",
+    "@rollup/plugin-node-resolve": "^7.1.1",
+    "concurrently": "^5.1.0",
+    "eslint": "^6.8.0",
     "eslint-config-mdcs": "^4.2.3",
     "google-closure-compiler": "^20190929.0.0",
-    "rollup": "^1.26.0",
-    "rollup-plugin-node-resolve": "^5.2.0",
-    "serve": "^11.2.0"
+    "rollup": "^2.3.0",
+    "serve": "^11.3.0"
   },
   "dependencies": {
     "dat.gui": "0.7.6",
