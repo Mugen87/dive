@@ -74540,12 +74540,6 @@
 
 					this.world.fpsControls.connect();
 
-				},
-				resumeAudioContext: () => {
-
-					const context = AudioContext.getContext();
-					context.resume();
-
 				}
 			};
 
@@ -74636,7 +74630,6 @@
 
 				} );
 
-				folderWorld.add( params, 'resumeAudioContext' ).name( 'resume audio context ' );
 				folderWorld.add( params, 'enableFPSControls' ).name( 'enable FPS controls' );
 
 				// enemy folder
