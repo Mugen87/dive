@@ -5,7 +5,7 @@
   "repository": "Mugen87/dive",
   "scripts": {
     "build": "rollup -c \"config/rollup/config.js\"",
-    "build-prod": "rollup -c \"config/rollup/config.js\" && google-closure-compiler-js build/bundle.js > build/bundle.min.js",
+    "build-prod": "rollup -c \"config/rollup/config.js\" && google-closure-compiler build/bundle.js > build/bundle.min.js",
     "dev": "concurrently \"rollup -c \"config/rollup/config.js\" -w\" \"serve\"",
     "lint": "eslint src --ext .js",
     "start": "npm run dev"
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "dat.gui": "0.7.6",
-    "three": "0.115.0",
+    "three": "0.113.0",
     "yuka": "0.3.0"
   }
 }
