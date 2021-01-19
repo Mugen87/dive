@@ -7,7 +7,7 @@
 	 * @license
 	 * The MIT License
 	 *
-	 * Copyright © 2019 Yuka authors
+	 * Copyright © 2021 Yuka authors
 	 *
 	 * Permission is hereby granted, free of charge, to any person obtaining a copy
 	 * of this software and associated documentation files (the "Software"), to deal
@@ -51,31 +51,31 @@
 
 			/**
 			* The sender.
-			* @type GameEntity
+			* @type {GameEntity}
 			*/
 			this.sender = sender;
 
 			/**
 			* The receiver.
-			* @type GameEntity
+			* @type {GameEntity}
 			*/
 			this.receiver = receiver;
 
 			/**
 			* The actual message.
-			* @type String
+			* @type {String}
 			*/
 			this.message = message;
 
 			/**
 			* A time value in millisecond used to delay the message dispatching.
-			* @type Number
+			* @type {Number}
 			*/
 			this.delay = delay;
 
 			/**
 			* An object for custom data.
-			* @type Object
+			* @type {Object}
 			*/
 			this.data = data;
 
@@ -218,7 +218,8 @@
 
 			/**
 			* A list of delayed telegrams.
-			* @type Array
+			* @type {Array<Telegram>}
+			* @readonly
 			*/
 			this.delayedTelegrams = new Array();
 
@@ -501,19 +502,19 @@
 
 			/**
 			* The x component.
-			* @type Number
+			* @type {Number}
 			*/
 			this.x = x;
 
 			/**
 			* The y component.
-			* @type Number
+			* @type {Number}
 			*/
 			this.y = y;
 
 			/**
 			* The z component.
-			* @type Number
+			* @type {Number}
 			*/
 			this.z = z;
 
@@ -1120,7 +1121,7 @@
 		/**
 		* Sets the components of this 3D vector from an array.
 		*
-		* @param {Array} array - An array.
+		* @param {Array<Number>} array - An array.
 		* @param {Number} offset - An optional offset.
 		* @return {Vector3} A reference to this vector.
 		*/
@@ -1137,9 +1138,9 @@
 		/**
 		* Copies all values of this 3D vector to the given array.
 		*
-		* @param {Array} array - An array.
+		* @param {Array<Number>} array - An array.
 		* @param {Number} offset - An optional offset.
-		* @return {Array} The array with the 3D vector components.
+		* @return {Array<Number>} The array with the 3D vector components.
 		*/
 		toArray( array, offset = 0 ) {
 
@@ -1192,7 +1193,7 @@
 
 			/**
 			* The elements of the matrix in column-major order.
-			* @type Array
+			* @type {Array<Number>}
 			*/
 			this.elements = [
 
@@ -1684,7 +1685,7 @@
 		/**
 		* Sets the elements of this matrix from an array.
 		*
-		* @param {Array} array - An array.
+		* @param {Array<Number>} array - An array.
 		* @param {Number} offset - An optional offset.
 		* @return {Matrix3} A reference to this matrix.
 		*/
@@ -1705,9 +1706,9 @@
 		/**
 		* Copies all elements of this matrix to the given array.
 		*
-		* @param {Array} array - An array.
+		* @param {Array<Number>} array - An array.
 		* @param {Number} offset - An optional offset.
-		* @return {Array} The array with the elements of the matrix.
+		* @return {Array<Number>} The array with the elements of the matrix.
 		*/
 		toArray( array, offset = 0 ) {
 
@@ -1777,25 +1778,25 @@
 
 			/**
 			* The x component.
-			* @type Number
+			* @type {Number}
 			*/
 			this.x = x;
 
 			/**
 			* The y component.
-			* @type Number
+			* @type {Number}
 			*/
 			this.y = y;
 
 			/**
 			* The z component.
-			* @type Number
+			* @type {Number}
 			*/
 			this.z = z;
 
 			/**
 			* The w component.
-			* @type Number
+			* @type {Number}
 			*/
 			this.w = w;
 
@@ -2271,7 +2272,7 @@
 		/**
 		* Sets the components of this quaternion from an array.
 		*
-		* @param {Array} array - An array.
+		* @param {Array<Number>} array - An array.
 		* @param {Number} offset - An optional offset.
 		* @return {Quaternion} A reference to this quaternion.
 		*/
@@ -2289,9 +2290,9 @@
 		/**
 		* Copies all values of this quaternion to the given array.
 		*
-		* @param {Array} array - An array.
+		* @param {Array<Number>} array - An array.
 		* @param {Number} offset - An optional offset.
-		* @return {Array} The array with the quaternion components.
+		* @return {Array<Number>} The array with the quaternion components.
 		*/
 		toArray( array, offset = 0 ) {
 
@@ -2333,7 +2334,7 @@
 
 			/**
 			* The elements of the matrix in column-major order.
-			* @type Array
+			* @type {Array<Number>}
 			*/
 			this.elements = [
 
@@ -2644,6 +2645,8 @@
 		/**
 		* Computes the inverse of this matrix and stored the result in the given matrix.
 		*
+		* You can not invert a matrix with a determinant of zero. If you attempt this, the method returns a zero matrix instead.
+		*
 		* @param {Matrix4} m - The result matrix.
 		* @return {Matrix4} The result matrix.
 		*/
@@ -2664,12 +2667,7 @@
 
 			const det = n11 * t11 + n21 * t12 + n31 * t13 + n41 * t14;
 
-			if ( det === 0 ) {
-
-				Logger.warn( 'YUKA.Matrix4: .getInverse() can not invert matrix, determinant is 0.' );
-				return this.identity();
-
-			}
+			if ( det === 0 ) return m.set( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
 			const detInv = 1 / det;
 
@@ -2795,7 +2793,7 @@
 		/**
 		* Sets the elements of this matrix from an array.
 		*
-		* @param {Array} array - An array.
+		* @param {Array<Number>} array - An array.
 		* @param {Number} offset - An optional offset.
 		* @return {Matrix4} A reference to this matrix.
 		*/
@@ -2816,9 +2814,9 @@
 		/**
 		* Copies all elements of this matrix to the given array.
 		*
-		* @param {Array} array - An array.
+		* @param {Array<Number>} array - An array.
 		* @param {Number} offset - An optional offset.
-		* @return {Array} The array with the elements of the matrix.
+		* @return {Array<Number>} The array with the elements of the matrix.
 		*/
 		toArray( array, offset = 0 ) {
 
@@ -2889,115 +2887,112 @@
 
 			/**
 			* The name of this game entity.
-			* @type String
+			* @type {String}
 			*/
 			this.name = '';
 
 			/**
 			* Whether this game entity is active or not.
-			* @type Boolean
+			* @type {Boolean}
 			* @default true
 			*/
 			this.active = true;
 
 			/**
 			* The child entities of this game entity.
-			* @type Array
+			* @type {Array<GameEntity>}
 			*/
 			this.children = new Array();
 
 			/**
 			* A reference to the parent entity of this game entity.
 			* Automatically set when added to a {@link GameEntity}.
-			* @type GameEntity
+			* @type {GameEntity}
 			* @default null
+			* @readonly
 			*/
 			this.parent = null;
 
 			/**
 			* A list of neighbors of this game entity.
-			* @type Array
+			* @type {Array<GameEntity>}
+			* @readonly
 			*/
 			this.neighbors = new Array();
 
 			/**
 			* Game entities within this radius are considered as neighbors of this entity.
-			* @type Number
+			* @type {Number}
 			* @default 1
 			*/
 			this.neighborhoodRadius = 1;
 
 			/**
 			* Whether the neighborhood of this game entity is updated or not.
-			* @type Boolean
+			* @type {Boolean}
 			* @default false
 			*/
 			this.updateNeighborhood = false;
 
 			/**
 			* The position of this game entity.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.position = new Vector3();
 
 			/**
 			* The rotation of this game entity.
-			* @type Quaternion
+			* @type {Quaternion}
 			*/
 			this.rotation = new Quaternion();
 
 			/**
 			* The scaling of this game entity.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.scale = new Vector3( 1, 1, 1 );
 
 			/**
 			* The default forward vector of this game entity.
-			* @type Vector3
+			* @type {Vector3}
 			* @default (0,0,1)
 			*/
 			this.forward = new Vector3( 0, 0, 1 );
 
 			/**
 			* The default up vector of this game entity.
-			* @type Vector3
+			* @type {Vector3}
 			* @default (0,1,0)
 			*/
 			this.up = new Vector3( 0, 1, 0 );
 
 			/**
 			* The bounding radius of this game entity in world units.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.boundingRadius = 0;
 
 			/**
 			* The maximum turn rate of this game entity in radians per seconds.
-			* @type Number
+			* @type {Number}
 			* @default π
 			*/
 			this.maxTurnRate = Math.PI;
 
 			/**
 			* Whether the entity can activate a trigger or not.
-			* @type Boolean
+			* @type {Boolean}
 			* @default true
 			*/
 			this.canActivateTrigger = true;
 
 			/**
-			* A transformation matrix representing the world space of this game entity.
-			* @type Matrix4
-			*/
-			this.worldMatrix = new Matrix4();
-
-			/**
 			* A reference to the entity manager of this game entity.
 			* Automatically set when added to an {@link EntityManager}.
-			* @type EntityManager
+			* @type {EntityManager}
 			* @default null
+			* @readonly
 			*/
 			this.manager = null;
 
@@ -3006,6 +3001,10 @@
 			// local transformation matrix. no part of the public API due to caching
 
 			this._localMatrix = new Matrix4();
+
+			// internal world matrix reference (only accessible via a getter)
+
+			this._worldMatrix = new Matrix4();
 
 			// per-entity cache in order to avoid unnecessary matrix calculations
 
@@ -3024,12 +3023,34 @@
 
 			this._started = false;
 
-			// unique ID, primarily used in context of serialization/deserialization
+			//
 
 			this._uuid = null;
 
+			// if set to true, it means the world matrix requires a recomputation
+
+			this._worldMatrixDirty = false;
+
 		}
 
+		/**
+		* A transformation matrix representing the world space of this game entity.
+		* @type {Matrix4}
+		* @readonly
+		*/
+		get worldMatrix() {
+
+			this._updateWorldMatrix();
+
+			return this._worldMatrix;
+
+		}
+
+		/**
+		* Unique ID, primarily used in context of serialization/deserialization.
+		* @type {String}
+		* @readonly
+		*/
 		get uuid() {
 
 			if ( this._uuid === null ) {
@@ -3039,12 +3060,6 @@
 			}
 
 			return this._uuid;
-
-		}
-
-		set uuid( uuid ) {
-
-			this._uuid = uuid;
 
 		}
 
@@ -3180,58 +3195,6 @@
 		}
 
 		/**
-		* Updates the world matrix representing the world space.
-		*
-		* @param {Boolean} up - Whether to update the world matrices of the parents or not.
-		* @param {Boolean} down - Whether to update the world matrices of the children or not.
-		* @return {GameEntity} A reference to this game entity.
-		*/
-		updateWorldMatrix( up = false, down = false ) {
-
-			const parent = this.parent;
-			const children = this.children;
-
-			// update higher levels first
-
-			if ( up === true && parent !== null ) {
-
-				parent.updateWorldMatrix( true );
-
-			}
-
-			// update this entity
-
-			this._updateMatrix();
-
-			if ( parent === null ) {
-
-				this.worldMatrix.copy( this._localMatrix );
-
-			} else {
-
-				this.worldMatrix.multiplyMatrices( this.parent.worldMatrix, this._localMatrix );
-
-			}
-
-			// update lower levels
-
-			if ( down === true ) {
-
-				for ( let i = 0, l = children.length; i < l; i ++ ) {
-
-					const child = children[ i ];
-
-					child.updateWorldMatrix( false, true );
-
-				}
-
-			}
-
-			return this;
-
-		}
-
-		/**
 		* Sets a renderable component of a 3D engine with a sync callback for this game entity.
 		*
 		* @param {Object} renderComponent - A renderable component of a 3D engine.
@@ -3345,7 +3308,6 @@
 		*/
 		fromJSON( json ) {
 
-			this.uuid = json.uuid;
 			this.name = json.name;
 			this.active = json.active;
 			this.neighborhoodRadius = json.neighborhoodRadius;
@@ -3358,19 +3320,21 @@
 			this.boundingRadius = json.boundingRadius;
 			this.maxTurnRate = json.maxTurnRate;
 			this.canActivateTrigger = json.canActivateTrigger;
-			this.worldMatrix.fromArray( json.worldMatrix );
 
 			this.children = json.children.slice();
 			this.neighbors = json.neighbors.slice();
 			this.parent = json.parent;
 
 			this._localMatrix.fromArray( json._localMatrix );
+			this._worldMatrix.fromArray( json.worldMatrix );
 
 			this._cache.position.fromArray( json._cache.position );
 			this._cache.rotation.fromArray( json._cache.rotation );
 			this._cache.scale.fromArray( json._cache.scale );
 
 			this._started = json._started;
+
+			this._uuid = json.uuid;
 
 			return this;
 
@@ -3422,7 +3386,7 @@
 					cache.rotation.equals( this.rotation ) &&
 					cache.scale.equals( this.scale ) ) {
 
-				return this;
+				return;
 
 			}
 
@@ -3432,6 +3396,58 @@
 			cache.rotation.copy( this.rotation );
 			cache.scale.copy( this.scale );
 
+			this._worldMatrixDirty = true;
+
+		}
+
+		_updateWorldMatrix() {
+
+			const parent = this.parent;
+
+			if ( parent !== null ) {
+
+				parent._updateWorldMatrix();
+
+			}
+
+			this._updateMatrix();
+
+			if ( this._worldMatrixDirty === true ) {
+
+				if ( parent === null ) {
+
+					this._worldMatrix.copy( this._localMatrix );
+
+				} else {
+
+					this._worldMatrix.multiplyMatrices( this.parent._worldMatrix, this._localMatrix );
+
+				}
+
+				this._worldMatrixDirty = false;
+
+				// invalidate world matrices of children
+
+				const children = this.children;
+
+				for ( let i = 0, l = children.length; i < l; i ++ ) {
+
+					const child = children[ i ];
+					child._worldMatrixDirty = true;
+
+				}
+
+			}
+
+		}
+
+		// deprecated
+
+		updateWorldMatrix() {
+
+			// this warning will be removed with v1.0.0
+
+			console.warn( 'GameEntity: .updateWorldMatrix() has been removed. World matrices are automatically updated on access.' );
 			return this;
 
 		}
@@ -3472,19 +3488,19 @@
 
 			/**
 			* The velocity of this game entity.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.velocity = new Vector3();
 
 			/**
 			* The maximum speed at which this game entity may travel.
-			* @type Number
+			* @type {Number}
 			*/
 			this.maxSpeed = 1;
 
 			/**
 			* Whether the orientation of this game entity will be updated based on the velocity or not.
-			* @type Boolean
+			* @type {Boolean}
 			* @default true
 			*/
 			this.updateOrientation = true;
@@ -3608,14 +3624,14 @@
 
 			/**
 			* Whether this steering behavior is active or not.
-			* @type Boolean
+			* @type {Boolean}
 			* @default true
 			*/
 			this.active = true;
 
 			/**
 			* Can be used to tweak the amount that a steering force contributes to the total steering force.
-			* @type Number
+			* @type {Number}
 			* @default 1
 			*/
 			this.weight = 1;
@@ -3760,22 +3776,22 @@
 
 			/**
 			* The target vector.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.target = target;
 
 			/**
 			* The amount of deceleration.
-			* @type Number
+			* @type {Number}
 			* @default 3
 			*/
 			this.deceleration = deceleration;
 
 			/**
-			 * A tolerance value in world units to prevent the vehicle from overshooting its target.
-			 * @type {Number}
-			 * @default 0
-			 */
+			* A tolerance value in world units to prevent the vehicle from overshooting its target.
+			* @type {Number}
+			* @default 0
+			*/
 			this.tolerance = tolerance;
 
 		}
@@ -3879,7 +3895,7 @@
 
 			/**
 			* The target vector.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.target = target;
 
@@ -4038,13 +4054,13 @@
 
 			/**
 			* The target vector.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.target = target;
 
 			/**
 			* The agent only flees from the target if it is inside this radius.
-			* @type Number
+			* @type {Number}
 			* @default 10
 			*/
 			this.panicDistance = panicDistance;
@@ -4153,21 +4169,21 @@
 
 			/**
 			* The agent to evade from.
-			* @type MovingEntity
+			* @type {MovingEntity}
 			* @default null
 			*/
 			this.pursuer = pursuer;
 
 			/**
 			* The agent only flees from the pursuer if it is inside this radius.
-			* @type Number
+			* @type {Number}
 			* @default 10
 			*/
 			this.panicDistance = panicDistance;
 
 			/**
 			* This factor determines how far the vehicle predicts the movement of the pursuer.
-			* @type Number
+			* @type {Number}
 			* @default 1
 			*/
 			this.predictionFactor = predictionFactor;
@@ -4273,7 +4289,7 @@
 
 			/**
 			* Whether this path is looped or not.
-			* @type Boolean
+			* @type {Boolean}
 			*/
 			this.loop = false;
 
@@ -4439,13 +4455,13 @@
 
 			/**
 			* The path to follow.
-			* @type Path
+			* @type {Path}
 			*/
 			this.path = path;
 
 			/**
 			* The distance the agent seeks for the next waypoint.
-			* @type Number
+			* @type {Number}
 			* @default 1
 			*/
 			this.nextWaypointDistance = nextWaypointDistance;
@@ -4561,21 +4577,21 @@
 
 			/**
 			* The first agent.
-			* @type MovingEntity
+			* @type {MovingEntity}
 			* @default null
 			*/
 			this.entity1 = entity1;
 
 			/**
 			* The second agent.
-			* @type MovingEntity
+			* @type {MovingEntity}
 			* @default null
 			*/
 			this.entity2 = entity2;
 
 			/**
 			* The amount of deceleration.
-			* @type Number
+			* @type {Number}
 			* @default 3
 			*/
 			this.deceleration = deceleration;
@@ -4711,13 +4727,13 @@
 
 			/**
 			* The minimum bounds of the AABB.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.min = min;
 
 			/**
 			* The maximum bounds of the AABB.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.max = max;
 
@@ -4975,7 +4991,7 @@
 		/**
 		* Computes an AABB that encloses the given set of points.
 		*
-		* @param {Array} points - An array of 3D vectors representing points in 3D space.
+		* @param {Array<Vector3>} points - An array of 3D vectors representing points in 3D space.
 		* @return {AABB} A reference to this AABB.
 		*/
 		fromPoints( points ) {
@@ -5080,13 +5096,13 @@
 
 			/**
 			* The center position of the bounding sphere.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.center = center;
 
 			/**
 			* The radius of the bounding sphere.
-			* @type Number
+			* @type {Number}
 			*/
 			this.radius = radius;
 
@@ -5216,7 +5232,7 @@
 		/**
 		* Computes a bounding sphere that encloses the given set of points.
 		*
-		* @param {Array} points - An array of 3D vectors representing points in 3D space.
+		* @param {Array<Vector3>} points - An array of 3D vectors representing points in 3D space.
 		* @return {BoundingSphere} A reference to this bounding sphere.
 		*/
 		fromPoints( points ) {
@@ -5319,13 +5335,13 @@
 
 			/**
 			* The origin of the ray.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.origin = origin;
 
 			/**
 			* The direction of the ray.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.direction = direction;
 
@@ -5943,7 +5959,7 @@
 		/**
 		* Constructs a new obstacle avoidance behavior.
 		*
-		* @param {Array} obstacles - An Array with obstacle of type {@link GameEntity}.
+		* @param {Array<GameEntity>} obstacles - An Array with obstacle of type {@link GameEntity}.
 		*/
 		constructor( obstacles = new Array() ) {
 
@@ -5951,20 +5967,20 @@
 
 			/**
 			* An Array with obstacle of type {@link GameEntity}.
-			* @type Array
+			* @type {Array<GameEntity>}
 			*/
 			this.obstacles = obstacles;
 
 			/**
 			* This factor determines how much the vehicle decelerates if an intersection occurs.
-			* @type Number
+			* @type {Number}
 			* @default 0.2
 			*/
 			this.brakingWeight = 0.2;
 
 			/**
 			* Minimum length of the detection box used for intersection tests.
-			* @type Number
+			* @type {Number}
 			* @default 4
 			*/
 			this.dBoxMinLength = 4; //
@@ -6166,13 +6182,13 @@
 
 			/**
 			* The leader vehicle.
-			* @type Vehicle
+			* @type {Vehicle}
 			*/
 			this.leader = leader;
 
 			/**
 			* The offset from the leader.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.offset = offset;
 
@@ -6299,14 +6315,14 @@
 
 			/**
 			* The agent to pursue.
-			* @type MovingEntity
+			* @type {MovingEntity}
 			* @default null
 			*/
 			this.evader = evader;
 
 			/**
 			* This factor determines how far the vehicle predicts the movement of the evader.
-			* @type Number
+			* @type {Number}
 			* @default 1
 			*/
 			this.predictionFactor = predictionFactor;
@@ -6505,21 +6521,21 @@
 
 			/**
 			* The radius of the constraining circle for the wander behavior.
-			* @type Number
+			* @type {Number}
 			* @default 1
 			*/
 			this.radius = radius;
 
 			/**
 			* The distance the wander sphere is projected in front of the agent.
-			* @type Number
+			* @type {Number}
 			* @default 5
 			*/
 			this.distance = distance;
 
 			/**
 			* The maximum amount of displacement along the sphere each frame.
-			* @type Number
+			* @type {Number}
 			* @default 5
 			*/
 			this.jitter = jitter;
@@ -6649,13 +6665,14 @@
 
 			/**
 			* The vehicle that owns this steering manager.
-			* @type Vehicle
+			* @type {Vehicle}
 			*/
 			this.vehicle = vehicle;
 
 			/**
 			* A list of all steering behaviors.
-			* @type Array
+			* @type {Array<SteeringBehavior>}
+			* @readonly
 			*/
 			this.behaviors = new Array();
 
@@ -6979,7 +6996,7 @@
 
 			/**
 			* The amount of samples the smoother will use to average a vector.
-			* @type Number
+			* @type {Number}
 			* @default 10
 			*/
 			this.count = count;
@@ -7124,28 +7141,28 @@
 			super();
 
 			/**
-			* The mass if the vehicle in kilogram.
-			* @type Number
+			* The mass of the vehicle in kilogram.
+			* @type {Number}
 			* @default 1
 			*/
 			this.mass = 1;
 
 			/**
 			* The maximum force this entity can produce to power itself.
-			* @type Number
+			* @type {Number}
 			* @default 100
 			*/
 			this.maxForce = 100;
 
 			/**
 			* The steering manager of this vehicle.
-			* @type SteeringManager
+			* @type {SteeringManager}
 			*/
 			this.steering = new SteeringManager( this );
 
 			/**
 			* An optional smoother to avoid shakiness due to conflicting steering behaviors.
-			* @type Smoother
+			* @type {Smoother}
 			* @default null
 			*/
 			this.smoother = null;
@@ -7353,6 +7370,10 @@
 
 			super();
 
+			/**
+			* The size of the region.
+			* @type {Vector3}
+			*/
 			this.size = size;
 
 			this._aabb = new AABB();
@@ -7442,6 +7463,10 @@
 
 			super();
 
+			/**
+			* The radius of the region.
+			* @type {Number}
+			*/
 			this.radius = radius;
 
 			//
@@ -7534,7 +7559,7 @@
 
 			/**
 			* The region of the trigger.
-			* @type TriggerRegion
+			* @type {TriggerRegion}
 			*/
 			this.region = region;
 
@@ -7686,14 +7711,15 @@
 		constructor() {
 
 			/**
-			* A list of {@link GameEntity game entities }.
-			* @type Array
+			* A list of {@link GameEntity game entities}.
+			* @type {Array<GameEntity>}
+			* @readonly
 			*/
 			this.entities = new Array();
 
 			/**
 			* A reference to a spatial index.
-			* @type CellSpacePartitioning
+			* @type {CellSpacePartitioning}
 			* @default null
 			*/
 			this.spatialIndex = null;
@@ -7846,7 +7872,6 @@
 				// update entity
 
 				entity.update( delta );
-				entity.updateWorldMatrix();
 
 				// update children
 
@@ -8265,13 +8290,13 @@
 
 			/**
 			* The normal vector of the plane.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.normal = normal;
 
 			/**
 			* The distance of the plane from the origin.
-			* @type Number
+			* @type {Number}
 			*/
 			this.constant = constant;
 
@@ -8471,12 +8496,34 @@
 		*/
 		constructor( vertices = new Float32Array(), indices = null ) {
 
+			/**
+			* The vertex buffer.
+			* @type {Float32Array}
+			*/
 			this.vertices = vertices;
+
+			/**
+			* The index buffer.
+			* @type {Uint16Array | Uint32Array}
+			*/
 			this.indices = indices;
 
+			/**
+			*  Whether back face culling is active or not. Only relevant for raycasting.
+			* @type {Boolean}
+			*/
 			this.backfaceCulling = true;
 
+			/**
+			* An AABB enclosing the geometry.
+			* @type {AABB}
+			*/
 			this.aabb = new AABB();
+
+			/**
+			* A bounding sphere enclosing the geometry.
+			* @type {BoundingSphere}
+			*/
 			this.boundingSphere = new BoundingSphere();
 
 			this.computeBoundingVolume();
@@ -8685,19 +8732,19 @@
 		}
 
 		/**
-		 * Returns a new geometry without containing indices.
+		 * Returns a new geometry without containing indices. If the geometry is already
+		 * non-indexed, the method performs no changes.
 		 *
-		 * @return {MeshGeometry} The new geometry.
+		 * @return {MeshGeometry} The new non-indexed geometry.
 		 */
 		toTriangleSoup() {
 
 			const indices = this.indices;
-			const vertices = this.vertices;
-			let newVertices;
 
 			if ( indices ) {
 
-				newVertices = new Float32Array( indices.length * 3 );
+				const vertices = this.vertices;
+				const newVertices = new Float32Array( indices.length * 3 );
 
 				for ( let i = 0, l = indices.length; i < l; i ++ ) {
 
@@ -8710,13 +8757,13 @@
 
 				}
 
+				return new MeshGeometry( newVertices );
+
 			} else {
 
-				newVertices = new Float32Array( vertices );
+				return this;
 
 			}
-
-			return new MeshGeometry( newVertices );
 
 		}
 
@@ -9013,7 +9060,7 @@
 
 			/**
 			* The amount of updates per second.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.updateFrequency = updateFrequency;
@@ -9105,7 +9152,7 @@
 		/**
 		* Constructs a new fuzzy composite term with the given values.
 		*
-		* @param {Array} terms - An arbitrary amount of fuzzy terms.
+		* @param {Array<FuzzyTerm>} terms - An arbitrary amount of fuzzy terms.
 		*/
 		constructor( terms = new Array() ) {
 
@@ -9113,7 +9160,7 @@
 
 			/**
 			* List of fuzzy terms.
-			* @type Array
+			* @type {Array<FuzzyTerm>}
 			*/
 			this.terms = terms;
 
@@ -9447,7 +9494,7 @@
 
 			/**
 			* Represents the degree of membership to this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.degreeOfMembership = 0;
@@ -9457,21 +9504,21 @@
 			* the set is triangular then this will be the peak point of the triangular.
 			* If the set has a plateau then this value will be the mid point of the
 			* plateau. Used to avoid runtime calculations.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.representativeValue = representativeValue;
 
 			/**
 			* Represents the left border of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.left = 0;
 
 			/**
 			* Represents the right border of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.right = 0;
@@ -9482,6 +9529,11 @@
 
 		}
 
+		/**
+		* Unique ID, primarily used in context of serialization/deserialization.
+		* @type {String}
+		* @readonly
+		*/
 		get uuid() {
 
 			if ( this._uuid === null ) {
@@ -9491,12 +9543,6 @@
 			}
 
 			return this._uuid;
-
-		}
-
-		set uuid( uuid ) {
-
-			this._uuid = uuid;
 
 		}
 
@@ -9585,7 +9631,8 @@
 			this.representativeValue = json.representativeValue;
 			this.left = json.left;
 			this.right = json.right;
-			this.uuid = json.uuid;
+
+			this._uuid = json.uuid;
 
 			return this;
 
@@ -9619,21 +9666,21 @@
 
 			/**
 			* Represents the left border of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.left = left;
 
 			/**
 			* Represents the peak value of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.midpoint = midpoint;
 
 			/**
 			* Represents the right border of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.right = right;
@@ -9735,21 +9782,21 @@
 
 			/**
 			* Represents the left border of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.left = left;
 
 			/**
 			* Represents the peak value of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.midpoint = midpoint;
 
 			/**
 			* Represents the right border of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.right = right;
@@ -9847,21 +9894,21 @@
 
 			/**
 			* Represents the left border of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.left = left;
 
 			/**
 			* Represents the peak value of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.midpoint = midpoint;
 
 			/**
 			* Represents the right border of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.right = right;
@@ -9938,21 +9985,21 @@
 
 			/**
 			* Represents the left border of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.left = left;
 
 			/**
 			* Represents the peak value of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.midpoint = midpoint;
 
 			/**
 			* Represents the right border of this fuzzy set.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.right = right;
@@ -10051,14 +10098,14 @@
 
 			/**
 			* Represents the condition of the rule.
-			* @type FuzzyTerm
+			* @type {FuzzyTerm}
 			* @default null
 			*/
 			this.antecedent = antecedent;
 
 			/**
 			* Describes the consequence if the condition is satisfied.
-			* @type FuzzyTerm
+			* @type {FuzzyTerm}
 			* @default null
 			*/
 			this.consequence = consequence;
@@ -10128,7 +10175,7 @@
 					// atomic term -> FuzzySet
 
 					const uuid = termJSON;
-					return fuzzySets.get( uuid ) || null;
+					return fuzzySets.get( uuid ) || null;
 
 				} else {
 
@@ -10204,23 +10251,26 @@
 
 			/**
 			* An array of the fuzzy sets that comprise this FLV.
-			* @type Array
+			* @type {Array<FuzzySet>}
+			* @readonly
 			*/
 			this.fuzzySets = new Array();
 
 			/**
 			* The minimum value range of this FLV. This value is
 			* automatically updated when adding/removing fuzzy sets.
-			* @type Number
+			* @type {Number}
 			* @default Infinity
+			* @readonly
 			*/
 			this.minRange = Infinity;
 
 			/**
 			* The maximum value range of this FLV. This value is
 			* automatically updated when adding/removing fuzzy sets.
-			* @type Number
+			* @type {Number}
 			* @default - Infinity
+			* @readonly
 			*/
 			this.maxRange = - Infinity;
 
@@ -10460,13 +10510,15 @@
 
 			/**
 			* An array of the fuzzy rules.
-			* @type Array
+			* @type {Array<FuzzyRule>}
+			* @readonly
 			*/
 			this.rules = new Array();
 
 			/**
 			* A map of FLVs.
-			* @type Map
+			* @type {Map<String,FuzzyVariable>}
+			* @readonly
 			*/
 			this.flvs = new Map();
 
@@ -10719,13 +10771,13 @@
 
 			/**
 			* The owner of this goal.
-			* @type GameEntity
+			* @type {GameEntity}
 			*/
 			this.owner = owner;
 
 			/**
 			* The status of this goal.
-			* @type Status
+			* @type {Status}
 			* @default INACTIVE
 			*/
 			this.status = Goal.STATUS.INACTIVE;
@@ -10911,7 +10963,7 @@
 
 			/**
 			* A list of subgoals.
-			* @type Array
+			* @type {Array<Goal>}
 			*/
 			this.subgoals = new Array();
 
@@ -11152,7 +11204,7 @@
 			/**
 			* Can be used to adjust the preferences of agents. When the desirability score
 			* for a goal has been evaluated, it is multiplied by this value.
-			* @type Number
+			* @type {Number}
 			* @default 1
 			*/
 			this.characterBias = characterBias;
@@ -11230,7 +11282,7 @@
 
 			/**
 			* A list of goal evaluators.
-			* @type Array
+			* @type {Array<GoalEvaluator>}
 			*/
 			this.evaluators = new Array();
 
@@ -11500,21 +11552,21 @@
 
 			/**
 			* The index of the *from* node.
-			* @type Number
+			* @type {Number}
 			* @default -1
 			*/
 			this.from = from;
 
 			/**
 			* The index of the *to* node.
-			* @type Number
+			* @type {Number}
 			* @default -1
 			*/
 			this.to = to;
 
 			/**
 			* The cost of this edge. This could be for example a distance or time value.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.cost = cost;
@@ -11598,7 +11650,7 @@
 
 			/**
 			* The unique index of this node. The default value *-1* means invalid index.
-			* @type Number
+			* @type {Number}
 			* @default -1
 			*/
 			this.index = index;
@@ -11651,7 +11703,7 @@
 
 			/**
 			* Whether this graph is directed or not.
-			* @type Boolean
+			* @type {Boolean}
 			* @default false
 			*/
 			this.digraph = false;
@@ -11756,8 +11808,8 @@
 		/**
 		* Gathers all nodes of the graph and stores them into the given array.
 		*
-		* @param {Array} result - The result array.
-		* @return {Array} The result array.
+		* @param {Array<Node>} result - The result array.
+		* @return {Array<Node>} The result array.
 		*/
 		getNodes( result ) {
 
@@ -11773,8 +11825,8 @@
 		* into the given array.
 		*
 		* @param {Number} index - The node index.
-		* @param {Array} result - The result array.
-		* @return {Array} The result array.
+		* @param {Array<Edge>} result - The result array.
+		* @return {Array<Edge>} The result array.
 		*/
 		getEdgesOfNode( index, result ) {
 
@@ -12110,20 +12162,20 @@
 
 			/**
 			* The data items of the priority queue.
-			* @type Array
+			* @type {Array<Object>}
 			*/
 			this.data = new Array();
 
 			/**
 			* The length of the priority queue.
-			* @type Number
+			* @type {Number}
 			* @default 0
 			*/
 			this.length = 0;
 
 			/**
 			* The compare function used for sorting.
-			* @type Function
+			* @type {Function}
 			* @default defaultCompare
 			*/
 			this.compare = compare;
@@ -12149,7 +12201,7 @@
 		*
 		* @return {Object} The item with the highest priority.
 		*/
-		pop() {
+		pop() {
 
 			if ( this.length === 0 ) return null;
 
@@ -12176,7 +12228,7 @@
 		*/
 		peek() {
 
-			return this.data[ 0 ] || null;
+			return this.data[ 0 ] || null;
 
 		}
 
@@ -12260,32 +12312,32 @@
 
 			/**
 			* The graph.
-			* @type Graph
+			* @type {Graph}
 			*/
 			this.graph = graph;
 
 			/**
 			* The node index of the source node.
-			* @type Number
+			* @type {Number}
 			*/
 			this.source = source;
 
 			/**
 			* The node index of the target node.
-			* @type Number
+			* @type {Number}
 			*/
 			this.target = target;
 
 			/**
 			* Whether the search was successful or not.
-			* @type Boolean
+			* @type {Boolean}
 			* @default false
 			*/
 			this.found = false;
 
 			/**
 			* The heuristic of the search.
-			* @type Object
+			* @type {Object}
 			* @default HeuristicPolicyEuclid
 			*/
 			this.heuristic = HeuristicPolicyEuclid;
@@ -12394,7 +12446,7 @@
 		/**
 		* Returns the shortest path from the source to the target node as an array of node indices.
 		*
-		* @return {Array} The shortest path.
+		* @return {Array<Number>} The shortest path.
 		*/
 		getPath() {
 
@@ -12433,7 +12485,7 @@
 		/**
 		* Returns the search tree of the algorithm as an array of edges.
 		*
-		* @return {Array} The search tree.
+		* @return {Array<Edge>} The search tree.
 		*/
 		getSearchTree() {
 
@@ -12498,35 +12550,35 @@
 		* Constructs a new BVH.
 		*
 		* @param {Number} branchingFactor - The branching factor.
-		* @param {Number} depth - The maximum hierarchical depth.
 		* @param {Number} primitivesPerNode - The minimum amount of primitives per BVH node.
+		* @param {Number} depth - The maximum hierarchical depth.
 		*/
 		constructor( branchingFactor = 2, primitivesPerNode = 1, depth = 10 ) {
 
 			/**
 			* The branching factor (how many nodes per level).
-			* @type Number
+			* @type {Number}
 			* @default 2
 			*/
 			this.branchingFactor = branchingFactor;
 
 			/**
 			* The minimum amount of primitives per BVH node.
-			* @type Number
+			* @type {Number}
 			* @default 10
 			*/
 			this.primitivesPerNode = primitivesPerNode;
 
 			/**
 			* The maximum hierarchical depth.
-			* @type Number
+			* @type {Number}
 			* @default 10
 			*/
 			this.depth = depth;
 
 			/**
 			* The root BVH node.
-			* @type BVHNode
+			* @type {BVHNode}
 			* @default null
 			*/
 			this.root = null;
@@ -12545,9 +12597,15 @@
 
 			// primitives
 
-			const nonIndexedGeometry = geometry.toTriangleSoup();
-			const vertices = nonIndexedGeometry.vertices;
-			this.root.primitives.push( ...vertices );
+			if ( geometry.indices !== null ) geometry = geometry.toTriangleSoup();
+
+			const vertices = geometry.vertices;
+
+			for ( let i = 0, l = vertices.length; i < l; i ++ ) {
+
+				this.root.primitives.push( vertices[ i ] );
+
+			}
 
 			// centroids
 
@@ -12604,34 +12662,34 @@
 
 			/**
 			* The parent BVH node.
-			* @type BVHNode
+			* @type {BVHNode}
 			* @default null
 			*/
 			this.parent = null;
 
 			/**
 			* The child BVH nodes.
-			* @type Array
+			* @type {Array<BVHNode>}
 			*/
 			this.children = new Array();
 
 			/**
 			* The bounding volume of this BVH node.
-			* @type AABB
+			* @type {AABB}
 			*/
 			this.boundingVolume = new AABB();
 
 			/**
 			* The primitives (triangles) of this BVH node.
 			* Only filled for leaf nodes.
-			* @type Array
+			* @type {Array<Number>}
 			*/
 			this.primitives = new Array();
 
 			/**
 			* The centroids of the node's triangles.
 			* Only filled for leaf nodes.
-			* @type Array
+			* @type {Array<Number>}
 			*/
 			this.centroids = new Array();
 
@@ -13040,7 +13098,7 @@
 
 				}
 
-			} else {
+			} else {
 
 				// always return null for non-root nodes
 
@@ -13139,13 +13197,13 @@
 
 			/**
 			* The start point of the line segment.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.from = from;
 
 			/**
 			* The end point of the line segment.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.to = to;
 
@@ -13295,31 +13353,31 @@
 
 			/**
 			* The vertex of this half-edge. It represents the head/destination of the respective full edge.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.vertex = vertex;
 
 			/**
 			* A reference to the next half-edge.
-			* @type HalfEdge
+			* @type {HalfEdge}
 			*/
 			this.next = null;
 
 			/**
 			* A reference to the previous half-edge.
-			* @type HalfEdge
+			* @type {HalfEdge}
 			*/
 			this.prev = null;
 
 			/**
 			* A reference to the opponent half-edge.
-			* @type HalfEdge
+			* @type {HalfEdge}
 			*/
 			this.twin = null;
 
 			/**
 			* A reference to its polygon/face.
-			* @type Polygon
+			* @type {Polygon}
 			*/
 			this.polygon = null;
 
@@ -13433,19 +13491,19 @@
 
 			/**
 			* The centroid of this polygon.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.centroid = new Vector3();
 
 			/**
 			* A reference to the first half-edge of this polygon.
-			* @type HalfEdge
+			* @type {HalfEdge}
 			*/
 			this.edge = null;
 
 			/**
 			* A plane abstraction of this polygon.
-			* @type Plane
+			* @type {Plane}
 			*/
 			this.plane = new Plane();
 
@@ -13456,7 +13514,7 @@
 		* The method assumes the contour (the sequence of points) is defined
 		* in CCW order.
 		*
-		* @param {Array} points - The array of points.
+		* @param {Array<Vector3>} points - The array of points.
 		* @return {Polygon} A reference to this polygon.
 		*/
 		fromContour( points ) {
@@ -13483,7 +13541,7 @@
 
 				let current, prev, next;
 
-				if ( i === 0 ) {
+				if ( i === 0 ) {
 
 					current = edges[ i ];
 					prev = edges[ l - 1 ];
@@ -13673,8 +13731,8 @@
 		* Determines the contour (sequence of points) of this polygon and
 		* stores the result in the given array.
 		*
-		* @param {Array} result - The result array.
-		* @return {Array} The result array.
+		* @param {Array<Vector3>} result - The result array.
+		* @return {Array<Vector3>} The result array.
 		*/
 		getContour( result ) {
 
@@ -13748,13 +13806,13 @@
 
 			/**
 			* The position of the node in 3D space.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.position = position;
 
 			/**
 			* Custom user data connected to this node.
-			* @type Object
+			* @type {Object}
 			*/
 			this.userData = userData;
 
@@ -13781,7 +13839,7 @@
 
 			/**
 			* The portal edges of the corridor.
-			* @type Array
+			* @type {Array<Object>}
 			*/
 			this.portalEdges = new Array();
 
@@ -13808,7 +13866,7 @@
 		/**
 		* Generates the shortest path through the corridor as an array of 3D vectors.
 		*
-		* @return {Array} An array of 3D waypoints.
+		* @return {Array<Vector3>} An array of 3D waypoints.
 		*/
 		generate() {
 
@@ -14128,7 +14186,7 @@
 	* which define the walkable areas of a game environment. A convex polygon allows unobstructed travel
 	* from any point in the polygon to any other. This is useful because it enables the navigation mesh
 	* to be represented using a graph where each node represents a convex polygon and their respective edges
-	* represent the neighborly relations to other polygons. More compact navigation graphs leads
+	* represent the neighborly relations to other polygons. More compact navigation graphs lead
 	* to faster graph search execution.
 	*
 	* This particular implementation is able to merge convex polygons into bigger ones as long
@@ -14147,37 +14205,44 @@
 
 			/**
 			* The internal navigation graph of this navigation mesh representing neighboring polygons.
-			* @type Graph
+			* @type {Graph}
 			*/
 			this.graph = new Graph();
 			this.graph.digraph = true;
 
 			/**
 			* The list of convex regions.
-			* @type Array
+			* @type {Array<Polygon>}
 			*/
 			this.regions = new Array();
 
 			/**
 			* A reference to a spatial index.
-			* @type CellSpacePartitioning
+			* @type {CellSpacePartitioning}
 			* @default null
 			*/
 			this.spatialIndex = null;
 
 			/**
 			* The tolerance value for the coplanar test.
-			* @type Number
+			* @type {Number}
 			* @default 1e-3
 			*/
 			this.epsilonCoplanarTest = 1e-3;
 
 			/**
 			* The tolerance value for the containment test.
-			* @type Number
+			* @type {Number}
 			* @default 1
 			*/
 			this.epsilonContainsTest = 1;
+
+			/**
+			* Whether convex regions should be merged or not.
+			* @type {Boolean}
+			* @default true
+			*/
+			this.mergeConvexRegions = true;
 
 			//
 
@@ -14188,7 +14253,7 @@
 		/**
 		* Creates the navigation mesh from an array of convex polygons.
 		*
-		* @param {Array} polygons - An array of convex polygons.
+		* @param {Array<Polygon>} polygons - An array of convex polygons.
 		* @return {NavMesh} A reference to this navigation mesh.
 		*/
 		fromPolygons( polygons ) {
@@ -14294,7 +14359,7 @@
 		* @param {Vector3} point - A point in 3D space.
 		* @return {Polygon} The closest convex region.
 		*/
-		getClosestRegion( point ) {
+		getClosestRegion( point ) {
 
 			const regions = this.regions;
 			let closesRegion = null;
@@ -14399,7 +14464,7 @@
 		*
 		* @param {Vector3} from - The start/source position.
 		* @param {Vector3} to - The end/destination position.
-		* @return {Array} The shortest path as an array of points.
+		* @return {Array<Vector3>} The shortest path as an array of points.
 		*/
 		findPath( from, to ) {
 
@@ -14610,60 +14675,64 @@
 				rightNext: null
 			};
 
-			// process edges from longest to shortest
+			if ( this.mergeConvexRegions === true ) {
 
-			for ( let i = 0, l = edgeList.length; i < l; i ++ ) {
+				// process edges from longest to shortest
 
-				const entry = edgeList[ i ];
+				for ( let i = 0, l = edgeList.length; i < l; i ++ ) {
 
-				let candidate = entry.edge;
+					const entry = edgeList[ i ];
 
-				// cache current references for possible restore
+					let candidate = entry.edge;
 
-				cache.prev = candidate.prev;
-				cache.next = candidate.next;
-				cache.prevTwin = candidate.twin.prev;
-				cache.nextTwin = candidate.twin.next;
+					// cache current references for possible restore
 
-				// temporarily change the first polygon in order to represent both polygons
+					cache.prev = candidate.prev;
+					cache.next = candidate.next;
+					cache.prevTwin = candidate.twin.prev;
+					cache.nextTwin = candidate.twin.next;
 
-				candidate.prev.next = candidate.twin.next;
-				candidate.next.prev = candidate.twin.prev;
-				candidate.twin.prev.next = candidate.next;
-				candidate.twin.next.prev = candidate.prev;
+					// temporarily change the first polygon in order to represent both polygons
 
-				const polygon = candidate.polygon;
-				polygon.edge = candidate.prev;
+					candidate.prev.next = candidate.twin.next;
+					candidate.next.prev = candidate.twin.prev;
+					candidate.twin.prev.next = candidate.next;
+					candidate.twin.next.prev = candidate.prev;
 
-				if ( polygon.convex() === true && polygon.coplanar( this.epsilonCoplanarTest ) === true ) {
+					const polygon = candidate.polygon;
+					polygon.edge = candidate.prev;
 
-					// correct polygon reference of all edges
+					if ( polygon.convex() === true && polygon.coplanar( this.epsilonCoplanarTest ) === true ) {
 
-					let edge = polygon.edge;
+						// correct polygon reference of all edges
 
-					do {
+						let edge = polygon.edge;
 
-						edge.polygon = polygon;
+						do {
 
-						edge = edge.next;
+							edge.polygon = polygon;
 
-					} while ( edge !== polygon.edge );
+							edge = edge.next;
 
-					// delete obsolete polygon
+						} while ( edge !== polygon.edge );
 
-					const index = regions.indexOf( entry.edge.twin.polygon );
-					regions.splice( index, 1 );
+						// delete obsolete polygon
 
-				} else {
+						const index = regions.indexOf( entry.edge.twin.polygon );
+						regions.splice( index, 1 );
 
-					// restore
+					} else {
 
-					cache.prev.next = candidate;
-					cache.next.prev = candidate;
-					cache.prevTwin.next = candidate.twin;
-					cache.nextTwin.prev = candidate.twin;
+						// restore
 
-					polygon.edge = candidate;
+						cache.prev.next = candidate;
+						cache.next.prev = candidate;
+						cache.prevTwin.next = candidate.twin;
+						cache.nextTwin.prev = candidate.twin;
+
+						polygon.edge = candidate;
+
+					}
 
 				}
 
@@ -15032,7 +15101,8 @@
 
 				if ( options ) {
 
-					if ( options.epsilonCoplanarTest ) navMesh.epsilonCoplanarTest = options.epsilonCoplanarTest;
+					if ( options.epsilonCoplanarTest !== undefined ) navMesh.epsilonCoplanarTest = options.epsilonCoplanarTest;
+					if ( options.mergeConvexRegions !== undefined ) navMesh.mergeConvexRegions = options.mergeConvexRegions;
 
 				}
 
@@ -15375,13 +15445,14 @@
 
 			/**
 			* The bounding volume of the cell.
-			* @type AABB
+			* @type {AABB}
 			*/
 			this.aabb = aabb;
 
 			/**
 			* The list of entries which belong to this cell.
-			* @type Array
+			* @type {Array<Any>}
+			* @readonly
 			*/
 			this.entries = new Array();
 
@@ -15543,43 +15614,43 @@
 
 			/**
 			* The list of partitions.
-			* @type Array
+			* @type {Array<Cell>}
 			*/
 			this.cells = new Array();
 
 			/**
 			* The width of the entire spatial index.
-			* @type Number
+			* @type {Number}
 			*/
 			this.width = width;
 
 			/**
 			* The height of the entire spatial index.
-			* @type Number
+			* @type {Number}
 			*/
 			this.height = height;
 
 			/**
 			* The depth of the entire spatial index.
-			* @type Number
+			* @type {Number}
 			*/
 			this.depth = depth;
 
 			/**
 			* The amount of cells along the x-axis.
-			* @type Number
+			* @type {Number}
 			*/
 			this.cellsX = cellsX;
 
 			/**
 			* The amount of cells along the y-axis.
-			* @type Number
+			* @type {Number}
 			*/
 			this.cellsY = cellsY;
 
 			/**
 			* The amount of cells along the z-axis.
-			* @type Number
+			* @type {Number}
 			*/
 			this.cellsZ = cellsZ;
 
@@ -15723,8 +15794,8 @@
 		*
 		* @param {Vector3} position - The given query position.
 		* @param {Number} radius - The given query radius.
-		* @param {Array} result - The result array.
-		* @return {Array} The result array.
+		* @param {Array<Any>} result - The result array.
+		* @return {Array<Any>} The result array.
 		*/
 		query( position, radius, result ) {
 
@@ -15907,14 +15978,14 @@
 
 			/**
 			* The game entity that is represented by this memory record.
-			* @type GameEntity
+			* @type {GameEntity}
 			*/
 			this.entity = entity;
 
 			/**
 			* Records the time the entity became visible. Useful in combination with a reaction time
 			* in order to prevent immediate actions.
-			* @type Number
+			* @type {Number}
 			* @default - Infinity
 			*/
 			this.timeBecameVisible = - Infinity;
@@ -15922,20 +15993,20 @@
 			/**
 			* Records the time the entity was last sensed (e.g. seen or heard). Used to determine
 			* if a game entity can "remember" this record or not.
-			* @type Number
+			* @type {Number}
 			* @default - Infinity
 			*/
 			this.timeLastSensed = - Infinity;
 
 			/**
 			* Marks the position where the opponent was last sensed.
-			* @type Vector3
+			* @type {Vector3}
 			*/
 			this.lastSensedPosition = new Vector3();
 
 			/**
 			* Whether this game entity is visible or not.
-			* @type Boolean
+			* @type {Boolean}
 			* @default false
 			*/
 			this.visible = false;
@@ -15986,7 +16057,7 @@
 		*/
 		resolveReferences( entities ) {
 
-			this.entity = entities.get( this.entity ) || null;
+			this.entity = entities.get( this.entity ) || null;
 
 			return this;
 
@@ -16011,7 +16082,7 @@
 
 			/**
 			* The game entity that owns this memory system.
-			* @type GameEntity
+			* @type {GameEntity}
 			*/
 			this.owner = owner;
 
@@ -16019,13 +16090,13 @@
 			* Used to simulate memory of sensory events. It contains {@link MemoryRecord memory records}
 			* of all relevant game entities in the environment. The records are usually update by
 			* the owner of the memory system.
-			* @type Array
+			* @type {Array<MemoryRecord>}
 			*/
 			this.records = new Array();
 
 			/**
 			* Same as {@link MemorySystem#records} but used for fast access via the game entity.
-			* @type Map
+			* @type {Map<GameEntity,MemoryRecord>}
 			*/
 			this.recordsMap = new Map();
 
@@ -16033,7 +16104,7 @@
 			* Represents the duration of the game entities short term memory in seconds.
 			* When a bot requests a list of all recently sensed game entities, this value
 			* is used to determine if the bot is able to remember a game entity or not.
-			* @type Number
+			* @type {Number}
 			* @default 1
 			*/
 			this.memorySpan = 1;
@@ -16117,8 +16188,8 @@
 		* Determines all valid memory record and stores the result in the given array.
 		*
 		* @param {Number} currentTime - The current elapsed time.
-		* @param {Array} result - The result array.
-		* @return {Array} The result array.
+		* @param {Array<MemoryRecord>} result - The result array.
+		* @return {Array<MemoryRecord>} The result array.
 		*/
 		getValidMemoryRecords( currentTime, result ) {
 
@@ -16203,7 +16274,7 @@
 		*/
 		resolveReferences( entities ) {
 
-			this.owner = entities.get( this.owner ) || null;
+			this.owner = entities.get( this.owner ) || null;
 
 			// records
 
@@ -16246,20 +16317,20 @@
 
 			/**
 			 * The game entity that owns this vision instance.
-			 * @type GameEntity
+			 * @type {GameEntity}
 			 */
 			this.owner = owner;
 
 			/**
 			 * The field of view in radians.
-			 * @type Number
+			 * @type {Number}
 			 * @default π
 			 */
 			this.fieldOfView = Math.PI;
 
 			/**
 			 * The visual range in world units.
-			 * @type Number
+			 * @type {Number}
 			 * @default Infinity
 			 */
 			this.range = Infinity;
@@ -16267,7 +16338,7 @@
 			/**
 			 * An array of obstacles. An obstacle is a game entity that
 			 * implements the {@link GameEntity#lineOfSightTest} method.
-			 * @type Array
+			 * @type {Array<GameEntity>}
 			 */
 			this.obstacles = new Array();
 
@@ -16279,7 +16350,7 @@
 		 * @param {GameEntity} obstacle - The obstacle to add.
 		 * @return {Vision} A reference to this vision instance.
 		 */
-		addObstacle( obstacle ) {
+		addObstacle( obstacle ) {
 
 			this.obstacles.push( obstacle );
 
@@ -16293,7 +16364,7 @@
 		 * @param {GameEntity} obstacle - The obstacle to remove.
 		 * @return {Vision} A reference to this vision instance.
 		 */
-		removeObstacle( obstacle ) {
+		removeObstacle( obstacle ) {
 
 			const index = this.obstacles.indexOf( obstacle );
 			this.obstacles.splice( index, 1 );
@@ -16462,20 +16533,20 @@
 
 			/**
 			* The path to stay close to.
-			* @type Path
+			* @type {Path}
 			*/
 			this.path = path;
 
 			/**
 			* Defines the width of the path. With a smaller radius, the vehicle will have to follow the path more closely.
-			* @type Number
+			* @type {Number}
 			* @default 0.1
 			*/
 			this.radius = radius;
 
 			/**
 			* Determines how far the behavior predicts the movement of the vehicle.
-			* @type Number
+			* @type {Number}
 			* @default 1
 			*/
 			this.predictionFactor = predictionFactor;
@@ -16629,7 +16700,8 @@
 
 			/**
 			* A list of pending tasks.
-			* @type Array
+			* @type {Array<Task>}
+			* @readonly
 			*/
 			this.tasks = new Array();
 
@@ -16637,7 +16709,7 @@
 			* Used to control the asynchronous processing.
 			* - timeout: After this amount of time (in ms), a scheduled task is executed even if
 			* doing so risks causing a negative performance impact (e.g. bad frame time).
-			* @type Object
+			* @type {Object}
 			*/
 			this.options = {
 				timeout: 1000 // ms
@@ -71690,10 +71762,6 @@ vec4 envMapTexelToLinear(vec4 color) {
 			competitor.rotation.fromEuler( spawnPoint.rotation.x, spawnPoint.rotation.y, spawnPoint.rotation.z );
 
 			if ( competitor.isPlayer ) competitor.head.rotation.set( 0, 0, 0, 1 );
-
-			// ensure all world matrices of the competitor are immediately up to date
-
-			competitor.updateWorldMatrix( true, true );
 
 			return this;
 

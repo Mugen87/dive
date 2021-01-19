@@ -148,10 +148,6 @@ class SpawningManager {
 
 		if ( competitor.isPlayer ) competitor.head.rotation.set( 0, 0, 0, 1 );
 
-		// ensure all world matrices of the competitor are immediately up to date
-
-		competitor.updateWorldMatrix( true, true );
-
 		return this;
 
 	}
